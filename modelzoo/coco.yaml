@@ -1,0 +1,56 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+################################################################################
+#
+# Object detectors
+#
+################################################################################
+
+
+yolov3_coco:
+  name: YOLOv3 COCO 608
+  processor: yolo
+  output: bbox
+  local: modelzoo/models/darknet/detection/yolo_v3_coco/
+  remote: https://download.vframe.io/v2/models/darknet/detection/yolo_v3_coco/
+  model: yolov3.weights
+  config: yolov3.cfg
+  labels: labels.txt
+  license: license.md
+  layers: ['yolo_82', 'yolo_94', 'yolo_106']
+  mean: [0,0,0]
+  scale: 0.00392156862745098  # 1/255
+  width: 608
+  height: 608
+  rgb: true
+  crop: false
+  threshold: 0.85
+  nms: true
+
+yolov4_coco:
+  name: YOLOv4 COCO 512
+  processor: yolo
+  output: bbox
+  local: modelzoo/models/darknet/detection/yolo_v4_coco/
+  remote: https://download.vframe.io/v2/models/darknet/detection/yolo_v4_coco/
+  model: yolov4.weights
+  config: yolov4.cfg
+  labels: labels.txt
+  license: license.md
+  layers: ['yolo_139', 'yolo_150', 'yolo_161']
+  mean: [0,0,0]
+  scale: 0.00392156862745098  # 1/255
+  width: 608
+  height: 608
+  rgb: true
+  crop: false
+  threshold: 0.85
+  nms: true

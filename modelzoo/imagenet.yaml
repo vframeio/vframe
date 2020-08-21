@@ -1,0 +1,78 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+################################################################################
+#
+# ImageNet Classification
+#
+################################################################################
+
+caffe_imagenet_bvlc_googlenet:
+  name: Caffe ImageNet GoogleNet
+  processor: classify
+  output: features
+  local: modelzoo/models/caffe/classification/imagenet/bvlc_googlenet/
+  remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_googlenet/
+  model: bvlc_googlenet.caffemodel
+  config: bvlc_googlenet.prototxt
+  labels: labels.txt
+  license: license.md
+  mean: [104, 117, 123]
+  scale: 1.0
+  width: 224
+  height: 224
+  rgb: false
+  crop: false
+  features: pool5/drop_7x7_s1
+  dimensions: 1024
+  threshold: 0.5
+  active: True
+
+caffe_imagenet_bvlc_alexnet:
+  name: Caffe ImageNet AlexNet
+  processor: classify
+  output: features
+  local: modelzoo/models/caffe/classification/imagenet/bvlc_alexnet/
+  remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_alexnet/
+  model: bvlc_alexnet.caffemodel
+  config: bvlc_alexnet.prototxt
+  labels: labels.txt
+  license: license.md
+  mean: [104, 117, 123]
+  scale: 1.0
+  width: 224
+  height: 224
+  rgb: false
+  crop: false
+  features: drop7
+  dimensions: 4096
+  threshold: 0.5
+  active: True
+
+caffe_imagenet_bvlc_reference_caffenet:
+  name: Caffe ImageNet CaffeNet
+  processor: classify
+  output: features
+  local: modelzoo/models/caffe/classification/imagenet/bvlc_reference_caffenet/
+  remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_reference_caffenet/
+  model: bvlc_reference_caffenet.caffemodel
+  config: bvlc_reference_caffenet.prototxt
+  labels: labels.txt
+  license: license.md
+  mean: [104, 117, 123]
+  scale: 1.0
+  width: 224
+  height: 224
+  rgb: false
+  crop: false
+  features: drop7
+  dimensions: 4096
+  threshold: 0.5
+  active: True

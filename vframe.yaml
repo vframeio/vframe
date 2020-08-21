@@ -1,0 +1,74 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+
+modelzoo:
+
+  # COCO object detection
+  - filepath: 'modelzoo/coco.yaml'
+  
+  # ImageNet for feature extraction
+  - filepath: 'modelzoo/imagenet.yaml'
+  
+  # Places365 for feature extraction
+  - filepath: 'modelzoo/places365.yaml'
+
+  # Superresolution
+  - filepath: 'modelzoo/super-resolution.yaml'
+
+  # Face detection for redaction
+  - filepath: 'modelzoo/face-detection.yaml'
+  
+
+plugins:
+
+  # ---------------------------------------------------------------------------
+  # Pipe stream processor
+  # ---------------------------------------------------------------------------
+  - name: pipe
+    chain: True
+    scripts:
+      - filepath: commands/pipe
+
+  # ---------------------------------------------------------------------------
+  # Development scripts, snippets
+  # ---------------------------------------------------------------------------
+  - name: dev
+    scripts:
+      - filepath: commands/dev
+
+  # ---------------------------------------------------------------------------
+  # ModelZoo manager
+  # ---------------------------------------------------------------------------
+  - name: modelzoo
+    scripts:
+      - filepath: commands/modelzoo
+
+  # ---------------------------------------------------------------------------
+  # CVAT manager
+  # ---------------------------------------------------------------------------
+  - name: cvat
+    scripts:
+      - filepaths: commands/cvat
+
+  # ---------------------------------------------------------------------------
+  # Examples
+  # ---------------------------------------------------------------------------
+  - name: examples
+    scripts:
+     - filepath: commands/examples
+       include_hidden: True  # show files starting with "_" (eg _template.py)
+
+  # ---------------------------------------------------------------------------
+  # Search
+  # ---------------------------------------------------------------------------
+  #- name: search
+  #  scripts:
+  #    - filepath: plugins/vframe_search_plugin/vframe_search/commands/
