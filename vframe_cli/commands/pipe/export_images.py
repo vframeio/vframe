@@ -20,7 +20,7 @@ from vframe.utils.click_utils import processor
 @click.option('-e', '--ext', 'opt_ext', default='jpg',
   type=types.ImageFileExtVar,
   help=click_utils.show_help(types.ImageFileExt))
-@click.option('--frame', 'opt_frame_type', default='draw',
+@click.option('-f', '--frame', 'opt_frame_type', default='draw',
   type=types.FrameImageVar,
   help=click_utils.show_help(types.FrameImage))
 @click.option('--prefix', 'opt_prefix', default='',
@@ -63,6 +63,7 @@ def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   while True:
     
     pipe_item = yield
+    header = ctx.obj['header']
     im = pipe_item.get_image(opt_frame_type)
 
     # filename options
@@ -70,7 +71,7 @@ def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
       stem = file_utils.zpad(frame_count)
       frame_count += 1
     else:
-      stem = Path(pipe_item.filename).stem
+      stem = Path(header.filename).stem
 
     # set filename
     fn = f'{opt_prefix}{stem}{opt_suffix}.{ext}'

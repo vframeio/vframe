@@ -36,20 +36,21 @@ fp_env = join(DIR_PROJECT_ROOT, '.env')
 load_dotenv(dotenv_path=fp_env)
 
 # directories
-DIR_DATA_STORE = os.getenv("DATA_STORE", join(DIR_PROJECT_ROOT, 'data'))
+DIR_DATA_STORE = os.getenv("DATA_STORE", join(DIR_PROJECT_ROOT, 'data_store'))
 DIR_MODELZOO = join(DIR_PROJECT_ROOT, 'modelzoo')
 DIR_MODELS = join(DIR_MODELZOO, 'models')
 DIR_PLUGINS = join(DIR_MODELZOO, 'plugins')
 
 DIR_CLI = join(DIR_PROJECT_ROOT, 'vframe_cli')
 DIR_FONTS = join(DIR_DATA_STORE, 'fonts')
+
 # fonts
-FP_ROBOTO_300 = join(DIR_FONTS, 'roboto/Roboto_300.ttf')
-FP_ROBOTO_400 = join(DIR_FONTS, 'roboto/Roboto_400.ttf')
-FP_ROBOTO_500 = join(DIR_FONTS, 'roboto/Roboto_500.ttf')
-FP_ROBOTO_700 = join(DIR_FONTS, 'roboto/Roboto_700.ttf')
-#FP_HELVETICA_NORMAL = join(DIR_FONTS, 'helvetica/Helvetica-Normal.ttf')
-#FP_HELVETICA_BOLD = join(DIR_FONTS, 'helvetica/Helvetica-Bold.ttf')
+FP_ROBOTO_300 = join(DIR_FONTS, 'Roboto_300.ttf')
+FP_ROBOTO_400 = join(DIR_FONTS, 'Roboto_400.ttf')
+FP_ROBOTO_500 = join(DIR_FONTS, 'Roboto_500.ttf')
+FP_ROBOTO_700 = join(DIR_FONTS, 'Roboto_700.ttf')
+FP_HELVETICA_NORMAL = join(DIR_FONTS, 'Helvetica-Normal.ttf')
+FP_HELVETICA_BOLD = join(DIR_FONTS, 'Helvetica-Bold.ttf')
 
 # filenames
 FN_CSV_SUMMARY  = 'summary.csv'

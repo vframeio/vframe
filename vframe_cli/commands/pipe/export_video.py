@@ -10,19 +10,19 @@
 
 import click
 
-from vframe.models import types
 from vframe.utils import click_utils
+from vframe.models.types import FrameImage, FrameImageVar, VideoFileExt, VideoFileExtVar
 from vframe.utils.click_utils import processor
 
 @click.command('')
 @click.option('-o', '--output', 'opt_dir_out', required=True,
   help='Path to output directory')
 @click.option('-e', '--ext', 'opt_ext', default='mp4',
-  type=types.VideoFileExtVar,
-  help=click_utils.show_help(types.VideoFileExt))
-@click.option('--frame', 'opt_frame_type', default='draw',
-  type=types.FrameImageVar,
-  help=click_utils.show_help(types.FrameImage))
+  type=VideoFileExtVar,
+  help=click_utils.show_help(VideoFileExt))
+@click.option('-f', '--frame', 'opt_frame_type', default='draw',
+  type=FrameImageVar,
+  help=click_utils.show_help(FrameImage))
 @click.option('--codec', 'opt_codec', 
   type=click.Choice(['mp4v', 'avc1']),
   default='mp4v',
@@ -39,6 +39,7 @@ def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_codec):
   
   from vframe.settings import app_cfg
   from vframe.utils import file_utils
+  
 
 
   # ---------------------------------------------------------------------------
@@ -73,11 +74,15 @@ def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_codec):
       filepath = header.filepath
       fn = Path(header.filename).stem
       fp_out = join(opt_dir_out, f'{fn}.{ext}')
-      video_out = cv.VideoWriter(fp_out, four_cc, header.fps, header.dim)
+      if opt_frame_type == FrameImage.ORIGINAL:
+        dim =  header.dim
+      elif opt_frame_type == FrameImage.DRAW:
+        dim = header.dim_draw
+      video_out = cv.VideoWriter(fp_out, four_cc, header.fps, tuple(dim))
       is_writing = True
 
     if is_writing:
-      im = pipe_item.get_image(types.FrameImage.DRAW)
+      im = pipe_item.get_image(FrameImage.DRAW)
       video_out.write(im)
 
 

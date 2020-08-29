@@ -31,7 +31,7 @@ class SuperResolution:
 
     # build dnn net
     self.net = dnn_superres.DnnSuperResImpl_create()
-    self.net.readModel(dnn_cfg.model_local)
+    self.net.readModel(dnn_cfg.fp_model)
     self.net.setModel(dnn_cfg.algorithm, dnn_cfg.scale_factor)
     
     # set backend

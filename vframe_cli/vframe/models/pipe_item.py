@@ -46,6 +46,7 @@ class PipeContextHeader:
     if self.ext == 'jpg':
       im = Image.open(self.filepath)
       self.dim = im.size
+      self.dim_draw = self.dim
       self.width, self.height = self.dim
       self.frame_count = 1
       self._frame_idx_start = 0
@@ -59,14 +60,15 @@ class PipeContextHeader:
         self.height = int(self.video.get(cv.CAP_PROP_FRAME_HEIGHT))
         self.width = int(self.video.get(cv.CAP_PROP_FRAME_WIDTH))
         self.dim = (self.width, self.height)
-        self.bitrate = self.video.get(cv.CAP_PROP_BITRATE)
+        self.dim_draw = (self.width, self.height)
+        self.bitrate = (self.video.get(cv.CAP_PROP_BITRATE))
         self.fps = self.video.get(cv.CAP_PROP_FPS)
         self.spf = 1 / self.fps
         self.mspf = 1 / self.fps * 1000  # milliseconds per frame
         self._frame_idx_start = 0  # opencv frame index starts at 0 (not 1)
         self._frame_idx_end = self.frame_count - 1  # 0-indexed frames
       except Exception as e:
-        self.log.error('Could not load file')
+        self.log.error(f'Could not load file: {self.filename}')
 
   def increment_frame(self):
     """Increments frame count and adds empty frame data dict
