@@ -25,11 +25,13 @@ from vframe.models.types import ModelZooClickVar, ModelZoo, FrameImage, FrameIma
 @click.option('-f', '--frame', 'opt_frame_type', default='draw',
   type=FrameImageVar,
   help=show_help(FrameImage))
-@click.option('--no-resize/--resize', 'opt_reset_size', is_flag=True, default=True,
-  help="Reset to original size")
+@click.option('--original-size/--scale-size', 'opt_scale_size', is_flag=True,
+  help="Scale to new size or keep original size")
+@click.option('--iters', 'opt_iterations', default=1,
+  help='Number of super resolution iterations')
 @processor
 @click.pass_context
-def cli(ctx, pipe, opt_model_enum, opt_reset_size, opt_frame_type, opt_gpu):
+def cli(ctx, pipe, opt_model_enum, opt_scale_size, opt_frame_type, opt_gpu, opt_iterations):
   """Super resolution upsample"""
 
   from vframe.settings import app_cfg
@@ -57,6 +59,8 @@ def cli(ctx, pipe, opt_model_enum, opt_reset_size, opt_frame_type, opt_gpu):
   # create dnn cvmodel
   cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
 
+  header_dim_reset = False
+
   # ---------------------------------------------------------------------------
   # process
 
@@ -65,12 +69,24 @@ def cli(ctx, pipe, opt_model_enum, opt_reset_size, opt_frame_type, opt_gpu):
     # Get pipe data
     pipe_item = yield
     header = ctx.obj['header']
+
+    # reset header dim to scale factor
+    if not opt_scale_size and not header_dim_reset:
+      header_dim_reset = True
+      if opt_frame_type == FrameImage.ORIGINAL:
+        header.dim = (dnn_cfg.scale_factor * x for x in header.dim)
+      elif opt_frame_type == FrameImage.DRAW:
+        header.dim_draw = (dnn_cfg.scale_factor * x for x in header.dim_draw)
+
     im = pipe_item.get_image(FrameImage.ORIGINAL)
     h,w,c = im.shape
 
-    im = cvmodel.upsample(im)
-    if opt_reset_size:
-      im = im_utils.resize(im, width=w, height=h)
+    for i in range(opt_iterations):
+      if not opt_scale_size:
+        # resize back to original
+        im = im_utils.resize(im, width=w, height=h)
+      im = cvmodel.upsample(im)
+
 
     pipe_item.set_image(opt_frame_type, im)
     

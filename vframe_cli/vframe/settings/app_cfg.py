@@ -16,6 +16,14 @@ from dotenv import load_dotenv
 import yaml
 import cv2 as cv
 
+
+# -----------------------------------------------------------------------------
+# CV Modules
+# -----------------------------------------------------------------------------
+
+SRES_ENABLED = 'superres' in cv.getBuildInformation()
+CUDA_ENABLED = 'CUDA' in cv.getBuildInformation()
+
 # -----------------------------------------------------------------------------
 # Logging
 # -----------------------------------------------------------------------------
@@ -43,13 +51,14 @@ DIR_PLUGINS = join(DIR_MODELZOO, 'plugins')
 
 DIR_CLI = join(DIR_PROJECT_ROOT, 'vframe_cli')
 DIR_FONTS = join(DIR_DATA_STORE, 'fonts')
+
 # fonts
 FP_ROBOTO_300 = join(DIR_FONTS, 'roboto/Roboto_300.ttf')
 FP_ROBOTO_400 = join(DIR_FONTS, 'roboto/Roboto_400.ttf')
 FP_ROBOTO_500 = join(DIR_FONTS, 'roboto/Roboto_500.ttf')
 FP_ROBOTO_700 = join(DIR_FONTS, 'roboto/Roboto_700.ttf')
-#FP_HELVETICA_NORMAL = join(DIR_FONTS, 'helvetica/Helvetica-Normal.ttf')
-#FP_HELVETICA_BOLD = join(DIR_FONTS, 'helvetica/Helvetica-Bold.ttf')
+FP_HELVETICA_NORMAL = join(DIR_FONTS, 'helvetica/Helvetica-Normal.ttf')
+FP_HELVETICA_BOLD = join(DIR_FONTS, 'helvetica/Helvetica-Bold.ttf')
 
 # filenames
 FN_CSV_SUMMARY  = 'summary.csv'
@@ -59,6 +68,8 @@ FN_LABEL_COLORS = 'label_colors.json'
 FP_VFRAME_CONFIG = join(DIR_PROJECT_ROOT, os.getenv("FP_VFRAME_CONFIG", "vframe.yaml"))
 LOG.debug(f'VFRAME config: {FP_VFRAME_CONFIG}')
 
+# Cmake config files
+FP_CMAKE_OPENCV = join(DIR_DATA_STORE, 'configs/cmake/opencv.yaml')
 
 # -----------------------------------------------------------------------------
 # Input types
@@ -91,7 +102,7 @@ dnn_targets = {
   'OPENCL_FP16': cv.dnn.DNN_TARGET_OPENCL_FP16,  # not used
   'VULKAN': cv.dnn.DNN_TARGET_VULKAN,  # not used
 }
-CUDA_ENABLED = 'CUDA' in cv.getBuildInformation()
+
 if CUDA_ENABLED:
   dnn_backends.update({'CUDA': cv.dnn.DNN_BACKEND_CUDA})
   dnn_targets.update({'CUDA': cv.dnn.DNN_TARGET_CUDA})

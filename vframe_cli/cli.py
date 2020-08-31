@@ -35,18 +35,11 @@ from vframe.utils import log_utils
 
 import argparse
 
-example_text = '''examples:
-./cli.py modelzoo
-./cli.py dev
-./cli.py pipe
- '''
-
 # intercept the first argument using argparse to select command group
 argv_tmp = sys.argv
 sys.argv = sys.argv[:2]
 ap = argparse.ArgumentParser(prog='\033[1m\033[94m./cli.py\033[0m',
                               description='VFRAME',
-                              epilog=example_text,
                               formatter_class=argparse.RawDescriptionHelpFormatter)
 ap.add_argument('commands', choices=plugins_cfg.plugins.keys(), default='pipe')
 args = ap.parse_args()
@@ -133,9 +126,12 @@ for plugin_script in plugin_group.scripts:
       continue
       
     fp_module = fp_py.replace('/', '.').replace('.py','')
-    module = importlib.import_module(fp_module)
-    fn = Path(fp_py).stem
-    cli.add_command(module.cli, name=fn)
+    try:
+      module = importlib.import_module(fp_module)
+      fn = Path(fp_py).stem
+      cli.add_command(module.cli, name=fn)
+    except Exception as e:
+      print(f'Could not import {fn}: {e}')
 
 
 # -----------------------------------------------------------------------------
