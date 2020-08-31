@@ -4,7 +4,7 @@ VFRAME is a computer vision toolkit designed for analyzing large media archives 
 
 VFRAME is still under development and code is subject to major changes.
 
-The recommended way to use this repo is with building a custom version of OpenCV to utilize NVIDIA GPUs for DNN inference. See the [OpenCV CMake](docs/opencv.md) instructions for building locally. The Conda environemnts only include a CPU version of OpenCV.
+The recommended way to use this repo is with building a custom version of OpenCV to utilize NVIDIA GPUs for DNN inference. The Conda environment yaml only include a CPU version of OpenCV.
 
 ## Setup Conda Environment
 
@@ -13,12 +13,34 @@ The recommended way to use this repo is with building a custom version of OpenCV
 git clone https://github.com/vframeio/vframe
 
 # Create Conda environment
-conda env create -f environment-linux.yml  # Linux GPU
+conda env create -f environment-linux.yml  # Linux CPU (Another step required for GPU)
 #conda env create -f environment-osx.yml  # MacOS CPU
+```
 
+Rebuild OpenCV for GPU DNN inference:
+```
+# pip wheels for opencv with CUDA DNN are not available due to NVIDIA licensing issues. Temporary workaround is to rebuild OpenCV with CUDA support then remove the pip-installed opencv packages
+
+# clone opencv and contrib
+git clone https://github.com/opencv 3rdparty/
+git clone https://github.com/opencv_contrib 3rdparty/
+
+# use vframe cmake generator
+./cli.py dev cmake -o ../3rdparty/opencv/build/build.sh
+cd ../3rdparty/opencv/build/
+
+# run build script
+sh ../3rdparty/opencv/build/build.sh
+
+# if build script runs OK then run 
+sudo make install -j $(nproc)
+
+# uninstall pip opencv
+pip uininstall opencv-python -y
 ```
 
 
+## Run ModelZoo Test Script
 ```
 # CD to CLI root
 cd vframe_cli
@@ -27,9 +49,11 @@ cd vframe_cli
 ./cli.py modelzoo test -m yolov3_coco
 
 # Speed test model for 20 iterations
-./cli.py modelzoo fps -m yolov3_coco --iters 20
+./cli.py modelzoo fps -m yolov3_coco --iters 20 --cpu  # use CPU
+./cli.py modelzoo fps -m yolov3_coco --iters 20 --gpu  # use GPU if available
 ```
 
+Read more about the [ModelZoo](docs/modelzoo.md)
 
 ## Detect Basic Objects:
 ```
@@ -40,18 +64,22 @@ cd vframe_cli
               display
 ```
 
-See more [examples](docs/examples.md)
+Read more about [classification and detection](docs/examples.md)
+
+## Blur Faces
+```
+# Detect and blur faces in directory of images
+./cli.py pipe open -i path/to/your/images/ --exts jpg \
+              detect -m yoloface \
+              blur \
+              save_image -o path/to/your/images_redacted/
+```
+
+Read more about [redaction](docs/redaction.md)
 
 ## Plugins
 
-Plugins extend the core scripts. The plugins are located inside `vframe/vframe_cli/plugins`. The commands can be used in combination with other plugins or with the core VFRAME commands. Follow the [plugins guide](docs/plugins.md) to create a custom plugin or add more VFRAME plugins. 
+Plugins extend the core scripts. The plugins are located inside `vframe/vframe_cli/plugins`. The commands can be used in combination with other plugins or with the core VFRAME commands. 
 
-## ModelZoo
+Read more about [VFRAME plugins](docs/plugins.md)
 
-The ModelZoo enables VFRAME to detect more custom objects
-
-## Troubleshooting
-
-View the most commons problems during setup
-- conda environment issues
-- opencv issues
