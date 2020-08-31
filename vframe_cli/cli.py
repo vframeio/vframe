@@ -35,18 +35,11 @@ from vframe.utils import log_utils
 
 import argparse
 
-example_text = '''examples:
-./cli.py modelzoo
-./cli.py dev
-./cli.py pipe
- '''
-
 # intercept the first argument using argparse to select command group
 argv_tmp = sys.argv
 sys.argv = sys.argv[:2]
 ap = argparse.ArgumentParser(prog='\033[1m\033[94m./cli.py\033[0m',
                               description='VFRAME',
-                              epilog=example_text,
                               formatter_class=argparse.RawDescriptionHelpFormatter)
 ap.add_argument('commands', choices=plugins_cfg.plugins.keys(), default='pipe')
 args = ap.parse_args()
