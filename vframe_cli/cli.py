@@ -133,9 +133,12 @@ for plugin_script in plugin_group.scripts:
       continue
       
     fp_module = fp_py.replace('/', '.').replace('.py','')
-    module = importlib.import_module(fp_module)
-    fn = Path(fp_py).stem
-    cli.add_command(module.cli, name=fn)
+    try:
+      module = importlib.import_module(fp_module)
+      fn = Path(fp_py).stem
+      cli.add_command(module.cli, name=fn)
+    except Exception as e:
+      print(f'Could not import {fn}: {e}')
 
 
 # -----------------------------------------------------------------------------

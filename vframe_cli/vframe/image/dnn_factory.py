@@ -20,10 +20,10 @@ from vframe.image.processors.retinaface_mxnet import RetinaFaceMXNetProc
 from vframe.image.processors.ultralight import UltralightRetinaFaceProc
 from vframe.image.processors.mask_rcnn import MaskRCNNProc
 from vframe.image.processors.human_pose import HumanPoseProc
-
-from vframe.image.processors.sres import SuperResolution
-
 from vframe.image.processors.east import EASTProc
+# conditional imports
+if app_cfg.SRES_ENABLED:
+    from vframe.image.processors.sres import SuperResolution
 
 # ---------------------------------------------------------------------------
 # DNN CV Model factory
@@ -41,9 +41,11 @@ class DNNFactory:
     'ultralight': UltralightRetinaFaceProc,
     'mask_rcnn': MaskRCNNProc,
     'east_text': EASTProc,
-    'human_pose': HumanPoseProc,
-    'sres': SuperResolution
+    'human_pose': HumanPoseProc
   }
+  # conditional processors
+  if app_cfg.SRES_ENABLED:
+    processors['sres'] = SuperResolution
 
 
   @classmethod

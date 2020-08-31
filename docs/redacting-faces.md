@@ -1,4 +1,6 @@
-# Face Blurring
+# Face Redaction
+
+![](assets/face-redact-01.jpg)
 
 Use VFRAME to detect and redact faces in images and videos. Save the results to JPG, PNG, MP4, or as JSON data files.
 
@@ -15,7 +17,7 @@ Blur all faces in a single image using YOLOV4 face detector:
 
 ```
 # Blur faces in a single image and display to screen
-./cli.py pipe open -i ../data_store/images/face_simple.jpg \
+./cli.py pipe open -i ../data/images/face_simple.jpg \
               detect -m yoloface \
               blur \
               display
@@ -25,7 +27,7 @@ Blur all faces in a single image using YOLOV4 face detector:
 Blur Faces, Save to New File
 ```
 # Blur faces in a single image and save to new file
-./cli.py pipe open -i ../data_store/images/face_simple.jpg \
+./cli.py pipe open -i ../data/images/face_simple.jpg \
               detect -m yoloface \
               blur \
               save_image -o ~/Downloads/ --suffix _redacted
@@ -35,13 +37,13 @@ Blur Faces, Save to New File
 Blur Directory of Images or Videos 
 ```
 # Directory of JPG images
-./cli.py pipe open -i ../data_store/images/ --exts jpg \
+./cli.py pipe open -i ../data/images/ --exts jpg \
               detect -m yoloface \
               blur \
               save_image -o ~/Downloads/ --suffix _redacted
 
 # Directory of MP4 videos
-./cli.py pipe open -i ../data_store/images/ --exts mp4 \
+./cli.py pipe open -i ../data/images/ --exts mp4 \
               detect -m yoloface \
               blur \
               save_video -o ~/Downloads/ --suffix _redacted
@@ -50,7 +52,7 @@ Blur Directory of Images or Videos
 Expand BBox (for example, to cover ears)
 ```
 # Expand the bounding box to blur more than the face
-./cli.py pipe open -i ../data_store/media/input/samples/faces.jpg \
+./cli.py pipe open -i ../data/media/input/samples/faces.jpg \
               detect -m yoloface \
               blur --expand 0.5 \
               display
@@ -62,10 +64,10 @@ Expand BBox (for example, to cover ears)
 Blur all faces in a video and export to JSON file
 ```
 # Blur faces in a single image
-./cli.py pipe open -i ../data_store/media/input/samples/faces.mp4 \
+./cli.py pipe open -i ../data/media/input/samples/faces.mp4 \
               detect -m yoloface \
               blur \
-              save_data -o ../data_store/media/output/
+              save_data -o ../data/media/output/
 ```
 
 
@@ -74,10 +76,10 @@ Blur all faces in a video and export to JSON file
 Blur Faces and Save to JSON
 ```
 # Blur faces in a single image
-./cli.py pipe open -i ../data_store/media/input/samples/faces.mp4 \
+./cli.py pipe open -i ../data/media/input/samples/faces.mp4 \
               detect -m yoloface \
               blur \
-              save_data -o ../data_store/media/output/faces.json
+              save_data -o ../data/media/output/faces.json
 ```
 
 
@@ -87,7 +89,7 @@ Detector ensemble
 ```
 # Merge detections from multiple models
 ./cli.py  pipe \
-       open -i ../data_store/media/input/samples/faces.jpg \
+       open -i ../data/media/input/samples/faces.jpg \
        detect -m yoloface \
        detect -m ssd \
        merge --to face \
@@ -187,13 +189,13 @@ By default, the detectors use the image size settings in the ModelZoo YAML confi
 
 ```
 # Increase size (slows down, but detects more small faces)
-./cli.py pipe open -i ../data_store/media/input/samples/faces.jpg \
+./cli.py pipe open -i ../data/media/input/samples/faces.jpg \
               detect -m yoloface --width 960 \
               blur \
               display
 
 # Decrease size (speeds up, but detects less small faces)
-./cli.py pipe open -i ../data_store/media/input/samples/faces.jpg \
+./cli.py pipe open -i ../data/media/input/samples/faces.jpg \
               detect -m yoloface --width 448 \
               blur \
               display
