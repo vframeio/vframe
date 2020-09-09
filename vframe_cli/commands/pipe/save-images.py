@@ -32,10 +32,12 @@ from vframe.utils.click_utils import processor
 @click.option('-q', '--quality', 'opt_quality', default=100, type=click.IntRange(0,100, clamp=True),
   show_default=True,
   help='JPEG write quality')
+@click.option('--subdirs', 'opt_keep_subdirs', is_flag=True,
+  help='Keep subdirectory structure in output directory')
 @processor
 @click.pass_context
 def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
-  opt_numbered, opt_quality):
+  opt_numbered, opt_quality, opt_keep_subdirs):
   """Save to images"""
   
   from os.path import join
@@ -72,14 +74,24 @@ def cli(ctx, pipe, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
     else:
       stem = Path(header.filename).stem
 
-    # set filename
+    # default to same extension unless extension is optioned
     if not opt_ext:
       ext = file_utils.get_ext(header.filename)
     else:
       ext = opt_ext.name.lower()
     fn = f'{opt_prefix}{stem}{opt_suffix}.{ext}'
-    fp_out = join(opt_dir_out, fn)
 
+    # if subdirs is optioned, copy subdirs from optioned value
+    if opt_keep_subdirs:
+      path_in = Path(ctx.obj['fp_input'])
+      path_out = Path(opt_dir_out)
+      path_file = Path(header.filepath)
+      fp_subdir = str(path_file.relative_to(path_in).parent)
+      fp_out = join(opt_dir_out, fp_subdir, fn)
+    else:
+      fp_out = join(opt_dir_out, fn)
+
+    file_utils.ensure_dir(fp_out)
     # write image
     if ext == 'jpg':
       cv.imwrite(fp_out, pipe_item.get_image(opt_frame_type), [int(cv.IMWRITE_JPEG_QUALITY), opt_quality])
