@@ -55,6 +55,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_he
   # initialize
 
   log = app_cfg.LOG
+  ctx.obj['fp_input'] = opt_input
 
   # Get input filepaths
   if Path(opt_input).is_dir():
