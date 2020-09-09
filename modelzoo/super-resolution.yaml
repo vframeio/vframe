@@ -17,7 +17,7 @@
 # EDSR: Highest quality, largest model, slowest inference
 # -----------------------------------------------------------------------------
 
-edsr_x2:
+edsr-x2:
   name: EDSR SuperResolution x2
   repo: https://github.com/Saafke/EDSR_Tensorflow/
   remote: https://download.vframe.io/tensorflow/superres/edsr/
@@ -29,7 +29,7 @@ edsr_x2:
   scale_factor: 2
   algorithm: edsr
 
-edsr_x3:
+edsr-x3:
   name: EDSR SuperResolution x3
   repo: https://github.com/Saafke/EDSR_Tensorflow/
   local: modelzoo/models/tensorflow/superres/edsr/
@@ -40,7 +40,7 @@ edsr_x3:
   scale_factor: 3
   algorithm: edsr
 
-edsr_x4:
+edsr-x4:
   name: EDSR SuperResolution x4
   repo: https://github.com/Saafke/EDSR_Tensorflow/
   local: modelzoo/models/tensorflow/superres/edsr/
@@ -56,7 +56,7 @@ edsr_x4:
 # ESPCN: Small model, fast and accurate inference. Suitable for real-time
 # -----------------------------------------------------------------------------
 
-espcn_x2:
+espcn-x2:
   name: ESPCN SuperResolution x2
   repo: https://github.com/fannymonori/TF-ESPCN
   local: modelzoo/models/tensorflow/superres/espcn/
@@ -67,7 +67,7 @@ espcn_x2:
   scale_factor: 2
   algorithm: espcn
 
-espcn_x3:
+espcn-x3:
   name: ESPCN SuperResolution x3
   repo: https://github.com/fannymonori/TF-ESPCN
   local: modelzoo/models/tensorflow/superres/espcn/
@@ -78,7 +78,7 @@ espcn_x3:
   scale_factor: 3
   algorithm: espcn
 
-espcn_x4:
+espcn-x4:
   name: ESPCN SuperResolution x4
   repo: https://github.com/fannymonori/TF-ESPCN
   local: modelzoo/models/tensorflow/superres/espcn/
@@ -94,7 +94,7 @@ espcn_x4:
 # LAPSRN: Medium sized model, upscale by 8x, but results less accurate
 # -----------------------------------------------------------------------------
 
-lapsrn_x2:
+lapsrn-x2:
   name: LAPSRN SuperResolution x2
   repo: https://github.com/fannymonori/TF-LapSRN/
   local: modelzoo/models/tensorflow/superres/lapsrn/
@@ -105,7 +105,7 @@ lapsrn_x2:
   scale_factor: 2
   algorithm: lapsrn
 
-lapsrn_x4:
+lapsrn-x4:
   name: LAPSRN SuperResolution x4
   repo: https://github.com/fannymonori/TF-LapSRN/
   local: modelzoo/models/tensorflow/superres/lapsrn/
@@ -116,7 +116,7 @@ lapsrn_x4:
   scale_factor: 4
   algorithm: lapsrn
 
-lapsrn_x8:
+lapsrn-x8:
   name: LAPSRN SuperResolution x8
   repo: https://github.com/fannymonori/TF-LapSRN/
   local: modelzoo/models/tensorflow/superres/lapsrn/

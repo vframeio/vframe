@@ -12,12 +12,11 @@ import click
 from vframe.utils.click_utils import processor
 from vframe.utils.click_utils import show_help
 from vframe.models.types import ModelZooClickVar, ModelZoo, FrameImage
-
-rotate_opts = list(map(str, [0, -90, 90, -180, 180, -270, 270]))  #str only
+from vframe.settings import app_cfg
 
 @click.command('')
 @click.option('-m', '--model', 'opt_model_enum', 
-  required=True,
+  default=app_cfg.DEFAULT_DETECT_MODEL,
   type=ModelZooClickVar,
   help=show_help(ModelZoo))
 @click.option('--gpu/--cpu', 'opt_gpu', is_flag=True, default=True,
@@ -28,7 +27,8 @@ rotate_opts = list(map(str, [0, -90, 90, -180, 180, -270, 270]))  #str only
   help='Detection threshold. Overrides config file')
 @click.option('--name', '-n', 'opt_data_key', default=None,
   help='Name of data key')
-@click.option('-r', '--rotate', 'opt_rotate', type=click.Choice(rotate_opts), 
+@click.option('-r', '--rotate', 'opt_rotate', 
+  type=click.Choice(app_cfg.ROTATE_VALS.keys()), 
   default='0',
   help='Rotate image this many degrees in counter-clockwise direction before detection')
 @click.option('--verbose', 'opt_verbose', is_flag=True)
@@ -42,10 +42,8 @@ def cli(ctx, pipe, opt_model_enum, opt_data_key, opt_gpu,
   from pathlib import Path
   import traceback
 
-  import dacite
   import cv2 as cv
 
-  from vframe.settings import app_cfg
   from vframe.models.dnn import DNN
   from vframe.settings.modelzoo_cfg import modelzoo
   from vframe.image.dnn_factory import DNNFactory
@@ -53,35 +51,16 @@ def cli(ctx, pipe, opt_model_enum, opt_data_key, opt_gpu,
   
   # ---------------------------------------------------------------------------
   # initialize
-
-  log = app_cfg.LOG
   
   model_name = opt_model_enum.name.lower()
   dnn_cfg = modelzoo.get(model_name)
 
   # override dnn_cfg vars with cli vars
-  if opt_gpu:
-    dnn_cfg.use_gpu()
-  else:
-    dnn_cfg.use_cpu()
-  if all(opt_dnn_size):
-    dnn_cfg.width = opt_dnn_size[0]
-    dnn_cfg.height = opt_dnn_size[1]
-  if opt_dnn_threshold is not None:
-    dnn_cfg.threshold = opt_dnn_threshold
+  dnn_cfg.override(gpu=opt_gpu, size=opt_dnn_size, threshold=opt_dnn_threshold)
     
-  # rotate
-  opt_rotate = int(opt_rotate)
-  np_rot_val =  opt_rotate // 90  # 90 deg rotations in counter-clockwise direction
-  if opt_rotate == 90 or opt_rotate == -270:
-    cv_rot_val = cv.ROTATE_90_COUNTERCLOCKWISE
-  elif opt_rotate == 180 or opt_rotate == -180:
-    cv_rot_val = cv.ROTATE_180
-  elif opt_rotate == 270 or opt_rotate == -90:
-    cv_rot_val = cv.ROTATE_90_CLOCKWISE
-  else:
-    cv_rot_val = None
-
+  # rotate cv, np vals
+  cv_rot_val = app_cfg.ROTATE_VALS[opt_rotate]
+  np_rot_val =  int(opt_rotate) // 90  # counter-clockwise 90 deg rotations
 
   if not opt_data_key:
     opt_data_key = model_name
@@ -94,7 +73,7 @@ def cli(ctx, pipe, opt_model_enum, opt_data_key, opt_gpu,
 
   while True:
 
-    # Get pipe data
+    # get pipe data
     pipe_item = yield
     header = ctx.obj['header']
     im = pipe_item.get_image(FrameImage.ORIGINAL)
@@ -103,7 +82,7 @@ def cli(ctx, pipe, opt_model_enum, opt_data_key, opt_gpu,
     if cv_rot_val is not None:
       im = cv.rotate(im, cv_rot_val)
     
-    # Detect
+    # detect
     try:
       results = cvmodel.infer(im)
 
@@ -114,19 +93,18 @@ def cli(ctx, pipe, opt_model_enum, opt_data_key, opt_gpu,
 
     except Exception as e:
       results = {}
-      log.error(f'Could not detect: {header.filepath}')
+      app_cfg.LOG.error(f'Could not detect: {header.filepath}')
       tb = traceback.format_exc()
-      log.error(tb)
-      
+      app_cfg.LOG.error(tb)
 
     # debug
     if opt_verbose:
-      log.debug(f'{cvmodel.dnn_cfg.name} detected: {len(results.detections)} objects')
+      app_cfg.LOG.debug(f'{cvmodel.dnn_cfg.name} detected: {len(results.detections)} objects')
 
-    # Update data
+    # update data
     if results:
       pipe_data = {opt_data_key: results}
       header.add_data(pipe_data)
     
-    # Continue processing
+    # continue processing
     pipe.send(pipe_item)

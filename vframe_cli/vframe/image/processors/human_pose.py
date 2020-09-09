@@ -14,8 +14,7 @@ import cv2 as cv
 
 from vframe.settings import app_cfg
 from vframe.utils import im_utils
-from vframe.models.bbox import BBoxNorm, BBoxDim, PointNorm, PointDim
-from vframe.models.bbox import RotatedBBoxNorm, RotatedBBoxDim
+from vframe.models.geometry import BBox, Point
 from vframe.image.processors.base import DetectionProc
 from vframe.models.cvmodels import HumanPoseDetectResult, HumanPoseDetectResults
 

@@ -40,6 +40,7 @@ class CmakeOpenCV:
   CMAKE_BUILD_TYPE: str='Release'
   CMAKE_INSTALL_PREFIX: str='/usr/local'
   OPENCV_GENERATE_PKGCONFIG: bool=True  # generate .pc file
+  OPENCV_PC_FILE_NAME: str='opencv.pc'
   INSTALL_C_EXAMPLES: bool=False
   OPENCV_ENABLE_NONFREE: bool=True
   

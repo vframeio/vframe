@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 import yaml
 import cv2 as cv
 
+from vframe.models.color import Color
 
 # -----------------------------------------------------------------------------
 # CV Modules
@@ -71,6 +72,7 @@ LOG.debug(f'VFRAME config: {FP_VFRAME_CONFIG}')
 # Cmake config files
 FP_CMAKE_OPENCV = join(DIR_DATA_STORE, 'configs/cmake/opencv.yaml')
 
+
 # -----------------------------------------------------------------------------
 # Input types
 # -----------------------------------------------------------------------------
@@ -81,6 +83,41 @@ VALID_PIPE_MEDIA_EXTS =  VALID_PIPE_IMAGE_EXTS + VALID_PIPE_VIDEO_EXTS
 VALID_PIPE_DATA_EXTS = ['json']
 VALID_PIPE_EXTS = VALID_PIPE_MEDIA_EXTS.extend(VALID_PIPE_DATA_EXTS)
 
+
+# -----------------------------------------------------------------------------
+# Colors
+# -----------------------------------------------------------------------------
+
+RED = Color.from_rgb_int((255, 0, 0))
+ORANGE = Color.from_rgb_int((255, 255, 127))
+YELLOW = Color.from_rgb_int((255, 255, 0))
+FUSCHIA = Color.from_rgb_int((255, 0, 127))
+PINK = Color.from_rgb_int((255, 0, 255))
+PURPLE = Color.from_rgb_int((127, 0, 255))
+LAVENDER = Color.from_rgb_int((127, 127, 255))
+CYAN = Color.from_rgb_int((0, 255, 255))
+GREEN = Color.from_rgb_int((0, 255, 0))
+BLUE = Color.from_rgb_int((0, 0, 255))
+
+BLACK = Color.from_rgb_int((0, 0, 0))
+WHITE = Color.from_rgb_int((255, 255, 255))
+GRAY = Color.from_rgb_int((127, 127, 127))
+LIGHT_GRAY = Color.from_rgb_int((170, 170, 170))
+DARK_GRAY = Color.from_rgb_int((85, 85, 85))
+
+DEFAULT_STROKE_WEIGHT = 2
+DEFAULT_TEXT_SIZE = 14
+DEFAULT_PADDING_PER = 0.25
+
+class TERM_COLORS:
+  HEADER = '\033[95m'
+  OKBLUE = '\033[94m'
+  OKGREEN = '\033[92m'
+  WARNING = '\033[93m'
+  FAIL = '\033[91m'
+  ENDC = '\033[0m'
+  BOLD = '\033[1m'
+  UNDERLINE = '\033[4m'
 
 # -----------------------------------------------------------------------------
 # OpenCV DNN
@@ -108,6 +145,20 @@ if CUDA_ENABLED:
   dnn_targets.update({'CUDA': cv.dnn.DNN_TARGET_CUDA})
   dnn_targets.update({'CUDA_FP16': cv.dnn.DNN_TARGET_CUDA_FP16})
 
+
+# -----------------------------------------------------------------------------
+# CLI command opts
+# -----------------------------------------------------------------------------
+DEFAULT_DETECT_MODEL = 'yolov3_coco'
+ROTATE_VALS = {
+  '0': None,
+  '90': cv.ROTATE_90_COUNTERCLOCKWISE,
+  '180': cv.ROTATE_180,
+  '-90': cv.ROTATE_90_CLOCKWISE,
+  '-180': cv.ROTATE_180,
+  '-270': cv.ROTATE_90_COUNTERCLOCKWISE,
+  '270': cv.ROTATE_90_CLOCKWISE,
+}
 
 # -----------------------------------------------------------------------------
 # S3 files

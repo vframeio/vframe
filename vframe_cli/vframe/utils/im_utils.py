@@ -91,27 +91,27 @@ def is_grayscale(im, threshold=5):
   return mean < threshold
 
 
-def crop_roi(im, bbox_norm):
+def crop_roi(im, bbox):
   """Crops ROI
   :param im: (np.ndarray) image BGR
-  :param bbox_norm: (BBoxNorm)
+  :param bbox: (BBox)
   :returns (np.ndarray) BGR image ROi
   """
   dim = im.shape[:2][::-1]
-  x1, y1, x2, y2 = bbox_norm.to_bbox_dim(dim).xyxy
+  x1, y1, x2, y2 = bbox.xyxy_int
   im_roi = im[y1:y2, x1:x2]
   return im_roi
 
 
-def blur_roi(im, bbox_norm, per=0.33, iters=1):
+def blur_roi(im, bbox, per=0.33, iters=1):
   """Blur ROI
   :param im: (np.ndarray) image BGR
-  :param bbox_norm: (BBoxNorm)
+  :param bbox: (BBox)
   :param cell_size: (int, int) pixellated cell size
   :returns (np.ndarray) BGR image
   """
   dim = im.shape[:2][::-1]
-  x1, y1, x2, y2 = bbox_norm.to_bbox_dim(dim).xyxy
+  x1, y1, x2, y2 = bbox.xyxy_int
   im_roi = im[y1:y2, x1:x2]
   h,w,c = im_roi.shape
   ksize = int(max(per * w, per * h))
@@ -123,15 +123,15 @@ def blur_roi(im, bbox_norm, per=0.33, iters=1):
   return im
 
 
-def pixellate_roi(im, bbox_norm, cell_size=(1,1)):
+def pixellate_roi(im, bbox, cell_size=(1,1)):
   """Pixellates ROI
   :param im: (np.ndarray) image BGR
-  :param bbox_norm: (BBoxNorm)
+  :param bbox: (BBox)
   :param cell_size: (int, int) pixellated cell size
   :returns (np.ndarray) BGR image
   """
   dim = im.shape[:2][::-1]
-  x1, y1, x2, y2 = bbox_norm.to_bbox_dim(dim).xyxy
+  x1, y1, x2, y2 = bbox.xyxy_int
   im_roi = im[y1:y2, x1:x2]
   h,w,c = im_roi.shape
   fw,fh = cell_size
@@ -215,7 +215,6 @@ def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR)
     elif height and not width:
       scale_y = height / im_height
       scale_x = scale_y
-
     w, h = int(scale_x * im_width), int(scale_y * im_height)
     im = cv.resize(im, (w ,h), interpolation=interp)
     return im

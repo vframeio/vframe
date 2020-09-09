@@ -14,7 +14,7 @@ import cv2 as cv
 from vframe.utils import im_utils
 from vframe.models.color import Color
 from vframe.settings import app_cfg
-from vframe.models.bbox import BBoxNorm, BBoxDim
+from vframe.models.geometry import BBox, Point
 from vframe.image.processors.base import DetectionProc, NetProc
 #from vframe.models.cvmodels import DetectResult, DetectResults
 from vframe.models.cvmodels import SegmentResult, SegmentResults
@@ -50,7 +50,7 @@ class MaskRCNNProc(NetProc):
       if confidence > self.dnn_cfg.threshold:
         box = boxes[0, 0, i, 3:7] * np.array([w, h, w, h])
         xyxy = box.astype("int")
-        bbox_norm = BBoxDim.from_xyxy_dim(xyxy, self.frame_dim).to_bbox_norm()
+        bbox_norm = BBox(*xyxy, *self.frame_dim)
         label = self.labels[class_idx] if self.labels else ''
         mask = masks[i, class_idx]
         detect_result = SegmentResult(class_idx, confidence, bbox_norm, mask, label)

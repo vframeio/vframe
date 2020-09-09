@@ -14,6 +14,8 @@ from vframe.utils.click_utils import generator
 @click.command('')
 @click.option('-i', '--input', 'opt_input', required=True,
   help='Path to image or image folder')
+@click.option('-r', '--recursive', 'opt_recursive', is_flag=True,
+  help='Recursive glob')
 @click.option('--replace-path', 'opt_replace_path',
   help="Replace file parent path")
 @click.option('--width', 'opt_width', default=None,
@@ -34,7 +36,7 @@ from vframe.utils.click_utils import generator
   help="Number of frames to skip between processing")
 @generator
 @click.pass_context
-def cli(ctx, sink, opt_input, opt_replace_path, opt_width, opt_height, opt_exts, opt_slice,
+def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_height, opt_exts, opt_slice,
   opt_frame_start, opt_frame_end, opt_decimate):
   """+ Add images or videos"""
   
@@ -59,7 +61,7 @@ def cli(ctx, sink, opt_input, opt_replace_path, opt_width, opt_height, opt_exts,
     # glob directory
     exts = opt_exts if opt_exts is not None else app_cfg.VALID_PIPE_EXTS
     # load multiple images
-    items = file_utils.glob_multi(opt_input, exts=exts)
+    items = file_utils.glob_multi(opt_input, exts=exts, recursive=opt_recursive)
     if len(items) == 0:
       log.error(f'No {opt_exts} found in {opt_input}')
       log.info('Use "-e/--ext" option to select different glob extension')

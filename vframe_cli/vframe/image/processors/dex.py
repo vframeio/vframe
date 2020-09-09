@@ -11,7 +11,7 @@ import numpy as np
 import cv2 as cv
 
 from vframe.settings import app_cfg
-from vframe.models.bbox import BBoxNorm, BBoxDim
+from vframe.models.geometry import BBoxNorm, BBox
 from vframe.image.processors.base import ClassificationProc
 from vframe.models.cvmodels import ClassifyResult, ClassifyResults
 from vframe.utils import im_utils
@@ -24,10 +24,10 @@ class DEXProc(ClassificationProc):
     """
     
     cfg = self.dnn_cfg
-
+    self.frame_dim_orig = im.shape[:2][::-1]
     im = im_utils.resize(im, width=cfg.width, height=cfg.height, force_fit=cfg.fit)
-    self.frame_dim = im.shape[:2][::-1]
-    dim = self.frame_dim if cfg.fit else cfg.size
+    self.frame_dim_resized = im.shape[:2][::-1]
+    dim = self.frame_dim_resized if cfg.fit else cfg.size
     blob = cv.dnn.blobFromImage(im, cfg.scale, dim, cfg.mean, crop=cfg.crop, swapRB=cfg.rgb)
     self.net.setInput(blob)
 

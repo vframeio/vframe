@@ -20,7 +20,7 @@ from vframe.settings import app_cfg
 from vframe.models import types
 from vframe.models.cvmodels import ClassifyResults, DetectResults
 from vframe.utils import im_utils, file_utils
-from vframe.models.bbox import BBoxNorm
+from vframe.models.geometry import BBox, Point
 
 
 # -----------------------------------------------------------------------------

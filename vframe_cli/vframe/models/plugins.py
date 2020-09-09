@@ -21,7 +21,7 @@ class PluginScriptGroup:
 class Plugin:
   name: str
   scripts: List[PluginScriptGroup]
-  chain: bool=False
+  pipe: bool=False
   active: bool=True
 
 

@@ -8,7 +8,7 @@
 #############################################################################
 
 from vframe.settings import app_cfg
-from vframe.models.bbox import BBoxNorm, BBoxDim
+from vframe.models.geometry import BBox, Point
 from vframe.image.processors.base import DetectionProc
 from vframe.models.cvmodels import DetectResult, DetectResults
 
@@ -24,10 +24,10 @@ class SSDProc(DetectionProc):
       confidence = float(detection[2])
       if confidence > self.dnn_cfg.threshold:
         class_idx = int(detection[1])  # skip background ?
-        (x1,y1,x2,y2) = detection[3:7]
-        bbox_norm = BBoxNorm(x1,y1,x2,y2)
+        xyxy = detection[3:7]
+        bbox = BBox.from_xyxy_norm(*xyxy, *self.frame_dim_orig)
         label = self.labels[class_idx] if self.labels else ''
-        detect_result = DetectResult(class_idx, confidence, bbox_norm, label)
+        detect_result = DetectResult(class_idx, confidence, bbox, label)
         detect_results.append(detect_result)
 
     if self.dnn_cfg.nms:

@@ -20,7 +20,7 @@ from os.path import join
 import time
 
 from vframe.settings import app_cfg
-from vframe.models.bbox import BBoxNorm, BBoxDim
+from vframe.models.geometry import BBox, Point
 from vframe.image.processors.base import DetectionProc
 from vframe.models.cvmodels import DetectResult, DetectResults
 
@@ -73,8 +73,8 @@ class MobileNetMXNetProc(DetectionProc):
     for detection in detections:
       xyxy = detection[:4]
       conf = detection[4]
-      bbox_norm = BBoxDim.from_xyxy_dim(xyxy, self.frame_dim).to_bbox_norm()
-      detect_result = DetectResult(self.class_idx, conf, bbox_norm, self.label)
+      bbox = BBox(*xyxy, *self.frame_dim)
+      detect_result = DetectResult(self.class_idx, conf, bbox, self.label)
       detect_results.append(detect_result)
     
     return DetectResults(detect_results, perf_ms)

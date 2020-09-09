@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-caffe_imagenet_bvlc_googlenet:
+caffe-imagenet-bvlc-googlenet:
   name: Caffe ImageNet GoogleNet
   processor: classify
   output: features
@@ -33,9 +33,10 @@ caffe_imagenet_bvlc_googlenet:
   features: pool5/drop_7x7_s1
   dimensions: 1024
   threshold: 0.5
+  allow_resize: False
   active: True
 
-caffe_imagenet_bvlc_alexnet:
+caffe-imagenet-bvlc-alexnet:
   name: Caffe ImageNet AlexNet
   processor: classify
   output: features
@@ -54,9 +55,10 @@ caffe_imagenet_bvlc_alexnet:
   features: drop7
   dimensions: 4096
   threshold: 0.5
+  allow_resize: False
   active: True
 
-caffe_imagenet_bvlc_reference_caffenet:
+caffe-imagenet-bvlc:
   name: Caffe ImageNet CaffeNet
   processor: classify
   output: features
@@ -75,4 +77,5 @@ caffe_imagenet_bvlc_reference_caffenet:
   features: drop7
   dimensions: 4096
   threshold: 0.5
+  allow_resize: False
   active: True

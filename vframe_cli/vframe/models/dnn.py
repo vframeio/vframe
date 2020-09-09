@@ -29,7 +29,8 @@ class DNN:
   remote: str=None  # root directory for model files
   width: int=None  # width of image tensor/blob
   height: int=None  # height of image tensor/blob
-  fit: bool=True  # force fit image to exact width and height
+  fit: bool=True  # force fit image to exact width and height\
+  allow_resize: bool=False
   # model file locations
   config: str=''  # filename prototxt, pbtxt, .cfg, etc
   labels: str = ''  # filename path to labels.txt line-delimeted
@@ -98,13 +99,30 @@ class DNN:
       self.fp_license = None
 
 
+  def override(self, gpu=None, size=(None, None), threshold=None):
+    if gpu is not None:
+      if gpu:
+        self.use_gpu()
+      else:
+        self.use_cpu()
+    if all(size):
+      if not self.allow_resize:
+        log.warn(f'Resizing DNN input size not permitted for this model')
+      else:
+        self.width, self.height = size
+    if threshold is not None:
+      self.threshold = threshold
+
+
   def use_gpu(self):
     self.backend = 'CUDA'
     self.target = 'CUDA'
 
+
   def use_cpu(self):
     self.backend = 'DEFAULT'
     self.target = 'DEFAULT'
+
       
   @property
   def size(self):

@@ -15,7 +15,7 @@
 ################################################################################
 
 
-yolov3_coco:
+yolo3-coco:
   name: YOLOv3 COCO 608
   processor: yolo
   output: bbox
@@ -34,8 +34,10 @@ yolov3_coco:
   crop: false
   threshold: 0.85
   nms: true
+  allow_resize: True
 
-yolov4_coco:
+
+yolo4-coco:
   name: YOLOv4 COCO 512
   processor: yolo
   output: bbox
@@ -54,3 +56,4 @@ yolov4_coco:
   crop: false
   threshold: 0.85
   nms: true
+  allow_resize: True

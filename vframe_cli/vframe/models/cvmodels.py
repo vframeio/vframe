@@ -19,8 +19,7 @@ import numpy as np
 
 from vframe.models.dnn import DNN
 from vframe.models.types import Processor
-from vframe.models.bbox import BBoxNorm, RotatedBBoxNorm
-from vframe.models.bbox import PointNorm, PointDim
+from vframe.models.geometry import BBox, Point, RotatedBBox
 from vframe.settings import app_cfg
 
 log = app_cfg.LOG
@@ -87,7 +86,7 @@ class ClassifyResult(ProcessorResult):
 class DetectResult(ProcessorResult):
   """Store results of object detection processor
   """
-  bbox: BBoxNorm
+  bbox: BBox
   confidence: float
   label: str = ''
   
@@ -106,7 +105,7 @@ class DetectResult(ProcessorResult):
 class SegmentResult(ProcessorResult):
   """Store results of segmentation detection processor
   """
-  bbox: BBoxNorm
+  bbox: BBox
   confidence: float
   mask: np.ndarray
   label: str = ''
@@ -127,9 +126,9 @@ class RotatedDetectResult(ProcessorResult):
   """
   #index: int
   #confidence: float
-  bbox: BBoxNorm
-  rbbox: RotatedBBoxNorm
-  bbox_unrotated: BBoxNorm
+  bbox: BBox
+  rbbox: RotatedBBox
+  bbox_unrotated: BBox
   angle: float
   label: str = ''
   
@@ -145,24 +144,24 @@ class RotatedDetectResult(ProcessorResult):
 
 @dataclass 
 class PoseKeypoints:
-  nose: PointNorm
-  neck: PointNorm
-  right_shoulder: PointNorm
-  right_elbow: PointNorm
-  right_wrist: PointNorm
-  left_shoulder: PointNorm
-  left_elbow: PointNorm
-  left_wrist: PointNorm
-  right_hip: PointNorm
-  right_knee: PointNorm
-  right_ankle: PointNorm
-  left_hip: PointNorm
-  left_knee: PointNorm
-  left_ankle: PointNorm
-  right_eye: PointNorm
-  left_eye: PointNorm
-  right_ear: PointNorm
-  left_ear: PointNorm
+  nose: Point
+  neck: Point
+  right_shoulder: Point
+  right_elbow: Point
+  right_wrist: Point
+  left_shoulder: Point
+  left_elbow: Point
+  left_wrist: Point
+  right_hip: Point
+  right_knee: Point
+  right_ankle: Point
+  left_hip: Point
+  left_knee: Point
+  left_ankle: Point
+  right_eye: Point
+  left_eye: Point
+  right_ear: Point
+  left_ear: Point
 
 #   def __post_init__(self):
 #   POSE_PAIRS = [[1,2], [1,5], [2,3], [3,4], [5,6], [6,7],
@@ -187,7 +186,7 @@ class PoseKeypoints:
 class HumanPoseDetectResult(ProcessorResult):
   """Store results of human pose detection
   """
-  bbox: BBoxNorm
+  bbox: BBox
   keypoints: List[PoseKeypoints]
   label: str = ''
 

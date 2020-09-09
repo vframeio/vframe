@@ -67,28 +67,16 @@ def cli(ctx, opt_model_enums, opt_gpu, opt_dnn_size,
   # init ars
   benchmarks = []
 
+  # input image
+  im = cv.imread(opt_fp_in) if opt_fp_in else im_utils.create_blank_im(640, 480)
+
   # iterate models
   for model_name in model_names:
-    log.debug(f'Benchmark: {model_name}')
+    log.info(f'Benchmark: {model_name}')
+    
     dnn_cfg = modelzoo_cfg.modelzoo.get(model_name)
-
-    # create blank image if none provided
-    if not opt_fp_in:
-      im = im_utils.create_blank_im(640, 480)
-    else:
-      im = cv.imread(opt_fp_in)
-
-    # update dnn cfg
-    if opt_gpu:
-      dnn_cfg.use_gpu()
-      processor = 'gpu'
-    else:
-      dnn_cfg.use_cpu()
-      processor = 'cpu'
-
-    if all(opt_dnn_size):
-      dnn_cfg.width = opt_dnn_size[0]
-      dnn_cfg.height = opt_dnn_size[1]
+    dnn_cfg.override(gpu=opt_gpu, size=opt_dnn_size)
+    processor = 'gpu' if opt_gpu else 'cpu'
 
     # init cvmodel
     cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
@@ -116,7 +104,6 @@ def cli(ctx, opt_model_enums, opt_gpu, opt_dnn_size,
     df = pd.DataFrame.from_dict(benchmarks)
     df.to_csv(opt_fp_out, index=False)
     log.info(f'Saved file to: {opt_fp_out}')
-    log.info('NB: run "plot_benchmark" to visualize data.')
   else:
     for benchmark in benchmarks:
       log.info(benchmark)

@@ -14,7 +14,7 @@
 #
 ################################################################################
 
-mask_rcnn:
+maskrcnn:
   name: Mask R-CNN Inception V2 COCO
   url: https://github.com/opencv/opencv/wiki/TensorFlow-Object-Detection-API
   processor: mask_rcnn

@@ -65,9 +65,10 @@ class NetProc:
       cfg.height = cfg.width
       self.log.warning(f'Width and height must be equal. Forcing to lowest size: {cfg.width}')
 
+    self.frame_dim_orig = im.shape[:2][::-1]
     im = im_utils.resize(im, width=cfg.width, height=cfg.height, force_fit=cfg.fit)
-    self.frame_dim = im.shape[:2][::-1]
-    dim = self.frame_dim if cfg.fit else cfg.size
+    self.frame_dim_resized = im.shape[:2][::-1]
+    dim = self.frame_dim_resized if cfg.fit else cfg.size
     blob = cv.dnn.blobFromImage(im, cfg.scale, dim, cfg.mean, crop=cfg.crop, swapRB=cfg.rgb)
     self.net.setInput(blob)
 
@@ -171,7 +172,7 @@ class DetectionProc(NetProc):
     :returns List[DetectResult] 
     """
     confidences = [float(d.confidence) for d in detect_results]
-    boxes = [d.bbox.to_bbox_dim(self.frame_dim).xywh for d in detect_results]
+    boxes = [d.bbox.xywh_int for d in detect_results]
     idxs = cv.dnn.NMSBoxes(boxes, confidences, self.dnn_cfg.threshold, self.dnn_cfg.nms_threshold)
     detect_results_nms = [detect_results[i[0]] for i in idxs]
     return detect_results_nms

@@ -33,7 +33,7 @@ import numpy as np
 import cv2 as cv
 
 from vframe.settings import app_cfg
-from vframe.models.bbox import BBoxNorm, BBoxDim
+from vframe.models.geometry import BBox, Point
 from vframe.image.processors.base import DetectionProc
 from vframe.models.cvmodels import DetectResult, DetectResults
 
@@ -176,8 +176,8 @@ class UltralightRetinaFaceProc(DetectionProc):
 
     detect_results = []
     for box, label, prob in zip(boxes, labels, probs):
-      bbox_norm = BBoxDim(*box, self.frame_dim).to_bbox_norm()
-      detect_results.append(DetectResult(class_idx, prob, bbox_norm, label))
+      bbox = BBox(*box, *self.frame_dim)
+      detect_results.append(DetectResult(class_idx, prob, bbox, label))
 
     return DetectResults(detect_results, self._perf_ms())
 

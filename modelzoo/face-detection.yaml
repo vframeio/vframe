@@ -43,6 +43,7 @@ retinafacelight:
   layers: ["boxes", "scores"]
   threshold: 0.8
   nms_threshold: 0.4
+  allow_resize: True
   active: True
 
 # -----------------------------------------------------------------------------
@@ -72,6 +73,7 @@ yoloface:
   threshold: 0.8  # use 0.5 for greedy, 0.75 for normal
   nms_threshold: 0.4
   nms: True
+  allow_resize: True
   active: True
 
 
@@ -99,6 +101,7 @@ retinaface:
   threshold: 0.8
   post_processor: retinaface_insightface
   algorithm: net3
+  allow_resize: True
   active: True
 
 # -----------------------------------------------------------------------------
@@ -124,6 +127,7 @@ ssdface:
   processor: ssd
   output: bbox
   threshold: 0.8
+  allow_resize: True
   active: True
 
 
@@ -154,6 +158,7 @@ ssdface:
 #   threshold: 0.8  # use 0.5 for greedy, 0.75 for normal
 #   nms_threshold: 0.4
 #   nms: True
+#   allow_resize: True
 #   active: True
 
 

@@ -17,16 +17,20 @@ from vframe.utils.click_utils import processor
   multiple=True,
   help='Data key for ROIs')
 @click.option('--fac', 'opt_factor', 
-  default=1.0,
+  default=0.5,
   show_default=True,
   help='Strength to apply redaction filter')
+@click.option('--iters', 'opt_iters', 
+  default=2,
+  show_default=True,
+  help='Blur iterations')
 @click.option('--expand', 'opt_expand', 
   default=0.25,
   show_default=True,
   help='Percentage to expand')
 @processor
 @click.pass_context
-def cli(ctx, pipe, opt_data_keys, opt_factor, opt_expand):
+def cli(ctx, pipe, opt_data_keys, opt_factor, opt_iters, opt_expand):
   """Blurs BBoxes"""
   
   from vframe.settings import app_cfg
@@ -51,7 +55,8 @@ def cli(ctx, pipe, opt_data_keys, opt_factor, opt_expand):
     pipe_item = yield
     header = ctx.obj['header']
     im = pipe_item.get_image(types.FrameImage.DRAW)
-
+    dim = im.shape[:2][::-1]
+    
     # get data keys
     if not opt_data_keys:
       data_keys = header.get_data_keys()
@@ -70,10 +75,11 @@ def cli(ctx, pipe, opt_data_keys, opt_factor, opt_expand):
       # blur data
       if item_data:
         for obj_idx, detection in enumerate(item_data.detections):
-          bbox_norm = detection.bbox.expand_per(opt_expand)
+          bbox = detection.bbox.expand_per(opt_expand).redim(dim)
 
           # TODO: handle segmentation mask
-          im = im_utils.blur_roi(im, bbox_norm)
+          for i in range(opt_iters):
+            im = im_utils.blur_roi(im, bbox)
 
 
       # resume pipe stream    

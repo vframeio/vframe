@@ -1,10 +1,10 @@
+*This module is still under development. Code is subject to major changes.*
+
 # Model Zoo
 
-The Model Zoo is a collection of nueral network computer vision models useful for inferring metadata about videos. It includes object detection, image classification, semantic segmentation, and superresolution with many more to come from VFRAME and contributors.
+The Model Zoo is a collection of neural network computer vision models useful for inferring metadata about videos. It includes object detection, image classification, semantic segmentation, and superresolution with many more to come from VFRAME and contributors.
 
-For compatability and long term support, the Model Zoo aims to only use models that are compatible with OpenCV. For now this includes Caffe, Darknet, and TensorFlow models. More work is needed to port PyTorch/ONNX models. A few other model types are included for comparison (eg MXNet).
-
-If you would like to see your models included in the VFRAME Model Zoo, contact us on keybase @vframeio.
+For compatibility and long term support, the Model Zoo aims to only use models that are compatible with OpenCV. For now this includes Caffe, Darknet, and TensorFlow models. More work is needed to port PyTorch/ONNX models. A few other model types are included for comparison (eg MXNet).
 
 
 ## Testing and Benchmarking
@@ -32,22 +32,26 @@ If you would like to see your models included in the VFRAME Model Zoo, contact u
 ./cli.py modelzoo fps -m caffe_imagenet_bvlc_alexnet
 
 # benchmark multiple models to csv
-./cli.py modelzoo fps -m caffe_imagenet_bvlc_alexnet -m caffe_imagenet_bvlc_alexnet -o ../data/modelzoo_fps.csv
-
-# benchmark multiple models to csv using custom sizes, with gpu, for 100 iterations.  
-./cli.py modelzoo fps -m caffe_imagenet_bvlc_alexnet -m caffe_imagenet_bvlc_alexnet --size 512 512 --gpu --iters 100 -o ../data/modelzoo_fps_multi.csv
+./cli.py modelzoo fps \
+    -m caffe_imagenet_bvlc_alexnet \
+    -m caffe_imagenet_bvlc_googlenet \
+    -m caffe_imagenet_bvlc_googlenet \
+    -m caffe_places365_vgg16 \
+    -m caffe_places365_imagenet1000_vgg16 \
+    -o ../data/modelzoo_fps.csv
 ```
 
 
 ## Adding new models:
 
-Config files for object detection will need the unconnected layers. Run the layers script to get a list of connected or unconnected layers and their output size:
-```
-# connected layers
-./cli.py modelzoo layers --connected -m yolov3_coco
+Config files for object detection will need the unconnected layers. Run the layers script to get a list of connected layers and their output size. For object detection use `--type unconnected`. For classification networks use `--type connected`. 
 
-# unconnected layers
-./cli.py modelzoo layers --unconnected -m yolov3_coco
+```
+# object detection connected layers
+./cli.py modelzoo layers -m yolov3_coco --type unconnected
+
+# image classification unconnected layers
+./cli.py modelzoo layers -m caffe_places365_googlenet --type connected
 ```
 
 
@@ -55,16 +59,16 @@ Config files for object detection will need the unconnected layers. Run the laye
 
 Inference on CPUs will likely be slow. To benchmark speeds on your computer run:
 ```
-# Benchmark AlexNet Places365 classifications
-#./cli.py modelzoo benchmark -m  caffe_places365_alexnet --gpu  # for GPU
-#./cli.py modelzoo benchmark -m caffe_places365_alexnet --cpu  # for CPU
+# Benchmark AlexNet Places365 classifications for gpu/cpu
+./cli.py modelzoo fps -m  caffe_places365_alexnet --gpu
+./cli.py modelzoo fps -m caffe_places365_alexnet --cpu
 
-# Benchmark YOLO V3 COCO
-#./cli.py modelzoo benchmark -m yolov3_coco --gpu  # for GPU
-#./cli.py modelzoo benchmark -m yolov3_coco --cpu  # for CPU
+# Benchmark YOLO V3 COCO for gpu/cpu
+./cli.py modelzoo fps -m yolov3_coco --gpu
+./cli.py modelzoo fps -m yolov3_coco --cpu
 
 # Output to CSV
-#./cli.py modelzoo benchmark -m yolov3_coco --cpu  # for CPU
+./cli.py modelzoo fps -m yolov3_coco --cpu  # for CPU
 ```
 
 
