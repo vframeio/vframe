@@ -7,7 +7,7 @@ The Model Zoo is a collection of neural network computer vision models useful fo
 For compatibility and long term support, the Model Zoo aims to only use models that are compatible with OpenCV. For now this includes Caffe, Darknet, and TensorFlow models. More work is needed to port PyTorch/ONNX models. A few other model types are included for comparison (eg MXNet).
 
 
-## Testing and Benchmarking
+## ModelZoo Utility Scripts
 
 ```
 # list modelzoo commands
@@ -20,24 +20,24 @@ For compatibility and long term support, the Model Zoo aims to only use models t
 ./cli.py modelzoo list -g output
 
 # download model (models also auto-download)
-./cli.py modelzoo download -m caffe_imagenet_bvlc_alexnet
+./cli.py modelzoo download -m caffe-imagenet-bvlc-alexnet
 
 # download all models
 ./cli.py modelzoo download --all
 
 # run basic inference test
-./cli.py modelzoo test -m caffe_imagenet_bvlc_alexnet
+./cli.py modelzoo test -m caffe-imagenet-bvlc-alexnet
 
 # benchmark model fps
-./cli.py modelzoo fps -m caffe_imagenet_bvlc_alexnet
+./cli.py modelzoo fps -m caffe-imagenet-bvlc-alexnet
 
 # benchmark multiple models to csv
 ./cli.py modelzoo fps \
-    -m caffe_imagenet_bvlc_alexnet \
-    -m caffe_imagenet_bvlc_googlenet \
-    -m caffe_imagenet_bvlc_googlenet \
-    -m caffe_places365_vgg16 \
-    -m caffe_places365_imagenet1000_vgg16 \
+    -m caffe-imagenet-bvlc-alexnet \
+    -m caffe-imagenet-bvlc-googlenet \
+    -m caffe-imagenet-bvlc-googlenet \
+    -m caffe-places365-vgg16 \
+    -m caffe-places365-imagenet1k-vgg16 \
     -o ../data/modelzoo_fps.csv
 ```
 
@@ -83,5 +83,5 @@ Inference on CPUs will likely be slow. To benchmark speeds on your computer run:
 If you want to host your own Model Zoo distribution server, use the upload script to synchronize models to your S3 server:
 ```
 # upload (requires S3 account credentials in your .env)
-./cli.py upload -m caffe_imagenet_bvlc_alexnet
+./cli.py upload -m caffe-imagenet-bvlc-alexnet
 ```

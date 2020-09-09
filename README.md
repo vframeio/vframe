@@ -41,38 +41,33 @@ pip uininstall opencv-python -y
 
 
 ## Run ModelZoo Test Script
+
 ```
 # CD to CLI root
 cd vframe_cli
 
 # Test a model (auto-downloads model)
-./cli.py modelzoo test -m yolov3_coco
+./cli.py modelzoo test -m yolo3-coco
 
 # Speed test model for 20 iterations
-./cli.py modelzoo fps -m yolov3_coco --iters 20 --cpu  # use CPU
-./cli.py modelzoo fps -m yolov3_coco --iters 20 --gpu  # use GPU if available
+./cli.py modelzoo fps -m yolo3-coco --iters 20 --cpu  # use CPU
+./cli.py modelzoo fps -m yolo3-coco --iters 20 --gpu  # use GPU if available
 ```
 
 Read more about the [ModelZoo](docs/modelzoo.md)
 
-## Detect Basic Objects:
-```
-# Detect COCO objects in an image
-./cli.py pipe import -i ../data/media/examples/horse.jpg \
-              detect -m yolov3_coco \
-              draw \
-              display
-```
+## Detect Basic Objects
 
-Read more about [classification and detection](docs/examples.md)
+Under development.
 
 ## Blur Faces
 ```
 # Detect and blur faces in directory of images
-./cli.py pipe open -i path/to/your/images/ --exts jpg \
-              detect -m yoloface \
-              blur \
-              save_image -o path/to/your/images_redacted/
+./cli.py pipe \
+    open -i path/to/input/ \
+    detect -m yoloface \
+    blur \
+    save_image -o path/to/output/
 ```
 
 Read more about [redaction](docs/redaction.md)
@@ -83,3 +78,10 @@ Plugins extend the core scripts. The plugins are located inside `vframe/vframe_c
 
 Read more about [VFRAME plugins](docs/plugins.md)
 
+## Acknowledgments
+
+VFRAME development during 2019-2021 is being supported with a three-year grant by [Meedan](https://meedan.com) / Check Global. With this grant, we have developed tools to integrate computer vision in to Check's infrastructure, allowing computer vision to be deployed in the effort to verify breaking news, and carried out research and development of the synthetic data generation and training environment.
+
+VFRAME development in 2018 and 2019 was supported with a grant from the German Federal Ministry of Education and Research (Bundesministerium für Bildung und Forschung) and the [Prototype Fund](https://prototypefund.de). This funding allowed VFRAME to research computer vision applications in human rights, prototype annotation and processing applications, implement a large-scale visual search engine, and prototype the synthetic 3D data generation environment.
+
+Read more about supporting VFRAME on the website [vframe.io/about](https://vframe.io/about)
