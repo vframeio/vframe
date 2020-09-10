@@ -15,6 +15,10 @@ git clone https://github.com/vframeio/vframe
 # Create Conda environment
 conda env create -f environment-linux.yml  # Linux CPU (Another step required for GPU)
 #conda env create -f environment-osx.yml  # MacOS CPU
+
+# Copy and edit .env variables
+cp .env-sample .env
+# nano .env, and if needed update variables for your system
 ```
 
 Rebuild OpenCV for GPU DNN inference:
