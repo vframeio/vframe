@@ -46,8 +46,14 @@ pip uininstall opencv-python -y
 # CD to CLI root
 cd vframe_cli
 
+# Show list of commands
+./cli.py -h
+
+# Show list of commands in subgroup
+./cli.py utils.modelzoo
+
 # Test a model (auto-downloads model)
-./cli.py modelzoo test -m yolo3-coco
+./cli.py utils.modelzoo test -m yolo3-coco
 
 # Speed test model for 20 iterations
 ./cli.py utils.modelzoo fps -m yolo3-coco --iters 20 --cpu  # use CPU
