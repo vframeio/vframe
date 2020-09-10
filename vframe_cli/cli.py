@@ -143,7 +143,6 @@ for plugin_script in plugin_group.scripts:
       
     fp_module = fp_py.replace('/', '.').replace('.py','')
     try:
-      print(fp_module)
       module = importlib.import_module(fp_module)
       fn = Path(fp_py).stem
       cli.add_command(module.cli, name=fn)
