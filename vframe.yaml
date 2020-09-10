@@ -29,49 +29,78 @@ modelzoo:
 
 plugins:
 
+  
   # ---------------------------------------------------------------------------
-  # Pipe stream processor
+  # Pipe processor
   # ---------------------------------------------------------------------------
   - name: pipe
-    chain: True
+    description: Image processing pipeline
+    pipe: True
     scripts:
       - filepath: commands/pipe
 
   # ---------------------------------------------------------------------------
   # Utility scripts
   # ---------------------------------------------------------------------------
-  - name: utils
+  - name: utils.convert
+    description: Conversion utility scripts
     scripts:
-      - filepath: commands/utils
+      - filepath: commands/utils/convert
+
+  - name: utils.cvat
+    description: CVAT utility scripts
+    scripts:
+      - filepath: commands/utils/cvat
+
+  - name: utils.modelzoo
+    description: ModelZoo utility scripts
+    scripts:
+      - filepath: commands/utils/modelzoo
+      - filepath: plugins/vframe_modelzoo_plugin/vframe_modelzoo/commands
+  - name: utils.plot
+    description: Data plotting utilities
+    scripts:
+      - filepath: commands/utils/plot
+  - name: utils.dev
+    description: Development, admin utilities
+    scripts:
+      - filepath: commands/utils/utils
 
   # ---------------------------------------------------------------------------
-  # ModelZoo manager
+  # Examples, templates
   # ---------------------------------------------------------------------------
-  - name: modelzoo
+  - name: templates
+    description: Example scripts to get started
     scripts:
-      - filepath: commands/modelzoo
-
-  # ---------------------------------------------------------------------------
-  # CVAT manager
-  # ---------------------------------------------------------------------------
-  - name: cvat
-    scripts:
-      - filepaths: commands/cvat
-
-  # ---------------------------------------------------------------------------
-  # Template scripts
-  # ---------------------------------------------------------------------------
-  - name: template
-    scripts:
-     - filepath: commands/template
-  - name: template.pipe
+      - filepath: commands/templates
+  - name: templates.pipe
+    description: Example pipe scripts to get started
     pipe: True
     scripts:
-      - filepath: commands/template/pipe
+      - filepath: commands/templates/pipe
+
+
+  
+  # ---------------------------------------------------------------------------
+  # Plugin Template
+  # ---------------------------------------------------------------------------
+  
+  # - name: plugins.template
+  #   scripts:
+  #     - filepath: plugins/vframe_template_plugin/vframe_template/commands/utils/
+  # - name: plugins.template.pipe
+  #   pipe: True
+  #   scripts:
+  #     - filepath: plugins/vframe_template_plugin/vframe_template/commands/pipe/
+
 
   # ---------------------------------------------------------------------------
   # Search
   # ---------------------------------------------------------------------------
-  #- name: search
+  
+  #- name: plugins.search
   #  scripts:
   #    - filepath: plugins/vframe_search_plugin/vframe_search/commands/
+
+
+

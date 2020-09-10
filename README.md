@@ -50,8 +50,8 @@ cd vframe_cli
 ./cli.py modelzoo test -m yolo3-coco
 
 # Speed test model for 20 iterations
-./cli.py modelzoo fps -m yolo3-coco --iters 20 --cpu  # use CPU
-./cli.py modelzoo fps -m yolo3-coco --iters 20 --gpu  # use GPU if available
+./cli.py utils.modelzoo fps -m yolo3-coco --iters 20 --cpu  # use CPU
+./cli.py utils.modelzoo fps -m yolo3-coco --iters 20 --gpu  # use GPU if available
 ```
 
 Read more about the [ModelZoo](docs/modelzoo.md)

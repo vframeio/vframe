@@ -35,14 +35,30 @@ from vframe.utils import log_utils
 # -----------------------------------------------------------------------------
 
 import argparse
+def choicesDescriptions(plugins):
+  """Generates custom help menu
+  """
+  clr_h = '\033[1m\033[94m'
+  clr_t = '\033[0m'
+  sp_max = 30 + len(clr_h) + len(clr_t)
+  t = ['Command options:']
+  for plugin in plugins:
+    t_cli = f'{clr_h}./cli.py {plugin.name}{clr_t}'
+    sp = sp_max - len(t_cli)
+    t.append(f'\t{t_cli}{" "*sp}{plugin.description}')
+  t = "\n".join(t)
+  return t
 
 # intercept the first argument using argparse to select command group
 argv_tmp = sys.argv
 sys.argv = sys.argv[:2]
-ap = argparse.ArgumentParser(prog='\033[1m\033[94m./cli.py\033[0m',
-                              description='VFRAME',
-                              formatter_class=argparse.RawDescriptionHelpFormatter)
-ap.add_argument('commands', choices=plugins_cfg.plugins.keys(), default='pipe')
+ap = argparse.ArgumentParser(prog='./cli.py [command]',
+  usage='./cli.py [command]',
+  description='\033[1m\033[94mVFRAME CLI (beta)\033[0m',
+  formatter_class=argparse.RawDescriptionHelpFormatter,
+  epilog=choicesDescriptions(plugins_cfg.plugins.plugins))
+ap.add_argument('commands', choices=plugins_cfg.plugins.keys(), 
+metavar='[command]')
 args = ap.parse_args()
 sys.argv = argv_tmp
 sys.argv.pop(1)  # remove arg
@@ -127,6 +143,7 @@ for plugin_script in plugin_group.scripts:
       
     fp_module = fp_py.replace('/', '.').replace('.py','')
     try:
+      print(fp_module)
       module = importlib.import_module(fp_module)
       fn = Path(fp_py).stem
       cli.add_command(module.cli, name=fn)

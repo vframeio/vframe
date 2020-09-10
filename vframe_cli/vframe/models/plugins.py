@@ -23,6 +23,7 @@ class Plugin:
   scripts: List[PluginScriptGroup]
   pipe: bool=False
   active: bool=True
+  description: str=''
 
 
 

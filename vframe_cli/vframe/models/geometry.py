@@ -441,6 +441,10 @@ class BBox:
   # ---------------------------------------------------------------------------
 
   @classmethod
+  def from_xywh(cls, x, y, w, h, dw, dh):
+    return cls(x, y, x + w , y + h, dw, dh)
+
+  @classmethod
   def from_xywh_norm(cls, x, y, w, h, dw, dh):
     xyxy = tuple(np.array((x, y, x + w, y + h)) * np.array([dw, dh, dw, dh]))
     return cls(x, y, x + w, y + h, dw, dh)
@@ -492,6 +496,7 @@ class BBox:
 
   @property
   def w_norm(self):
+    n = 0 if self.dw is 0 else self.w / self.dw
     return self.w / self.dw
 
   @property
@@ -519,7 +524,8 @@ class BBox:
 
   @property
   def h_norm(self):
-    return self.h / self.dw
+    n = 0 if self.dh is 0 else self.h / self.dh
+    return n
 
   @property
   def height_norm(self):

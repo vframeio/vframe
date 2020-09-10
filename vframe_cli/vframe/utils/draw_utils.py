@@ -235,7 +235,7 @@ def draw_bbox(im, bbox, color=None, stroke=None, expand=None,
   bbox = bbox if expand is None else bbox.expand(expand)
 
   # init font styles and canvas
-  stroke = app_cfg.DEFAULT_stroke if stroke is None else stroke
+  stroke = app_cfg.DEFAULT_STROKE_WEIGHT if stroke is None else stroke
   canvas = ImageDraw.ImageDraw(im)
 
   # draw bbox

@@ -24,7 +24,7 @@ from vframe.settings import app_cfg
 log = app_cfg.LOG
 
 # get list of active modelzoo files
-vframe_cfg = load_yaml(app_cfg.FP_VFRAME_CONFIG)
+vframe_cfg = load_yaml(app_cfg.FP_VFRAME_YAML)
 
 # iterate all modelzoo yamls
 modelzoo_yaml = {}

@@ -25,4 +25,4 @@ from vframe.utils.file_utils import load_yaml
 # -----------------------------------------------------------------------------
 
 # create click group commands
-plugins = load_yaml(app_cfg.FP_VFRAME_CONFIG, data_class=Plugins)
+plugins = load_yaml(app_cfg.FP_VFRAME_YAML, data_class=Plugins)

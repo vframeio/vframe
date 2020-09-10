@@ -41,8 +41,8 @@ SELF_CWD = os.path.dirname(os.path.realpath(__file__))  # this file
 DIR_PROJECT_ROOT = str(Path(SELF_CWD).parent.parent.parent)
 
 # source .env vars
-fp_env = join(DIR_PROJECT_ROOT, '.env')
-load_dotenv(dotenv_path=fp_env)
+fp_env = Path(DIR_PROJECT_ROOT) / '.env'
+load_dotenv(dotenv_path=fp_env, verbose=True)
 
 # directories
 DIR_DATA_STORE = os.getenv("DATA_STORE", join(DIR_PROJECT_ROOT, 'data'))
@@ -66,8 +66,7 @@ FN_CSV_SUMMARY  = 'summary.csv'
 FN_LABEL_COLORS = 'label_colors.json'
 
 # VFRAME config file
-FP_VFRAME_CONFIG = join(DIR_PROJECT_ROOT, os.getenv("FP_VFRAME_CONFIG", "vframe.yaml"))
-LOG.debug(f'VFRAME config: {FP_VFRAME_CONFIG}')
+FP_VFRAME_YAML = join(DIR_PROJECT_ROOT, os.getenv("FP_VFRAME_YAML", "vframe.yaml"))
 
 # Cmake config files
 FP_CMAKE_OPENCV = join(DIR_DATA_STORE, 'configs/cmake/opencv.yaml')
