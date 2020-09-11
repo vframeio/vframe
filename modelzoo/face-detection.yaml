@@ -30,7 +30,7 @@ retinafacelight:
   #model: version-slim-640_simplified.onnx
   config: RFB-320.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [127, 127, 127]
   scale: 0.0078125  # 1/128.0
   width: 320
@@ -59,7 +59,7 @@ yoloface:
   model: yolov4_40000.weights
   config: yolov4_deploy.cfg
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   layers: ['yolo_139', 'yolo_150', 'yolo_161']
   mean: [0,0,0]
   scale: 0.00392156862745098  # 1/255
@@ -92,7 +92,7 @@ retinaface:
   model: R50-0000.params
   config: R50-symbol.json  # not used
   labels: labels.txt
-  license: LICENSE.md
+  license: LICENSE.txt
   # processor
   processor: retinaface_mxnet
   output: bbox
@@ -116,7 +116,7 @@ ssdface:
   model: opencv_face_detector.caffemodel
   config: opencv_face_detector.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 177, 123]
   scale: 1.0
   width: 480

@@ -23,7 +23,7 @@ caffe-imagenet-bvlc-googlenet:
   model: bvlc_googlenet.caffemodel
   config: bvlc_googlenet.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -45,7 +45,7 @@ caffe-imagenet-bvlc-alexnet:
   model: bvlc_alexnet.caffemodel
   config: bvlc_alexnet.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -67,7 +67,7 @@ caffe-imagenet-bvlc:
   model: bvlc_reference_caffenet.caffemodel
   config: bvlc_reference_caffenet.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224

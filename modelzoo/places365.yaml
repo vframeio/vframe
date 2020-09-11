@@ -24,7 +24,7 @@ caffe-places365-googlenet:
   model: googlenet_places365.caffemodel
   config: googlenet_places365.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -47,7 +47,7 @@ caffe-places365-alexnet:
   model: alexnet_places365.caffemodel
   config: alexnet_places365.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -71,7 +71,7 @@ caffe-places365-vgg16:
   model: vgg16_places365.caffemodel
   config: vgg16_places365.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -94,7 +94,7 @@ caffe-places365-imagenet1k-vgg16:
   model: vgg16_hybrid1365.caffemodel
   config: vgg16_hybrid1365.prototxt
   labels: labels.txt
-  license: license.md
+  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
