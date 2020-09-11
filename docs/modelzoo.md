@@ -70,3 +70,12 @@ If you want to host your own Model Zoo distribution server, use the upload scrip
 # upload (requires S3 account credentials in your .env)
 ./cli.py upload -m caffe-imagenet-bvlc-alexnet
 ```
+
+
+## Converting TensorFlow Models to OpenCV DNN
+
+Under development. Further reading:
+- https://medium.com/@sathualab/how-to-use-tensorflow-graph-with-opencv-dnn-module-3bbeeb4920c5
+- https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/freeze_graph.py
+- https://github.com/nvnnghia/opencv-Image_classification
+- https://github.com/opencv/opencv/wiki/TensorFlow-Object-Detection-API
