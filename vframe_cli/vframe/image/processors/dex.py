@@ -11,9 +11,8 @@ import numpy as np
 import cv2 as cv
 
 from vframe.settings import app_cfg
-from vframe.models.geometry import BBoxNorm, BBox
 from vframe.image.processors.base import ClassificationProc
-from vframe.models.cvmodels import ClassifyResult, ClassifyResults
+from vframe.models.cvmodels import ClassifyResult
 from vframe.utils import im_utils
 
 class DEXProc(ClassificationProc):
