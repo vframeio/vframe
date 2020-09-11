@@ -192,7 +192,7 @@ def create_random_im(w, h, c=3, low=0, high=255, dtype=np.uint8):
 # -----------------------------------------------------------------------------
 
 def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR):
-  """Resizes image
+  """FIXME: Resizes image, scaling issues with floating point numbers
   :param im: (nump.ndarray) image
   :param width: int
   :param height: int
@@ -204,18 +204,22 @@ def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR)
     im_width, im_height = im.shape[:2][::-1]
     if width and height:
       if force_fit:
-        scale_x = width / im_width
-        scale_y = height / im_height
+        #scale_x = width / im_width
+        #scale_y = height / im_height
+        w, h = width, height
       else:
         scale_x = min(width / im_width, height / im_height)
         scale_y = scale_x
+        w, h = int(scale_x * im_width), int(scale_y * im_height)
     elif width and not height:
       scale_x = width / im_width
       scale_y = scale_x
+      w, h = int(scale_x * im_width), int(scale_y * im_height)
     elif height and not width:
       scale_y = height / im_height
       scale_x = scale_y
-    w, h = int(scale_x * im_width), int(scale_y * im_height)
+      w, h = int(scale_x * im_width), int(scale_y * im_height)
+
     im = cv.resize(im, (w ,h), interpolation=interp)
     return im
 
