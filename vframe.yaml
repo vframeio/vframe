@@ -14,6 +14,9 @@ modelzoo:
   # COCO object detection
   - filepath: 'modelzoo/coco.yaml'
   
+  # Open Images object detection
+  - filepath: 'modelzoo/openimages.yaml'
+
   # ImageNet for feature extraction
   - filepath: 'modelzoo/imagenet.yaml'
   
