@@ -259,13 +259,27 @@ def write_json(data, fp_out, minify=True, ensure_path=True, sort_keys=True, verb
 
 
 def write_csv(data, fp_out, header=None):
-  """ """
+  """Writes CSV file
+  :param data: (str) list of lists, or dict (writes list of key-value pairs)
+  :param fp_out: (str) filepath
+  :param header: (list) column headings """
   with open(fp_out, 'w') as fp:
-    writer = csv.DictWriter(fp, fieldnames=header)
-    writer.writeheader()
     if type(data) is dict:
+      writer = csv.DictWriter(fp, fieldnames=["key","value"])
+      writer.writeheader()
       for k, v in data.items():
-        fp.writerow('{},{}'.format(k, v))
+        writer.writerow([ k, v ])
+    elif type(data[0]) is dict:
+      writer = csv.DictWriter(fp, fieldnames=header)
+      writer.writeheader()
+      for row in data:
+        writer.writerow(data)
+    else:
+      writer = csv.writer(fp)
+      if header is not None:
+        writer.writerow(header)
+      for row in data:
+        writer.writerow(row)
 
 
 def write_file(data, fp_in, **kwargs):
