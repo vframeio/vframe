@@ -2,16 +2,6 @@
 
 This OpenCV installation guide is for Linux Ubuntu 18. It should also work for 16 and 20.
 
-## Clone OpenCV and OpenCV Contrib
-
-```
-cd vframe/3rdparty
-git clone https://github.com/opencv/opencv
-git clone https://github.com/opencv/opencv_contrib
-```
-
-## Install Dependencies
-
 First, install dependencies:
 ```
 sudo apt install -y \
@@ -28,6 +18,29 @@ sudo apt install -y \
 	libtiff-dev \
 	libwebp-dev
 ```
+
+Rebuild OpenCV for GPU DNN inference:
+```
+# pip wheels for opencv with CUDA DNN are not available due to NVIDIA licensing issues. Temporary workaround is to rebuild OpenCV with CUDA support then remove the pip-installed opencv packages
+
+# clone opencv and contrib
+git clone https://github.com/opencv 3rdparty/
+git clone https://github.com/opencv_contrib 3rdparty/
+
+# use vframe cmake generator
+./cli.py dev cmake -o ../3rdparty/opencv/build/build.sh
+cd ../3rdparty/opencv/build/
+
+# run build script
+sh ../3rdparty/opencv/build/build.sh
+
+# if build script runs OK then run 
+sudo make install -j $(nproc)
+
+# uninstall pip opencv
+pip uininstall opencv-python -y
+```
+
 
 ## Example build file
 
@@ -143,7 +156,8 @@ echo "sudo make install -j $(nproc)"
 echo "-----------------------------------------------------------"
 ```
 
-Which wil
+
+Which will create something similar to the output below:
 
 ```
 --
