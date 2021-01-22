@@ -1,9 +1,9 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
 # Copyright (c) 2020 Adam Harvey and VFRAME
-# https://vframe.io 
+# https://vframe.io
 #
 #############################################################################
 
@@ -33,7 +33,7 @@ class DNN:
   allow_resize: bool=False
   # model file locations
   config: str=''  # filename prototxt, pbtxt, .cfg, etc
-  labels: str = ''  # filename path to labels.txt line-delimeted
+  labels: str = 'labels.txt'  # filename path to labels.txt line-delimeted
   # preprocessing
   mean: List[float] = field(default_factory=lambda: [])
   scale: float=0.0
@@ -50,13 +50,15 @@ class DNN:
   dimensions: int=None
   # post-processing
   threshold: float=0.8  # detection confidence threshold
+  iou: float=0.45  # intersection over union
   nms: bool = False  # use non-maximum suppression
   nms_threshold: float=0.4  # nms threshold
   # metadata
   credit: str=''  # how credit should be displayed
   repo: str=''  # author/repo URL
-  license: str=''  # filepath to license
+  license: str='LICENSE.txt'  # filepath to license
   license_tag: str=''  # eg "mit", see https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository#choosing-the-right-license
+  #device: List[int] = field(default_factory=lambda: [-1])
 
   model_exists: bool=False
   config_exists: bool=False
@@ -98,6 +100,13 @@ class DNN:
     else:
       self.fp_license = None
 
+    # # update device
+    # if not self.device or any(self.device) == -1:
+    #   self.device = -1  # CPU
+    # else:
+    #   devices_available = os.getenv('CUDA_VISIBLE_DEVICES')
+    # device: 0  # gpu FIXME conflicts with gpu property
+
 
   def override(self, gpu=None, size=(None, None), threshold=None):
     if gpu is not None:
@@ -123,11 +132,11 @@ class DNN:
     self.backend = 'DEFAULT'
     self.target = 'DEFAULT'
 
-      
+
   @property
   def size(self):
     return (self.width, self.height)
-  
+
   @property
   def dnn_backend(self):
     if 'CUDA' in self.backend and not app_cfg.CUDA_ENABLED:

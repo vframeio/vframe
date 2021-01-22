@@ -59,4 +59,4 @@ class MaskRCNNProc(NetProc):
     if self.dnn_cfg.nms:
       detect_results = self._nms(detect_results, boxes, conf)
 
-    return SegmentResults(detect_results, self._perf_ms())
+    return SegmentResults(detect_results)

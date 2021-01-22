@@ -9,52 +9,110 @@ For compatibility and long term support, the Model Zoo aims to only use models t
 
 ## ModelZoo Utility Scripts
 
+List and download models
 ```
 # list modelzoo commands
-./cli.py utils.modelzoo
+./cli.py modelzoo
 
 # list models
-./cli.py utils.modelzoo list
+./cli.py modelzoo list
 
 # list models and group by attribute
-./cli.py utils.modelzoo list -g output
+./cli.py modelzoo list -g output
 
 # download model (models also auto-download)
-./cli.py utils.modelzoo download -m caffe-imagenet-bvlc-alexnet
+./cli.py modelzoo download -m imagenet_alexnet
 
 # download all models
-./cli.py utils.modelzoo download --all
+./cli.py modelzoo download --all
 
-# run basic inference test
-./cli.py utils.modelzoo test -m caffe-imagenet-bvlc-alexnet
-
-# benchmark model fps
-./cli.py utils.modelzoo fps -m caffe-imagenet-bvlc-alexnet
-
-# benchmark model fps to csv
-./cli.py utils.modelzoo fps -m caffe-imagenet-bvlc-alexnet -o ~/Downloads/fps.csv
-
-# benchmark multiple models to csv
-./cli.py utils.modelzoo fps \
-    -m caffe-imagenet-bvlc-alexnet \
-    -m caffe-imagenet-bvlc-googlenet \
-    -m caffe-imagenet-bvlc-googlenet \
-    -m caffe-places365-vgg16 \
-    -m caffe-places365-imagenet1k-vgg16 \
-    -o ~/Downloads/fps.csv
 ```
 
+Test models
+```
+# run basic inference test
+./cli.py modelzoo test -m imagenet_alexnet
+
+# benchmark model fps
+./cli.py modelzoo benchmark -m imagenet_alexnet
+
+# benchmark model fps to csv
+./cli.py modelzoo benchmark -m imagenet_alexnet -o ~/Downloads/benchmark.csv
+
+# benchmark multiple models to csv
+./cli.py modelzoo benchmark \
+    -m imagenet_alexnet \
+    -m imagenet_googlenet \
+    -m imagenet_googlenet \
+    -m places365_vgg16 \
+    -m places365_imagenet_vgg16 \
+    -o ~/Downloads/benchmark.csv
+```
+
+
+## Benchmarking
+
+Multi-model multi-size benchmark
+```
+# generate data
+./cli.py modelzoo benchmark \
+    -m yoloface \
+    -m ssdface \
+    -m retinaface \
+    --size 600 600 \
+    --size 800 800 \            
+    --size 1024 1024 \
+    -o ~/Downloads/benchmark.csv
+```
+
+
+Plot benchmark
+```
+# plot
+/cli.py plot benchmark -i ~/Downloads/benchmark.csv --type bar -f --xlabel-size 10
+```
+
+![](assets/modelzoo-benchmark-bar.png)*Example bar plot comparing face detector models at multiple sizes using GTX 1080 Ti*
+
+```
+# NB: if using YOLO models add the "--user-size" flag
+# this avoids size discrepancies caused by YOLO auto-adjusting DNN inference sizes
+./cli.py modelzoo plot-benchmark -i ~/Downloads/benchmark.csv --type line -f --xlabel-size 10 --user-size
+```
+
+![](assets/modelzoo-benchmark-line.png)*Example line plot comparing face detector models at multiple sizes using GTX 1080 Ti*
+
+Compare benchmarks for several classification models
+```
+/cli.py modelzoo benchmark \
+    -m imagenet_caffenet \
+    -m imagenet_alexnet \
+    -m imagenet_googlenet \
+    -m places365_googlenet \
+    -m places365_alexnet \
+    -m places365_vgg16 \
+    -m places365_imagenet_vgg16 \
+    --iters 50 \
+    -o ~/Downloads/benchmark.csv
+```
+
+Plot the classification benchmarks using bar plot
+```
+/cli.py plot benchmark -i ~/Downloads/benchmark.csv --type bar -f --xlabel-size 9
+```
+
+![](assets/modelzoo-benchmark-classification.png)*Example bar plot comparing classification models using GTX 1080 Ti*
 
 ## Adding new models:
 
-Config files for object detection will need the unconnected layers. Run the layers script to get a list of connected layers and their output size. For object detection use `--type unconnected`. For classification networks use `--type connected`. 
+Configuration files for object detection need the unconnected layers listed in the ModelZoo YAML. Run the layers script to get a list of connected layers and their output size. For object detection models use `--type unconnected`. For classification models use `--type connected`. 
 
 ```
 # object detection connected layers
-./cli.py utils.modelzoo layers -m yolo3-coco --type unconnected
+./cli.py modelzoo layers -m coco --type unconnected
 
 # image classification unconnected layers
-./cli.py utils.modelzoo layers -m caffe-places365-googlenet --type connected
+./cli.py modelzoo layers -m places365_googlenet --type connected
 ```
 
 
@@ -68,7 +126,7 @@ Config files for object detection will need the unconnected layers. Run the laye
 If you want to host your own Model Zoo distribution server, use the upload script to synchronize models to your S3 server:
 ```
 # upload (requires S3 account credentials in your .env)
-./cli.py upload -m caffe-imagenet-bvlc-alexnet
+./cli.py upload -m imagenet_alexnet
 ```
 
 

@@ -21,11 +21,11 @@ color_styles = ['random', 'preset', 'fixed']
   help='Name of data key for ROIs')
 @click.option('--bbox/--no-bbox', 'opt_bbox', is_flag=True, default=True,
   help='Draw bbox')
-@click.option('--class-label/--no-class-label', 'opt_label', is_flag=True, default=True,
+@click.option('--label-class/--no-label-class', 'opt_label', is_flag=True, default=True,
   help='Draws label')
 @click.option('--data-label/--no-data-label', 'opt_key', is_flag=True, default=False,
   help='Draws data key')
-@click.option('--confidence/--no-confidence', 'opt_conf', is_flag=True, default=False,
+@click.option('--label-confidence/--no-label-confidence', 'opt_conf', is_flag=True, default=False,
   help='Draws confidence score text')
 @click.option('--mask/--no-mask', 'opt_mask', is_flag=True, default=False,
   help='Draws mask (if available)')
@@ -39,12 +39,12 @@ color_styles = ['random', 'preset', 'fixed']
 @click.option('--mask-alpha', 'opt_mask_alpha', default=0.6,
   help='Mask color weight')
 @click.option('-c', '--color', 'opt_color', 
-  type=(int, int, int), default=(None, None, None),
+  type=(int, int, int), default=(0, 0, 255),
   help='Color in RGB int (eg 0 255 0)')
 @click.option('--color-source', 'opt_color_source', default='random', 
   type=click.Choice(color_styles),
   help="Assign color to bbox and label background")
-@click.option('--label-size', 'opt_size_label', default=16,
+@click.option('--label-size', 'opt_size_label', default=12,
   help='Text size')
 @click.option('--label-color', 'opt_color_label', 
   type=(int, int, int), default=(None, None, None),
@@ -55,13 +55,15 @@ color_styles = ['random', 'preset', 'fixed']
 @click.option('--label-index', 'opt_label_index', 
   is_flag=True,
   help='Label padding')
+@click.option('-t', '--threshold', 'opt_threshold', default=0.0,
+  help='Minimum detection confidence to draw')
 @processor
 @click.pass_context
 def cli(ctx, pipe, opt_data_keys, opt_bbox, opt_label, opt_key, opt_conf, 
   opt_mask, opt_rbbox, opt_stroke, opt_size_label, opt_expand, 
   opt_mask_alpha, opt_color_source, opt_color_label, opt_color, opt_padding_label,
-  opt_label_index):
-  """Draw bboxes, labels, and masks"""
+  opt_label_index, opt_threshold):
+  """Draw bboxes and labels"""
   
   from os.path import join
 
@@ -113,15 +115,18 @@ def cli(ctx, pipe, opt_data_keys, opt_bbox, opt_label, opt_key, opt_conf,
             color = Color.from_rgb_int(opt_color)
           elif opt_color_source == 'preset':
             # TODO: load JSON colors from .yaml
+            # TODO: add tracking ID based colors
             app_cfg.LOG.warn('Not yet implemented')
             color = Color.from_rgb_int((255,0,0))
           
+          # TODO: implement mask-segmentation drawing
           # # draw mask
           # if opt_mask and item_data.task_type == types.Processor.SEGMENTATION:
           #   mask = detection.mask
           #   im = draw_utils.draw_mask(im, bbox, mask, 
           #     color=color, color_weight=opt_mask_alpha)
 
+          # TODO: implement rotated BBox drawing
           # # draw rotated bbox
           # if opt_rbbox and item_data.task_type == types.Processor.DETECTION_ROTATED:
           #   im = draw_utils.draw_rotated_bbox_pil(im, detection.rbbox, 
@@ -147,5 +152,6 @@ def cli(ctx, pipe, opt_data_keys, opt_bbox, opt_label, opt_key, opt_conf,
               label=label, size_label=opt_size_label, padding_label=opt_padding_label,
               )
 
+    # update pipe with modified image
     pipe_item.set_image(types.FrameImage.DRAW, im)
     pipe.send(pipe_item)

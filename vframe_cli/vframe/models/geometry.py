@@ -152,85 +152,111 @@ class BBox:
 
   # ---------------------------------------------------------------------------
   # Expanding
+  # - ambiguous. change to scale() and expand_pixels()
   # ---------------------------------------------------------------------------
 
-  def _expand_wh(self, w, h):
+  def _expand_wh(self, w, h, keep_edges=False):
     x1, y1, x2, y2 = list(np.array(self.xyxy) + np.array([-w, -h, w, h]))
+    if keep_edges:
+      x1 = x1 if self.x1_int > 0 else self.x1_int
+      y1 = y1 if self.y1_int > 0 else self.y1_int
+      x2 = x2 if self.x2_int < self.dw else self.x2_int
+      y2 = y2 if self.y2_int < self.dh else self.y2_int
     return self.__class__(x1, y1, x2, y2, *self.dim)
 
 
-  def expand(self, k):
+  def expand_px(self, k, keep_edges=False):
     """Expands by pixels in all directions
     :param k: (int) pixels
     :returns BBox
     """
-    return self._expand_wh(k, k)
+    return self._expand_wh(k, k, keep_edges=keep_edges)
 
 
-  def expand_w(self, k):
-    return self._expand_wh(k, 0)
+  def expand_px_w(self, k, keep_edges=False):
+    return self._expand_wh(k, 0, keep_edges=keep_edges)
 
 
-  def expand_h(self, k):
-    return self._expand_wh(0, k)
+  def expand_px_h(self, k, keep_edges=False):
+    return self._expand_wh(0, k, keep_edges=keep_edges)
 
 
-  def expand_per(self, k):
+  def expand_per(self, k, keep_edges=False):
     """Expands BBox by percentage of current width and height
     :param per: (float) percentage to expand 0.0 - 1.0
     :returns BBox expanded
     """
     w, h = (int(k * self.w), int(k * self.h))
-    return self._expand_wh(w, h)
+    return self._expand_wh(w, h, keep_edges=keep_edges)
 
-  def expand_per_w(self, k):
+  def expand_per_w(self, k, keep_edges=False):
     """Expands BBox by percentage of current width
     :param per: (float) percentage to expand 0.0 - 1.0
     :returns BBox expanded
     """
     w, h = (int(k * self.w), int(k * self.h))
-    return self._expand_wh(w, 0)
+    return self._expand_wh(w, 0, keep_edges=keep_edges)
 
-  def expand_per_h(self, k):
+  def expand_per_h(self, k, keep_edges=False):
     """Expands BBox by percentage of current height
     :param per: (float) percentage to expand 0.0 - 1.0
     :returns BBox expanded
     """
     h = int(k * self.h)
-    return self._expand_wh(0, h)
+    return self._expand_wh(0, h, keep_edges=keep_edges)
 
 
   # ---------------------------------------------------------------------------
   # Scaling
   # ---------------------------------------------------------------------------
 
-  def _scale(self, w, h):
-    return self.__class__(self.x1 * s, self.y1 * h, self.x2 * s, self.y2 * h, *self.dim)
+  def _scale(self, sw, sh):
+    return self.__class__(self.x1 * sw, self.y1 * sh, self.x2 * sw, self.y2 * sh, *self.dim)
 
 
-  def scale(self, k):
+  def scale(self, s):
     """Scale by width and height values
     """
-    self._scale(k, k)
+    return self._scale(s, s)
 
 
-  def scale_w(self, k):
-    return self._scale(k, 1)
+  def scale_w(self, sw):
+    return self._scale(sw, 1)
 
 
-  def scale_h(self, k):
-    return self._scale(1, k)
+  def scale_h(self, sh):
+    return self._scale(1, sh)
     
 
-  def scale_wh(self, w, h):
+  def scale_wh(self, sw, sh):
     """Scales width and height independently
     """
-    self._scale(w, h)
+    return self._scale(sw, sh)
 
 
   # ---------------------------------------------------------------------------
   # Transformations
   # ---------------------------------------------------------------------------
+
+
+  def union(self, bboxes):
+    """Merges list of bboxes
+    :param bboxes: (list) or BBox
+    :returns (BBox): of all merged BBoxes
+    """
+    bboxes = bboxes if isinstance(bboxes, list) else [bboxes]
+    bboxes.append(self)
+    x1 = min([b.x1 for b in bboxes])
+    y1 = min([b.y1 for b in bboxes])
+    x2 = max([b.x2 for b in bboxes])
+    y2 = max([b.y2 for b in bboxes])
+    return self.__class__(x1, y1, x2, y2, *self.dim)
+    
+
+  def to_dim(self, dim):
+    """Sets xyxy into new dimension plane
+    """
+    return self.__class__(self.x1 , self.y1, self.x2, self.y2, *dim) 
 
   def translate(self, x, y):
     """Translates BBox points
@@ -275,17 +301,17 @@ class BBox:
       # 90 degrees
       x1,y1 = (h - self.y2, self.x1)
       x2,y2 = (x1 + self.h, y1 + self.w)
-      return self.__class__(x1, y1, x2, y2, (h,w))
+      return self.__class__(x1, y1, x2, y2, h, w)
     elif k == 2:
       # 180 degrees
       x1,y1 = (w - self.x2, h - self.y2)
       x2, y2 = (x1 + self.w, y1 + self.h)
-      return self.__class__(x1, y1, x2, y2, (w,h))
+      return self.__class__(x1, y1, x2, y2, w, h)
     elif k == 3:
       # 270 degrees
       x1,y1 = (self.y1, w - self.x2)
       x2, y2 = (x1 + self.h, y1 + self.w)
-      return self.__class__(x1, y1, x2, y2, (h,w))
+      return self.__class__(x1, y1, x2, y2, h, w)
     else:
       return self
 
@@ -353,7 +379,7 @@ class BBox:
     x1, x2 = (max(0, x1), min(1.0, x2))
     y1, y2 = (max(0, y1), min(1.0, y2))
       
-    return self.__class__(x1,y1,x2,y2)
+    return self.__class__(x1, y1, x2, y2, *self.dim)
   
 
   def square(self):
@@ -363,7 +389,6 @@ class BBox:
       return self
     x1, y1, x2, y2 = self.xyxy
     w, h = self.wh
-    # expand outward
     if w > h:
       # landscape: expand height
       delta = (w - h) / 2
@@ -387,12 +412,26 @@ class BBox:
       delta = (h - w) / 2
       y1 = max(y1 + delta, 0)
       y2 = min(y2 - delta, self.dw)
-    return self.__class__(x1, y1, x2, y2, self.dim)
+    return self.__class__(x1, y1, x2, y2, *self.dim)
+
+
+  def centered(self):
+    """Centers bbox inside bounding dimensions
+    """
+    cx,cy = (self.dw / 2, self.dh / 2)
+    dx, dy = ((self.dw - self.w) / 2), ((self.dh - self.h) / 2)
+    x1,y1,x2,y2 = (cx - self.w / 2, cy - self.h / 2, cx + self.w / 2, cy + self.h / 2)
+    return self.__class__(x1, y1, x2, y2, *self.dim)
+
   
 
   # ---------------------------------------------------------------------------
   # Comparisons
   # ---------------------------------------------------------------------------
+
+  def is_empty(self):
+    return (self.w == 0 or self.h == 0)
+
 
   def contains_point(self, p2):
     '''Checks if this BBox contains the normalized point
@@ -402,21 +441,36 @@ class BBox:
     return (p2.x >= self.x1 and p2.x <= self.x2 and p2.y >= self.y1 and p2.y <= self.y2)
 
 
-  def contains_bbox(self, b2):
+  def contains_bbox(self, bb2):
     '''Checks if this BBox fully contains another BBox
     :param b: (BBox)
     :returns (bool)
     '''
-    return (b2.x1 >= self.x1 and b2.x2 <= self.x2 and b2.y1 >= self.y1 and b2.y2 <= self.y2)
+    return (bb2.x1 >= self.x1 and bb2.x2 <= self.x2 and bb2.y1 >= self.y1 and bb2.y2 <= self.y2)
 
 
-  def overlaps(self, b2):
-    """Calculates overlap percentage between another BBox
-    :param b2: BBox
-    :returns percentage as float
+  def intersection(self, bb2):
+    """Creates new BBox of the intersection between two BBoxes. 
+    Returns zero filled BBox if no intersection.
+    :param bb2: BBox
+    :returns (BBox) of where two BBoxes intersected
     """
-    log.warn('Not yet implemented')
-    return 0.0
+    x1 = max(self.x1, bb2.x1)
+    y1 = max(self.y1, bb2.y1)
+    x2 = max(x1, min(self.x2, bb2.x2))
+    y2 = max(y1, min(self.y2, bb2.y2))
+    return self.__class__(x1,y1,x2,y2,*self.dim)
+
+
+  def iou(self, bb2):
+    """Calculates the intersection-over-union of two bounding boxes
+    :param bb2: (BBox)
+    :returns (float): intersection over union between bboxes
+    """
+    bbox_u = self.union(bb2)
+    bbox_x= self.intersection(bb2)
+    iou = 0 if bbox_x.is_empty() else bbox_x.area / bbox_u.area 
+    return iou
 
 
   # ---------------------------------------------------------------------------
@@ -447,7 +501,7 @@ class BBox:
   @classmethod
   def from_xywh_norm(cls, x, y, w, h, dw, dh):
     xyxy = tuple(np.array((x, y, x + w, y + h)) * np.array([dw, dh, dw, dh]))
-    return cls(x, y, x + w, y + h, dw, dh)
+    return cls(*xyxy, dw, dh)
 
   @classmethod
   def from_xyxy_norm(cls, x1, y1, x2, y2, dw, dh):
@@ -551,9 +605,21 @@ class BBox:
   def cy_norm(self):
     return (self.y1 + (self.height / 2)) / self.dh
   
+  # @property
+  # def cxcy(self):
+  #   return (*self.cx, *self.cy)
+
   @property
-  def cxcy(self):
-    return (*self.cx, *self.cy)
+  def cxcy_int(self):
+    return (self.cx, self.cy)
+
+  @property
+  def cx_int(self):
+    return self.cx
+
+  @property
+  def cy_int(self):
+    return self.cy
 
   @property
   def cxcy_norm(self):
@@ -640,7 +706,7 @@ class BBox:
 
   @property
   def wh_int(self):
-    return tuple(map, int, (self.w, self.h))
+    return tuple(map(int, (self.w, self.h)))
 
   @property
   def wh_norm(self):
@@ -680,11 +746,11 @@ class BBox:
 
   @property
   def p1(self):
-    return Point(self.x1, self.y1, self.dim)
+    return Point(self.x1, self.y1, *self.dim)
 
   @property
   def p2(self):
-    return Point(self.x2, self.y2, self.dim)
+    return Point(self.x2, self.y2, *self.dim)
 
 
 

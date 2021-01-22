@@ -35,7 +35,6 @@ def cli(ctx, opt_dir_in, opt_recursive, opt_exts, opt_slice, opt_threads, opt_mo
   from os.path import join
   from pathlib import Path
 
-  import numpy as np
   import cv2 as cv
   from tqdm import tqdm
   from pathos.multiprocessing import ProcessingPool as Pool
@@ -83,10 +82,10 @@ def cli(ctx, opt_dir_in, opt_recursive, opt_exts, opt_slice, opt_threads, opt_mo
     else:
       model_cfg.use_cpu()
 
-    # FIXME: don't reload model in every new thread
     # init dnn
     cvmodel = DNNFactory.from_dnn_cfg(model_cfg)
 
+    # FIXME change to threaded video stream buffer
     # open video stream
     video = cv.VideoCapture(fp_item)
   

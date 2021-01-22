@@ -20,7 +20,7 @@ from vframe.utils.click_utils import processor
   help="Rename merged data-key to this")
 @click.option('--nms-threshold', 'opt_nms_thresh', default=0.4,
   help='NMS threshold')
-@click.option('--dnn-threshold', 'opt_dnn_thresh', default=0.75,
+@click.option('--dnn-threshold', 'opt_dnn_thresh', default=0.7,
   help='DNN threshold')
 @click.option('--remove/--keep', 'opt_remove_old', is_flag=True,
   default=True,
@@ -28,7 +28,7 @@ from vframe.utils.click_utils import processor
 @processor
 @click.pass_context
 def cli(ctx, pipe, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_remove_old):
-  """Merge bboxes"""
+  """Merge bboxes using NMS (single class)"""
   
   import cv2 as cv
 
@@ -40,14 +40,7 @@ def cli(ctx, pipe, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_
 
   log = app_cfg.LOG
 
-  # error checks
-  #if not len(set(opt_data_keys)) > 1:
-  #  log.error('Merge requires 2 or more unique data keys. Add "-n/--name"')
-  #  return
-
-  if not opt_name:
-    #opt_name = opt_data_keys[0]
-    log.debug(f'New name not declared. Using and overwriting first data key')
+  log.warn(f'Multi-class merging not yet supported. Merging all classes to "{opt_name}"')
 
   # ---------------------------------------------------------------------------
   # process
@@ -57,16 +50,12 @@ def cli(ctx, pipe, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_
     pipe_item = yield
     header = ctx.obj['header']
     frame_dim = header.dim
+    data_keys = opt_data_keys if opt_data_keys else header.get_data_keys()
 
     bboxes = []
     confidences = []
     detect_results = []
     labels = []
-
-    if not opt_data_keys:
-      data_keys = header.get_data_keys()
-    else:
-      data_keys = opt_data_keys
 
     for data_key in data_keys:
       
@@ -75,7 +64,7 @@ def cli(ctx, pipe, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_
 
         if item_data.detections:
           for face_idx, detect_result in enumerate(item_data.detections):
-            bboxes.append(detect_result.bbox.to_bbox_dim(frame_dim).xywh)
+            bboxes.append(detect_result.bbox.xywh_int)
             confidences.append(float(detect_result.confidence))
             labels.append(detect_result.label)
             detect_results.append(detect_result)

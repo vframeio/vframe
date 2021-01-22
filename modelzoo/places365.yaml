@@ -14,8 +14,8 @@
 #
 ################################################################################
 
-caffe-places365-googlenet:
-  name: Caffe GoogleNet Places365
+places365_googlenet:
+  name: Places365 GoogleNet
   origin: https://github.com/CSAILVision/places365
   processor: classify
   output: features
@@ -23,8 +23,6 @@ caffe-places365-googlenet:
   remote: https://download.vframe.io/v2/models/caffe/classification/places365/googlenet_places365/
   model: googlenet_places365.caffemodel
   config: googlenet_places365.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -37,8 +35,8 @@ caffe-places365-googlenet:
   allow_resize: False
   active: True
 
-caffe-places365-alexnet:
-  name: Caffe AlexNet Places365
+places365_alexnet:
+  name: Places365 AlexNet
   origin: https://github.com/CSAILVision/places365
   processor: classify
   output: features
@@ -46,8 +44,6 @@ caffe-places365-alexnet:
   remote: https://download.vframe.io/v2/models/caffe/classification/places365/alexnet_places365/
   model: alexnet_places365.caffemodel
   config: alexnet_places365.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -61,8 +57,8 @@ caffe-places365-alexnet:
   active: True
   fit: True
 
-caffe-places365-vgg16:
-  name: Caffe VGG16 Places365
+places365_vgg16:
+  name: Places365 VGG16
   origin: https://github.com/CSAILVision/places365
   processor: classify
   output: features
@@ -70,8 +66,6 @@ caffe-places365-vgg16:
   remote: https://download.vframe.io/v2/models/caffe/classification/places365/vgg16_places365/
   model: vgg16_places365.caffemodel
   config: vgg16_places365.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -84,8 +78,15 @@ caffe-places365-vgg16:
   allow_resize: False
   active: True
 
-caffe-places365-imagenet1k-vgg16:
-  name: VGG16 ImagNetPlaces1365
+
+################################################################################
+#
+# Places365 + Imagenet classification
+#
+################################################################################
+
+places365_imagenet_vgg16:
+  name: ImagNet Places1365 VGG16
   origin: https://github.com/CSAILVision/places365
   processor: classify
   output: features
@@ -93,8 +94,6 @@ caffe-places365-imagenet1k-vgg16:
   remote: https://download.vframe.io/v2/models/caffe/classification/places365/vgg16_hybrid1365/
   model: vgg16_hybrid1365.caffemodel
   config: vgg16_hybrid1365.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224

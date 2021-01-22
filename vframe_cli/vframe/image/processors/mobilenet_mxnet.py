@@ -57,12 +57,11 @@ class MobileNetMXNetProc(DetectionProc):
     self._pre_process(im)
     start_time = time.time()
     outs = self.net.detect(im, threshold=self.dnn_cfg.threshold)
-    perf_ms = time.time() - start_time
-    results = self._post_process(outs, perf_ms)
+    results = self._post_process(outs)
     return results
     
 
-  def _post_process(self, outs, perf_ms):
+  def _post_process(self, outs):
     """InsightFace RetinaFace mxnet detector
     """
 
@@ -77,5 +76,5 @@ class MobileNetMXNetProc(DetectionProc):
       detect_result = DetectResult(self.class_idx, conf, bbox, self.label)
       detect_results.append(detect_result)
     
-    return DetectResults(detect_results, perf_ms)
+    return DetectResults(detect_results)
 

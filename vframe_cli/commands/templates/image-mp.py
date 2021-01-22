@@ -17,7 +17,7 @@ import click
   help='Glob extension')
 @click.option('--slice', 'opt_slice', type=(int, int), default=(None, None),
   help='Slice list of files')
-@click.option('-t', '--threads', 'opt_threads', default=None)
+@click.option('-t', '--threads', 'opt_threads', default=None, type=int)
 @click.pass_context
 def cli(ctx, opt_dir_in, opt_recursive, opt_exts, opt_slice, opt_threads):
   """Multiprocessor image template"""
@@ -28,20 +28,14 @@ def cli(ctx, opt_dir_in, opt_recursive, opt_exts, opt_slice, opt_threads):
 
   from os.path import join
   from pathlib import Path
-  from dataclasses import asdict
 
-  import numpy as np
   import cv2 as cv
   from tqdm import tqdm
   from pathos.multiprocessing import ProcessingPool as Pool
   from pathos.multiprocessing import cpu_count
 
   from vframe.settings import app_cfg
-  from vframe.settings.modelzoo_cfg import modelzoo
-  from vframe.models.dnn import DNN
-  from vframe.image.dnn_factory import DNNFactory
   from vframe.utils import file_utils
-  from vframe.utils.video_utils import FileVideoStream, mediainfo
 
 
   log = app_cfg.LOG

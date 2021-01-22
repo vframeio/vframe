@@ -53,13 +53,6 @@ class SuperResolution:
     return self.net.upsample(im)
 
 
-  def _perf_ms(self):
-    """FIXME: remove? Returns network forward pass performance time in milliseconds
-    """
-    t, _ = self.net.getPerfProfile()
-    return t * 1000.0 / cv.getTickFrequency()
-
-
   def fps(self, im=None, n_iters=10):
     """Benchmark model FPS on image
     :param im: (np.ndarray) image

@@ -26,5 +26,12 @@ class MediaMeta:
   created_at: str=''
 
   def __post_init__(self):
-  	if not self.aspect_ratio and self.valid:
-  		self.aspect_ratio = self.width / self.height
+    if not self.aspect_ratio and self.valid:
+      self.aspect_ratio = self.width / self.height
+
+
+@dataclass
+class KeyframeMediaMeta(MediaMeta):
+  sha256: str=''
+
+

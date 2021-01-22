@@ -50,7 +50,7 @@ def cli(ctx, pipe, opt_fp_out, opt_minify):
     try:
       pipe_item = yield
       header = ctx.obj['header']
-      if header.frame_index == header.frame_end:
+      if header.frame_index == header.last_frame_index:
         header_items.append(header.to_dict())
       pipe.send(pipe_item)
 

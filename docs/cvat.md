@@ -2,14 +2,14 @@
 
 # CVAT Guide
 
-Use CVAT for annotating videos and images. Use VFRAME to generate annotations for CVAT. 
+Use CVAT for annotating videos and images. Use VFRAME to generate annotations for CVAT.
 
 ## Setup
 
 - Install Docker Compose
 - clone <https://github.com/opencv/cvat> to `vframe/3rdparty/`
 - Edit `docker-compose-override.yml` to include a shared directory
-- Start docker and navigate to <http://localhost:8080/> 
+- Start docker and navigate to <http://localhost:8080/>
 
 ```
 - CLI `docker exec -it cvat bash -ic "python3 utils/cli/cli.py --auth ${CVAT_USERNAME}:${CVAT_PASSWORD} ls"`
@@ -22,7 +22,7 @@ First, setup a shared local directory for CVAT Docker to access. Edit `docker-co
 Edit override yaml
 ```
 # docker-compose-override.yml
-version: "2.3"
+version: '3.3'
 
 services:
   cvat:
@@ -78,7 +78,7 @@ Create labels.json and save to your shared directory
 ```
 [
   {
-    "name": "face",
+    "name": "myobject",
     "attributes": []
   }
 ]
@@ -122,7 +122,7 @@ docker exec -it cvat bash -ic \
 
 ## Generate Annotations and Convert to CVAT
 
-Although CVAT includes utility scripts to generate annotations, VFRAME includes similar utilities with a more flexible and powerful workflow. There are three steps involved in generating auto-annotations: process video/image into JSON detections, convert JSON detections into XML, then upload XML to CVAT.
+Preparing videos and images for CVAT annotation:
 
 First rename your files as their sha256
 ```
@@ -133,7 +133,8 @@ First rename your files as their sha256
 ./cli.py dev sha256 -i myfolder --confirm
 ```
 
-Process video into JSON detections
+
+(under development) Process video into JSON detections
 ```
 # set variable to video filename
 export SHA256=1a0b4feb75ccec99e44a44120734d75ab1a235c274d0577a191d631297cccbc5
@@ -142,7 +143,7 @@ export SHA256=1a0b4feb75ccec99e44a44120734d75ab1a235c274d0577a191d631297cccbc5
 ./cli.py pipe open -i ${SHA256}.mp4 detect -m yolov3_coco save_data -o ${SHA256}.json
 ```
 
-Merge Tracks
+(under development) Merge Tracks
 ```
 # add incrementing ID to each detection
 # Test, and auto-increment if no ID?
@@ -151,25 +152,25 @@ Merge Tracks
 ./cli.py dev merge_tracks -i ${SHA256}.json -o ${SHA256}_merged.json
 ```
 
-Convert JSON detections into CVAT XML
+(under development) Convert JSON detections into CVAT XML
 ```
 # Converts detections to JSON. Run reid first to merge tracks
 ./cli.py cvat to_xml -i ${SHA256}.json -o ${SHA256}.xml
 ```
 
-Import video to CVAT and set name
+(under development) Import video to CVAT and set name
 ```
 # Create a new task
 ./cli.py cvat create -i ${SHA256}.mp4 --name ${SHA256}
 ```
 
-Import XML to CVAT using filename to get task ID
+(under development) Import XML to CVAT using filename to get task ID
 ```
 # Import XML annotations to task
 ./cli.py cvat import --task 1 -i ${SHA256}.xml
 ```
 
-Export annotations to zip
+(under development) Export annotations to zip
 ```
 # Exports task to zip with XML annotations
 ./cli.py cvat export --task 1 -o ${SHA256}.zip
@@ -178,7 +179,7 @@ Export annotations to zip
 ./cli.py cvat export --task 1 -o ${SHA256}.zip --unzip --cleanup
 ```
 
-Delete task
+(under development) Delete task
 ```
 # Deletes task by task ID
 ./cli.py cvat delete --task 1
@@ -189,7 +190,7 @@ Delete task
 
 List tasks
 ```
-# Lists all tasks 
+# Lists all tasks
 ./cli.py cvat ls
 
 # List and write to CSV
@@ -202,6 +203,16 @@ Find file
 ./cli.py cvat find --name ${SHA256}
 ```
 
+## Automatic Annotation
+
+For others that see this to look at the docker logs you can run
+
+docker logs nuclio-nuclio-tf-faster-rcnn-inception-v2-coco-gpu
+
+and use docker ps -a to find your nuclio function if you try a different model.
+
+Solution was to set maxWorkers to 1 in the function.yaml file
+
 
 ## User Guide for Annotating Images and Video
 
@@ -211,7 +222,7 @@ Find file
 
 - set `outside="1"` to end a track?
 - merge id?
- 
+
 CVAT video annotation XML format
 ```
 <!-- annotation -->

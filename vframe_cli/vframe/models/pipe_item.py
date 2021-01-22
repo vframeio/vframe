@@ -43,7 +43,7 @@ class PipeContextHeader:
     self._frames_data[self._frame_idx]  = {} # init frames data dict
     self.video = None
 
-    if self.ext == 'jpg':
+    if self.ext.lower() in ['jpg', 'png']:
       im = Image.open(self.filepath)
       self.dim = im.size
       self.dim_draw = self.dim
@@ -52,7 +52,7 @@ class PipeContextHeader:
       self._frame_idx_start = 0
       self._frame_idx_end = 0
 
-    elif self.ext == 'mp4':
+    elif self.ext.lower() in ['mp4', 'mov']:
       try:
         self.video = cv.VideoCapture(self.filepath)
         self.video.get(cv.CAP_PROP_FOURCC)
@@ -69,6 +69,7 @@ class PipeContextHeader:
         self._frame_idx_end = self.frame_count - 1  # 0-indexed frames
       except Exception as e:
         self.log.error(f'Could not load file: {self.filename}')
+
 
   def increment_frame(self):
     """Increments frame count and adds empty frame data dict
@@ -91,59 +92,131 @@ class PipeContextHeader:
       self._frame_idx_end = decimate_intervals * opt_decimate
 
   
+  # ---------------------------------------------------------------------------
+  # Properties
+  # ---------------------------------------------------------------------------
 
   @property
-  def frame_start(self):
+  def first_frame_index(self):
+    """Returns the 0-based index of first frame
+    :returns (int) first frame number index
+    """
     return self._frame_idx_start
   
-  
   @property
-  def frame_end(self):
+  def last_frame_index(self):
+    """Returns the 0-based index of last frame
+    :returns (int) last frame number index
+    """
     return self._frame_idx_end
-
-  def is_last_frame(self):
-    return self._frame_idx > self._frame_idx_end or self._frame_idx >= self.frame_count
-  
 
   @property
   def frame_index(self):
+    """Returns the 0-based current frame index
+    :returns (int) current frame number index
+    """
     return self._frame_idx
   
   @property
   def _frame_data(self):
-    """Returns the current frame's data
+    """Current frame-indexed data
+    :returns (dict) {'frame_index': {frame_data}}
     """
     return self._frames_data[self._frame_idx]
 
+  def is_last_frame(self):
+    """Returns True if current frame index is the last frame of a video
+    """
+    return self._frame_idx > self._frame_idx_end or self._frame_idx >= self.frame_count
   
+
+  # ---------------------------------------------------------------------------
+  # Frame data
+  # ---------------------------------------------------------------------------
+
   def set_frame_index(self, n):
     self._frame_idx = n
     if not n in self._frames_data.keys():
       self._frames_data[self._frame_idx] = {}
 
 
-  def data_key_exists(self, k):
-    return k in self._frame_data.keys()
-
-    
-  def add_data(self, data):
-    self._frame_data.update(data)
+  def data_key_exists(self, data_key, frame_idx=None):
+    frame_idx = frame_idx if frame_idx else self._frame_idx
+    return data_key in self._frames_data[frame_idx].keys()
 
 
-  def set_data(self, data):
+  def set_data(self, data, frame_idx=None):
+    """Sets data on current frame
+    :param data: (dict) {data_key: frame_data}
+    """
+    frame_idx = frame_idx if frame_idx else self._frame_idx
     self._frame_data.update(data)
 
   
-  def get_data_keys(self):
+  def get_data_keys(self, frame_idx=None):
+    """Get all data keys on current frame
+    :returns (list) of keys (str)
+    """
+    frame_idx = frame_idx if frame_idx else self._frame_idx
     return list(self._frame_data.keys())
 
     
-  def remove_data(self, data_key):
+  def remove_data(self, data_key, frame_idx=None):
+    """Removes data on current frame
+    :param data_key: (str) dict key
+    """
+    frame_idx = frame_idx if frame_idx else self._frame_idx
     self._frame_data.pop(data_key)
 
 
-  def get_data(self, data_key):
-    return self._frame_data.get(data_key, None)
+  def get_data(self, data_key, frame_idx=None):
+    """Gets frame data on current frame index
+    :param data_key: (str) dict key
+    :returns (dict) of DetectResults
+    """
+    frame_idx = frame_idx if frame_idx else self._frame_idx
+    return self._frames_data[frame_idx].get(data_key, None)
+
+  """
+  "0": {
+    "retinaface_r0": {
+      "detections": [
+        {
+          "bbox": {
+            "dh": 720,
+            "dw": 1280,
+            "x1": 886.5418090820312,
+            "x2": 946.8053588867188,
+            "y1": 489.9473876953125,
+            "y2": 558.052978515625
+          },
+          "confidence": 0.9975469708442688,
+          "index": 0,
+          "label": "face"
+        },
+      "task_type": "detection"
+    },
+    "coco": {
+      "detections": [
+        {
+          "bbox": {
+            "dh": 720,
+            "dw": 1280,
+            "x1": 886.5418090820312,
+            "x2": 946.8053588867188,
+            "y1": 489.9473876953125,
+            "y2": 558.052978515625
+          },
+          "confidence": 0.9975469708442688,
+          "index": 0,
+          "label": "face"
+        },
+      "task_type": "detection"
+    }
+  },
+  """
+
+
 
 
   def to_dict(self):
@@ -182,12 +255,12 @@ class PipeContextHeader:
         if task_type == 'detection':
           outputs['task_type'] = types.Processor.DETECTION  # FIXME
           d = dacite.from_dict(data=outputs, data_class=DetectResults)
-          pipe_item.add_data({data_key: d})
+          pipe_item.set_data({data_key: d})
           
         elif task_type == 'classification':
           outputs['task_type'] = types.Processor.CLASSIFICATION  # FIXME
           d = dacite.from_dict(data=outputs, data_class=ClassifyResults)
-          pipe_item.add_data({data_key: d})
+          pipe_item.set_data({data_key: d})
 
     return pipe_item
 
@@ -221,6 +294,8 @@ class PipeFrame:
   def set_image(self, frame_type, im):
     if frame_type == types.FrameImage.ORIGINAL:
       self.im_original = im
+      self.im_draw = self.im_original.copy()
+      self.height, self.width = self.im_original.shape[:2]
     elif frame_type == types.FrameImage.DRAW:
       self.im_draw = im
 

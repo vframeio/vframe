@@ -60,7 +60,7 @@ class LogLevel(Enum):
 class Processor(Enum):
   """Loger vebosity
   """
-  DETECTION, CLASSIFICATION, SEGMENTATION, DETECTION_ROTATED = range(4)
+  DETECTION, CLASSIFICATION, SEGMENTATION, DETECTION_ROTATED, DETECTION_POSE = range(5)
 
   def __repr__(self):
     return self.name.lower()
@@ -105,6 +105,10 @@ class AnnoyMetric(Enum):
   """
   ANGULAR, EUCLIDEAN, MANHATTAN, HAMMING, DOT = range(5)
 
+class Haarcascade(Enum):
+  """Haarcascade filenames
+  """
+  FRONTALFACE_DEFAULT, FRONTALFACE_ALT, FRONTALFACE_ALT2, FRONTALFACE_ALT_TREE, PROFILEFACE = range(5)
 
 def dict_to_enum(name, cfg_data):
   """Dynamically create ModelZoo enum type using model zoo YAML
@@ -120,8 +124,6 @@ def dict_to_enum(name, cfg_data):
 # Dynamic enums
 # --------------------------------------------------------------------
 
-
-#cfg_data = file_utils.load_yaml(app_cfg.FP_MODELZOO)
 ModelZoo = dict_to_enum('ModelZoo', modelzoo_cfg.modelzoo)
 
 
@@ -137,6 +139,7 @@ ImageFileExtVar = click_utils.ParamVar(ImageFileExt)
 VideoFileExtVar = click_utils.ParamVar(VideoFileExt)
 ProcessorVar = click_utils.ParamVar(Processor)
 AnnoyMetricVar = click_utils.ParamVar(AnnoyMetric)
+HaarcascadeVar = click_utils.ParamVar(Haarcascade)
 
 
 # ---------------------------------------------------------------------

@@ -1,9 +1,9 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
 # Copyright (c) 2020 Adam Harvey and VFRAME
-# https://vframe.io 
+# https://vframe.io
 #
 #############################################################################
 
@@ -46,6 +46,7 @@ load_dotenv(dotenv_path=fp_env, verbose=True)
 
 # directories
 DIR_DATA_STORE = os.getenv("DATA_STORE", join(DIR_PROJECT_ROOT, 'data'))
+DIR_CONFIGS = join(DIR_DATA_STORE, 'configs')
 DIR_MODELZOO = join(DIR_PROJECT_ROOT, 'modelzoo')
 DIR_MODELS = join(DIR_MODELZOO, 'models')
 DIR_PLUGINS = join(DIR_MODELZOO, 'plugins')
@@ -104,9 +105,12 @@ GRAY = Color.from_rgb_int((127, 127, 127))
 LIGHT_GRAY = Color.from_rgb_int((170, 170, 170))
 DARK_GRAY = Color.from_rgb_int((85, 85, 85))
 
-DEFAULT_STROKE_WEIGHT = 2
 DEFAULT_TEXT_SIZE = 14
+DEFAULT_STROKE_WEIGHT = 2
+DEFAULT_SIZE_LABEL = 14
 DEFAULT_PADDING_PER = 0.25
+DEFAULT_FONT_NAME = 'roboto'
+DEFAULT_FONT_FP = FP_ROBOTO_400
 
 class TERM_COLORS:
   HEADER = '\033[95m'
@@ -148,7 +152,9 @@ if CUDA_ENABLED:
 # -----------------------------------------------------------------------------
 # CLI command opts
 # -----------------------------------------------------------------------------
-DEFAULT_DETECT_MODEL = 'yolov3_coco'
+DEFAULT_DETECT_MODEL = 'coco'
+
+# use CCW rotation where 90 means 90 CCW
 ROTATE_VALS = {
   '0': None,
   '90': cv.ROTATE_90_COUNTERCLOCKWISE,
@@ -158,6 +164,12 @@ ROTATE_VALS = {
   '-270': cv.ROTATE_90_COUNTERCLOCKWISE,
   '270': cv.ROTATE_90_CLOCKWISE,
 }
+
+# -----------------------------------------------------------------------------
+# Haarcascades
+# -----------------------------------------------------------------------------
+DIR_CV2_DATA = join(Path(os.path.dirname(cv.__file__)).parent, 'data')
+DEFAULT_HAARCASCADE = 'frontalface_default'
 
 # -----------------------------------------------------------------------------
 # S3 files
@@ -191,6 +203,17 @@ ZERO_PADDING = 6
 UCODE_OK = u"\u2714"  # check ok
 UCODE_NOK = u'\u2718'  # x no ok
 
+LICENSE_HEADER = """#############################################################################
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io
+#
+#############################################################################
+
+"""
+
 
 # -----------------------------------------------------------------------------
 # NVIDIA architectures for NVIDIA GPUs
@@ -203,7 +226,7 @@ GPU_ARCHS = {
   '6.1': ['gtx 1080 ti', 'gtx 1080', 'gtx 1060',' gtx 1050', 'gtx 1030', 'titan xp', 'tesla p40', 'tesla p4'],
   '6.0': ['GP100', 'tesla p100'],
   '5.3': ['jetson tx1', 'tegra x1', 'drive cx', 'drive px'],
-  '5.2': ['jetson tx2', 'drive-px2', 'drive px'], 
+  '5.2': ['jetson tx2', 'drive-px2', 'drive px'],
 }
 
 
@@ -218,3 +241,72 @@ try:
 except Exception as e:
   log.error(f'S3 .env variables not set. Can not access models.')
   log.info(f'Edit {fp_env} and add your S3 access keys. Use .env-sample.')
+
+
+
+# -----------------------------------------------------------------------------
+# Synthetic
+# -----------------------------------------------------------------------------
+
+# output files
+FN_METADATA = 'metadata.csv'  # filenamne
+FN_ANNOTATIONS = 'annotations.csv'  # filenamne
+DN_REAL = 'real'  # directory name
+DN_MASK = 'mask'  # directory name
+DN_COMP = 'comp'  # directory name
+DN_BBOX = 'bbox'  # directory name
+DN_IMAGES = 'images'  # directory name for images in concat output
+OUTPUT_FILE_FORMAT = 'PNG'
+
+
+# -----------------------------------------------------------------------------
+# YOLO
+# -----------------------------------------------------------------------------
+
+
+FP_YOLO_MODELS = join(DIR_CONFIGS, 'yolo-models.yaml')
+FP_DARKNET_BIN = join(DIR_PROJECT_ROOT, '3rdparty/darknet/darknet')
+
+DN_IMAGES_LABELS = 'images_labels'
+DN_BACKUP = 'backup'
+
+FN_TRAIN_INIT = 'train_init.sh'
+FN_TRAIN_RESUME = 'train_resume.sh'
+FN_TRAIN_MULTI = 'train_multi.sh'
+FN_TEST_INIT = 'test.sh'
+FN_LOGFILE = 'training.log'
+FN_META_DATA = 'meta.data'
+FN_LABELS = 'labels.txt'
+FN_VALID = 'valid.txt'
+FN_TRAIN = 'train.txt'
+LABEL_BACKGROUND = 'background'
+
+
+# -----------------------------------------------------------------------------
+# Yolo Training
+# -----------------------------------------------------------------------------
+
+# # load YOLO init model configs
+# modelzoo_yaml = load_yaml(FP_YOLO_MODELS)
+
+# # create dict with modelzoo name-keys and DNN values
+# modelzoo = {k: dacite.from_dict(data=v, data_class=DNN) for k,v in modelzoo_yaml.items()}
+
+# FP_YOLOV4_CFG = modelzoo.get('yolo4-init').fp_config
+# FP_YOLOV4_WEIGHTS = modelzoo.get('yolo4-init').fp_model
+
+# FP_YOLOV3_CFG = modelzoo.get('yolo3-init').fp_config
+# FP_YOLOV3_WEIGHTS = modelzoo.get('yolo3-init').fp_model
+
+# # Choose YOLO version based on .env variables
+# USE_YOLO_VERSION = int(os.getenv('YOLO_VERSION', '4'))
+# if USE_YOLO_VERSION == 3:
+#   FP_YOLO_CFG = FP_YOLOV4_CFG
+#   FP_YOLO_WEIGHTS = FP_YOLOV3_WEIGHTS
+# elif USE_YOLO_VERSION == 4:
+#   FP_YOLO_CFG = FP_YOLOV4_CFG
+#   FP_YOLO_WEIGHTS = FP_YOLOV3_WEIGHTS
+# else:
+#   LOG.error(f'YOLO version {USE_YOLO_VERSION} is not a valid option. Defaulting to 4.')
+#   FP_YOLO_CFG = FP_YOLOV4_CFG
+#   FP_YOLO_WEIGHTS = FP_YOLOV3_WEIGHTS

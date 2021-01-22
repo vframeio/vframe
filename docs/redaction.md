@@ -38,7 +38,7 @@ Simple face detection and blurring for images
 Simple face detection and blurring for videos
 ```
  # Detect and blur faces in a video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw display --autoplay
+./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw display --auto
 ```
 
 Save images or video
@@ -197,7 +197,7 @@ for DETECTOR in ${DETECTORS}; do
 done
 ```
 
-On a remote computerc reate a tmux session to monitor and detach
+On a remote computer create a tmux session to monitor and detach
 ```
 tmux new -s detect
 conda activate vframe
@@ -206,9 +206,20 @@ conda activate vframe
 # reattach: tmux a -t detect
 ```
 
-Then merge the JSON files
+Then merge all JSON files
 ```
-./cli.py dev merge_json -i ${FP_METADATA} -o ${FP_METADATA}/merged.json
+./cli.py dev merge-detections \
+  -i [json1] \
+  -i [json2] \
+  -i [json3] \
+  -o ${FP_METADATA}/merged.json
+```
+
+Then run NMS on the merged detections
+```
+./cli.py dev merge-detections-nms \
+  -i ${FP_METADATA}/merged.json \
+  -o ${FP_METADATA}/merged_nms.json
 ```
 
 Then blur the videos uses pre-computed detections

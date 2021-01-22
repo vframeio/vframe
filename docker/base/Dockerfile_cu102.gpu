@@ -1,4 +1,4 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
@@ -59,7 +59,7 @@ ENV DIR_TMP /tmp
 ENV PYTHON_VERSION 3.7
 RUN apt install sudo
 RUN echo "${user}  ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/${user}
-USER ${USER} 
+USER ${USER}
 # Subsequent code needs to explicitly call sudo
 
 

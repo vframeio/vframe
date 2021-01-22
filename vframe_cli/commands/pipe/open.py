@@ -34,21 +34,23 @@ from vframe.utils.click_utils import generator
   help='0-indexed frame number to end on')
 @click.option('--decimate', 'opt_decimate', type=int, default=None,
   help="Number of frames to skip between processing")
+@click.option('--fake-frame', 'opt_fake_frame', is_flag=True,
+  help='Use fake video frame. For data merging')
 @generator
 @click.pass_context
 def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_height, opt_exts, opt_slice,
-  opt_frame_start, opt_frame_end, opt_decimate):
+  opt_frame_start, opt_frame_end, opt_decimate, opt_fake_frame):
   """+ Add images or videos"""
   
   from pathlib import Path
   from os.path import join
 
-  from tqdm import tqdm
+  from tqdm import tqdm, trange
   
   import cv2 as cv
   from vframe.settings import app_cfg
   from vframe.models.pipe_item import PipeContextHeader, PipeFrame
-  from vframe.utils import file_utils
+  from vframe.utils import file_utils, im_utils
 
   
   # ---------------------------------------------------------------------------
@@ -67,8 +69,6 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_he
       log.error(f'No {opt_exts} found in {opt_input}')
       log.info('Use "-e/--ext" option to select different glob extension')
       return
-
-
     items.sort()
 
   elif Path(opt_input).is_file():
@@ -94,14 +94,16 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_he
   # ---------------------------------------------------------------------------
   # process
 
-  for item in tqdm(items, desc='Files', leave=False):
+  for item_idx in trange(len(items), desc='Files', leave=False):
     
+    item = items[item_idx]
 
     if type(item) == dict:      
       
       # replace parent filepath if optioned
       if opt_replace_path is not None:
-        item['filepath'] = join(opt_replace_path, Path(item['filepath']).name)
+        # replaced place in item data
+        items[item_idx]['filepath'] = join(opt_replace_path, Path(item['filepath']).name)
       
       fp_item = item['filepath']
       if not Path(fp_item).is_file():
@@ -134,20 +136,24 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_he
 
       # init video
       header.set_frame_min_max(opt_frame_start, opt_frame_end, opt_decimate)
-      if header.frame_start is not None:
-        video.set(cv.CAP_PROP_POS_FRAMES, header.frame_start)
-        header.set_frame_index(header.frame_start)
+      if header.first_frame_index is not None:
+        video.set(cv.CAP_PROP_POS_FRAMES, header.first_frame_index)
+        header.set_frame_index(header.first_frame_index)
 
-      n_frames = header.frame_end - (header.frame_start)
-      pbar = tqdm(total=n_frames, desc=header.filename, initial=header.frame_start, leave=False)
+      n_frames = header.last_frame_index - (header.first_frame_index)
+      pbar = tqdm(total=n_frames, desc=header.filename, initial=header.first_frame_index, leave=False)
 
       while video.isOpened():
 
-        if header.frame_index > header.frame_end:
+        if header.frame_index > header.last_frame_index:
           pbar.close()
           break
 
-        frame_ok, frame = video.read()
+        if opt_fake_frame:
+          # pass a fake video frame through. used for data merging
+          frame_ok, frame = True, im_utils.create_blank_im(*header.dim)
+        else:
+          frame_ok, frame = video.read()
 
         if not frame_ok:
           pbar.close()
@@ -158,7 +164,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_replace_path, opt_width, opt_he
           continue
         else:
           pbar.update()
-          pipe_frame = PipeFrame(frame)      
+          pipe_frame = PipeFrame(frame)
           sink.send(pipe_frame)
           header.increment_frame()
 

@@ -25,15 +25,23 @@ class Color:
 
   
   def to_rgb_int(self):
-    """RGBA normalized values
+    """RGB normalized values
     :returns tuple of int RGB values in (255, 255, 255) scale
     """
     rgb_int = (int(255 * self.r), int(255 * self.g), int(255 * self.b))
     return rgb_int
+
+
+  def to_bgr_int(self):
+    """BGR normalized values
+    :returns tuple of int RGB values in (255, 255, 255) scale
+    """
+    bgr_int = (int(255 * self.b), int(255 * self.g), int(255 * self.r))
+    return bgr_int
   
   
   def to_rgb_norm(self):
-    """RGBA normalized values
+    """RGB normalized values
     :returns tuple of normalized RGB values
     """
     rgb_norm = (self.r, self.g, self.b)

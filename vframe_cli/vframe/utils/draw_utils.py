@@ -35,18 +35,37 @@ class FontManager:
   
   fonts = {}
   log = logging.getLogger('vframe')
-  
+    
   def __init__(self):
     # build/cache a dict of common font sizes
+    name = app_cfg.DEFAULT_FONT_NAME
+    fp_font = app_cfg.DEFAULT_FONT_FP
+    self.fonts[name] = {}
+    self.fonts[name]['fp'] = fp_font
     for i in range(10, 60, 2):
-      self.fonts[i] = ImageFont.truetype(join(app_cfg.FP_ROBOTO_400), i)
+      self.fonts[name][i] = ImageFont.truetype(join(fp_font), i)
 
-  def get_font(self, pt):
+  def add_font(self, name, fp_font, font_size=16):
+    self.fonts[name] = {}
+    self.fonts[name]['fp'] = fp_font
+    self.fonts[name][font_size] = ImageFont.truetype(fp_font, font_size)
+
+  def get_font(self, font_name, font_size):
     """Returns font and creates/caches if doesn't exist
     """
-    if not pt in self.fonts.keys():
-      self.fonts[pt] = ImageFont.truetype(join(app_cfg.FP_ROBOTO_400), pt)
-    return self.fonts[pt]
+    font = self.fonts[font_name]
+    if not font_size in font.keys():
+      font[font_size] = ImageFont.truetype(font['fp'], font_size)
+    return font[font_size]
+
+
+# -----------------------------------------------------------------------------
+#
+# init instances
+#
+# -----------------------------------------------------------------------------
+
+font_mngr = FontManager()
 
 
 
@@ -213,10 +232,10 @@ def _draw_bbox_pil(canvas, bbox, color, stroke):
   
 
 def draw_bbox(im, bbox, color=None, stroke=None, expand=None,
-  label=None, color_label=None, size_label=None, padding_label=None):
+  label=None, color_label=None, size_label=None, padding_label=None, font_name=None):
   """Draws BBox on image
   :param im: PIL.Image or numpy.ndarray
-  :param bbox: list(BBox)
+  :param bbox: list(BBox) or (BBox)
   :param color: Color
   :param stroke: int
   :param expand: float percentage
@@ -225,6 +244,9 @@ def draw_bbox(im, bbox, color=None, stroke=None, expand=None,
   :param padding_label: int
   """
 
+  if not bbox:
+    return im
+
   # ensure pil format
   if im_utils.is_np(im):
     im = im_utils.np2pil(im)
@@ -232,36 +254,38 @@ def draw_bbox(im, bbox, color=None, stroke=None, expand=None,
   else:
     was_np = False
 
-  bbox = bbox if expand is None else bbox.expand(expand)
-
-  # init font styles and canvas
-  stroke = app_cfg.DEFAULT_STROKE_WEIGHT if stroke is None else stroke
+  # init kwargs
+  bboxes = bbox if type(bbox) == list else [bbox]
+  bboxes = [b.expand_per(expand) for b in bboxes] if expand is not None else bboxes
+  color = color if color else app_cfg.GREEN
+  stroke = stroke if stroke else app_cfg.DEFAULT_STROKE_WEIGHT
+  font_name = font_name if font_name else app_cfg.DEFAULT_FONT_NAME
   canvas = ImageDraw.ImageDraw(im)
 
-  # draw bbox
-  _draw_bbox_pil(canvas, bbox, color, stroke)
+  for bbox in bboxes:
+    # draw bbox
+    _draw_bbox_pil(canvas, bbox, color, stroke)
 
-  # draw label-background if optioned
-  if label:
-    label = label.upper()
-    # init font styles
-    color_label = color.get_fg_color() if color_label is None else color_label
-    size_label = app_cfg.DEFAULT_size_label if size_label is None else size_label
-    font = font_mngr.get_font(size_label)
-    padding_label = int(app_cfg.DEFAULT_PADDING_PER * size_label) if padding_label is None else padding_label
-    # bbox of label background
-    bbox_bg = _bbox_from_text(bbox, label, font, padding_label)
-    # check if space permits outer label
-    if bbox_bg.h > bbox.y1:
-      # move inside
-      bbox_bg = bbox_bg.translate(stroke, bbox_bg.h + stroke)
-    else:
-      bbox_bg = bbox_bg.translate(0, 0 - bbox_bg.h)
-    _draw_bbox_pil(canvas, bbox_bg,  color, -1)
-    # point of label origin
-    bbox_label = bbox_bg.shift(padding_label, padding_label, -padding_label, -padding_label)
-    _draw_text_pil(canvas, label, Point.from_bbox(bbox_label), color_label, font)
-
+    # draw label-background if optioned
+    if label:
+      label = label.upper()
+      # init font styles
+      color_label = color_label if color_label else color.get_fg_color()
+      size_label = size_label if size_label else app_cfg.DEFAULT_SIZE_LABEL
+      padding_label = padding_label if padding_label else int(app_cfg.DEFAULT_PADDING_PER * size_label)
+      font = font_mngr.get_font(font_name, size_label)
+      # bbox of label background
+      bbox_bg = _bbox_from_text(bbox, label, font, padding_label)
+      x1,y1,x2,y2 = bbox_bg.xyxy_int
+      bbox_bg = BBox(x1, y1, x2 + 2*stroke, y2, *bbox_bg.dim)
+      # check if space permits outer label
+      if bbox_bg.h < bbox.y1:
+        # move outside
+        bbox_bg = bbox_bg.translate(0, 0 - bbox_bg.h)
+      _draw_bbox_pil(canvas, bbox_bg,  color, -1)
+      # point of label origin
+      bbox_label = bbox_bg.shift(padding_label + stroke, padding_label, -padding_label, -padding_label)
+      _draw_text_pil(canvas, label, Point.from_bbox(bbox_label), color_label, font)
 
   # cleanup
   del canvas
@@ -280,6 +304,21 @@ def draw_bbox(im, bbox, color=None, stroke=None, expand=None,
 #
 # -----------------------------------------------------------------------------
 
+def mk_font_chip(txt, font_name, font_size=16, font_color=None, bg_color=None):
+  """Draw font chip for perceptual similarity scoring with synthetic font-graphics
+  """
+  # get text bounds
+  font = font_mngr.get_font(font_name, font_size)
+  tw, th = font.getsize(txt)
+
+  # create temp image
+  font_color = font_color if font_color else app_cfg.WHITE
+  bg_color = bg_color if bg_color else app_cfg.BLACK
+  im = Image.new('RGB', (tw,th), bg_color.rgb_int)
+  p = Point(0,0, *im.size)
+  im = draw_text(im, txt, p, font_name=font_name, font_color=font_color, font_size=font_size)
+  return im
+
 
 def _bbox_from_text(obj_geo, text, font, padding):
   """Creates BBox based on text, font size, and padding
@@ -296,15 +335,15 @@ def _draw_text_pil(canvas, text, pt, color, font):
   canvas.text(pt.xy_int, text, color.rgb_int, font)
 
 
-def draw_text(im, text, pt, color=None, size_text=None, color_text=None, 
+def draw_text(im, text, pt, font_name=None, font_size=None, font_color=None, 
   bg=False, padding_text=None, color_bg=None, upper=False):
   """Draws text with background
   :param im: PIL.Image or numpy.ndarray
-  :param bboxes: list(BBox)
-  :param color: Color
+  :param pt: Point of upper left corner
   :param text: String
+  :param color: Color
   :param stroke: int
-  :param size_text: int
+  :param font_size: int
   :param expand: float
   """
   if im_utils.is_np(im):
@@ -317,13 +356,14 @@ def draw_text(im, text, pt, color=None, size_text=None, color_text=None,
   # init font styles and canvas
   if upper:
     text = text.upper()
-  color_text = app_cfg.GREEN if color is None else color
-  size_text = app_cfg.DEFAULT_size_text if size_text is None else size_text
-  font = font_mngr.get_font(size_text)
+  font_name = font_name if font_name else app_cfg.DEFAULT_FONT_NAME
+  font_color = font_color if font_color else app_cfg.GREEN
+  font_size = font_size if font_size else app_cfg.DEFAULT_TEXT_SIZE
+  font = font_mngr.get_font(font_name, font_size)
   canvas = ImageDraw.ImageDraw(im)
 
   if bg:
-    padding_text = int(app_cfg.DEFAULT_PADDING_PER * size_text) if padding_text is None else padding_text
+    padding_text = int(app_cfg.DEFAULT_PADDING_PER * font_size) if padding_text is None else padding_text
     # bbox of text background
     bbox_bg = _bbox_from_text(pt, text, font, padding_text)
     _draw_bbox_pil(canvas, bbox_bg, color_bg, -1)
@@ -331,7 +371,9 @@ def draw_text(im, text, pt, color=None, size_text=None, color_text=None,
     bbox_text = bbox_bg.shift(padding_text, padding_text, -padding_text, -padding_text)
   else:
     bbox_text = _bbox_from_text(pt, text, font, 0)
-  _draw_text_pil(canvas, text, Point.from_bbox(bbox_text), color_text, font)
+
+  pt = Point.from_bbox(bbox_text)
+  _draw_text_pil(canvas, text, pt, font_color, font)
 
   del canvas
 
@@ -341,42 +383,6 @@ def draw_text(im, text, pt, color=None, size_text=None, color_text=None,
   return im
 
 
-
-# -----------------------------------------------------------------------------
-#
-# init instances
-#
-# -----------------------------------------------------------------------------
-
-font_mngr = FontManager()
-
-
-
-# -----------------------------------------------------------------------------
-#
-# junkyard
-#
-# -----------------------------------------------------------------------------
-
-# def draw_text_cv(im, text, pt, size=1.0, color=None):
-#   """Draws degrees as text over image
-#   """
-#   if im_utils.is_pil(im):
-#     im = im_utils.pil2np(im)
-#     was_pil = True
-#   else:
-#     was_pil = False
-
-#   dim = im.shape[:2][::-1]
-#   pt_dim = pt.to_point_dim(dim)
-#   color = app_cfg.GREEN if not color else color
-#   rgb = color.rgb_int
-#   cv.putText(im, text, pt_dim.xy, cv.text_HERSHEY_SIMPLEX, size, rgb, thickness=1, lineType=cv.LINE_AA)
-
-#   if was_pil:
-#     im = im_utils.pil2np(im)
-
-#   return im
 
 
 # -----------------------------------------------------------------------------

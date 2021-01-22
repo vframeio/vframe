@@ -1,38 +1,26 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
 # Copyright (c) 2020 Adam Harvey and VFRAME
-# https://vframe.io 
+# https://vframe.io
 #
 #############################################################################
 
 
 
 modelzoo:
-
-  # COCO object detection
   - filepath: 'modelzoo/coco.yaml'
-  
-  # Open Images object detection
   - filepath: 'modelzoo/openimages.yaml'
-
-  # ImageNet for feature extraction
   - filepath: 'modelzoo/imagenet.yaml'
-  
-  # Places365 for feature extraction
   - filepath: 'modelzoo/places365.yaml'
-
-  # Superresolution
   - filepath: 'modelzoo/super-resolution.yaml'
-
-  # Face detection for redaction
   - filepath: 'modelzoo/face-detection.yaml'
-  
+
 
 plugins:
 
-  
+
   # ---------------------------------------------------------------------------
   # Pipe processor
   # ---------------------------------------------------------------------------
@@ -45,29 +33,26 @@ plugins:
   # ---------------------------------------------------------------------------
   # Utility scripts
   # ---------------------------------------------------------------------------
-  - name: utils.convert
+  - name: convert
     description: Conversion utility scripts
     scripts:
-      - filepath: commands/utils/convert
+      - filepath: commands/convert
 
-  - name: utils.cvat
-    description: CVAT utility scripts
-    scripts:
-      - filepath: commands/utils/cvat
-
-  - name: utils.modelzoo
+  - name: modelzoo
     description: ModelZoo utility scripts
     scripts:
-      - filepath: commands/utils/modelzoo
+      - filepath: commands/modelzoo
       - filepath: plugins/vframe_modelzoo_plugin/vframe_modelzoo/commands
-  - name: utils.plot
+
+  - name: plot
     description: Data plotting utilities
     scripts:
-      - filepath: commands/utils/plot
-  - name: utils.dev
+      - filepath: commands/plot
+
+  - name: dev
     description: Development, admin utilities
     scripts:
-      - filepath: commands/utils/utils
+      - filepath: commands/utils
 
   # ---------------------------------------------------------------------------
   # Examples, templates
@@ -81,29 +66,3 @@ plugins:
     pipe: True
     scripts:
       - filepath: commands/templates/pipe
-
-
-  
-  # ---------------------------------------------------------------------------
-  # Plugin Template
-  # ---------------------------------------------------------------------------
-  
-  # - name: plugins.template
-  #   scripts:
-  #     - filepath: plugins/vframe_template_plugin/vframe_template/commands/utils/
-  # - name: plugins.template.pipe
-  #   pipe: True
-  #   scripts:
-  #     - filepath: plugins/vframe_template_plugin/vframe_template/commands/pipe/
-
-
-  # ---------------------------------------------------------------------------
-  # Search
-  # ---------------------------------------------------------------------------
-  
-  #- name: plugins.search
-  #  scripts:
-  #    - filepath: plugins/vframe_search_plugin/vframe_search/commands/
-
-
-

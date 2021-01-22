@@ -14,16 +14,14 @@
 #
 ################################################################################
 
-caffe-imagenet-bvlc-googlenet:
-  name: Caffe ImageNet GoogleNet
+imagenet_googlenet:
+  name: ImageNet GoogleNet
   processor: classify
   output: features
   local: modelzoo/models/caffe/classification/imagenet/bvlc_googlenet/
   remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_googlenet/
   model: bvlc_googlenet.caffemodel
   config: bvlc_googlenet.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -36,16 +34,14 @@ caffe-imagenet-bvlc-googlenet:
   allow_resize: False
   active: True
 
-caffe-imagenet-bvlc-alexnet:
-  name: Caffe ImageNet AlexNet
+imagenet_alexnet:
+  name: ImageNet AlexNet
   processor: classify
   output: features
   local: modelzoo/models/caffe/classification/imagenet/bvlc_alexnet/
   remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_alexnet/
   model: bvlc_alexnet.caffemodel
   config: bvlc_alexnet.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224
@@ -58,16 +54,14 @@ caffe-imagenet-bvlc-alexnet:
   allow_resize: False
   active: True
 
-caffe-imagenet-bvlc:
-  name: Caffe ImageNet CaffeNet
+imagenet_caffenet:
+  name: ImageNet CaffeNet
   processor: classify
   output: features
   local: modelzoo/models/caffe/classification/imagenet/bvlc_reference_caffenet/
   remote: https://download.vframe.io/v2/models/caffe/classification/imagenet/bvlc_reference_caffenet/
   model: bvlc_reference_caffenet.caffemodel
   config: bvlc_reference_caffenet.prototxt
-  labels: labels.txt
-  license: LICENSE.txt
   mean: [104, 117, 123]
   scale: 1.0
   width: 224

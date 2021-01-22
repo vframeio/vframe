@@ -17,6 +17,35 @@ from vframe.settings import app_cfg
 
 log = logging.getLogger('vframe')
 
+
+# -----------------------------------------------------------------------------
+#
+# Display standalone
+#
+# -----------------------------------------------------------------------------
+
+def display_frame(im, delay=1):
+
+  cv.imshow(app_cfg.CV_WINDOW_NAME, im)
+  
+  while True:
+
+    k = cv.waitKey(delay) & 0xFF
+    
+    if k == 27 or k == ord('q'):  # ESC
+      # exits the app
+      cv.destroyAllWindows()
+      sys.exit('Exiting because Q or ESC was pressed')
+    elif k != 255:
+      log.debug(f'k: {k}')
+
+
+# -----------------------------------------------------------------------------
+#
+# Display in pipe processor
+#
+# -----------------------------------------------------------------------------
+
 class DisplayUtils:
 
 

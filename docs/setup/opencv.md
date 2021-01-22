@@ -6,13 +6,13 @@ This OpenCV installation guide is for Linux Ubuntu 18. It should also work for 1
 
 ```
 cd vframe/3rdparty
-git clone https://github.com/opencv
-git clone https://github.com/opencv_contrib
+git clone https://github.com/opencv/opencv
+git clone https://github.com/opencv/opencv_contrib
 ```
 
 ## Install Dependencies
 
-First, install dependencies: 
+First, install dependencies:
 ```
 sudo apt install -y \
 	ffmpeg \
@@ -31,7 +31,9 @@ sudo apt install -y \
 
 ## Example build file
 
-Generate a cmake file using `./cli.py dev cmake ...` or copy/edit from below
+- Generate a cmake file using `./cli.py dev cmake -i [path-to-cmake.yaml] -o '[path-to-build.sh]`
+- run the generated bash script `bash build.sh`
+- or copy/edit from below:
 
 ```
 cmake \
@@ -144,14 +146,14 @@ echo "-----------------------------------------------------------"
 Which wil
 
 ```
--- 
+--
 -- General configuration for OpenCV 4.4.0-pre =====================================
 --   Version control:               4.3.0-636-g1fabe92ace
--- 
+--
 --   Extra modules:
 --     Location (extra):            /work/vframe/3rdparty/opencv_contrib/modules
 --     Version control (extra):     4.3.0-98-g5fae4082
--- 
+--
 --   Platform:
 --     Timestamp:                   2020-07-17T13:55:32Z
 --     Host:                        Linux 5.4.0-40-generic x86_64
@@ -159,7 +161,7 @@ Which wil
 --     CMake generator:             Unix Makefiles
 --     CMake build tool:            /usr/bin/make
 --     Configuration:               Release
--- 
+--
 --   CPU/HW features:
 --     Baseline:                    SSE SSE2 SSE3
 --       requested:                 SSE3
@@ -171,7 +173,7 @@ Which wil
 --       AVX (4 files):             + SSSE3 SSE4_1 POPCNT SSE4_2 AVX
 --       AVX2 (29 files):           + SSSE3 SSE4_1 POPCNT SSE4_2 FP16 FMA3 AVX AVX2
 --       AVX512_SKX (4 files):      + SSSE3 SSE4_1 POPCNT SSE4_2 FP16 FMA3 AVX AVX2 AVX_512F AVX512_COMMON AVX512_SKX
--- 
+--
 --   C/C++:
 --     Built as dynamic libs?:      NO
 --     C++ standard:                11
@@ -187,7 +189,7 @@ Which wil
 --     Precompiled headers:         NO
 --     Extra dependencies:          ade /usr/lib/x86_64-linux-gnu/libgtk-3.so /usr/lib/x86_64-linux-gnu/libgdk-3.so /usr/lib/x86_64-linux-gnu/libpangocairo-1.0.so /usr/lib/x86_64-linux-gnu/libpango-1.0.so /usr/lib/x86_64-linux-gnu/libatk-1.0.so /usr/lib/x86_64-linux-gnu/libcairo-gobject.so /usr/lib/x86_64-linux-gnu/libcairo.so /usr/lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so /usr/lib/x86_64-linux-gnu/libgio-2.0.so /usr/lib/x86_64-linux-gnu/libgobject-2.0.so /usr/lib/x86_64-linux-gnu/libglib-2.0.so /usr/lib/x86_64-linux-gnu/libgthread-2.0.so /usr/lib/x86_64-linux-gnu/libjpeg.so /usr/lib/x86_64-linux-gnu/libwebp.so /usr/lib/x86_64-linux-gnu/libpng.so /usr/lib/x86_64-linux-gnu/libz.so /usr/lib/x86_64-linux-gnu/libtiff.so /usr/lib/x86_64-linux-gnu/libImath.so /usr/lib/x86_64-linux-gnu/libIlmImf.so /usr/lib/x86_64-linux-gnu/libIex.so /usr/lib/x86_64-linux-gnu/libHalf.so /usr/lib/x86_64-linux-gnu/libIlmThread.so /usr/lib/x86_64-linux-gnu/libfreetype.so /usr/lib/x86_64-linux-gnu/libharfbuzz.so m pthread cudart_static -lpthread dl rt nppc nppial nppicc nppicom nppidei nppif nppig nppim nppist nppisu nppitc npps cublas cudnn cufft -L/usr/local/cuda/lib64 -L/usr/lib/x86_64-linux-gnu
 --     3rdparty dependencies:       ittnotify libprotobuf libjasper quirc
--- 
+--
 --   OpenCV modules:
 --     To be built:                 aruco calib3d ccalib core cudaarithm cudabgsegm cudacodec cudafeatures2d cudafilters cudaimgproc cudalegacy cudaobjdetect cudaoptflow cudastereo cudawarping cudev dnn dnn_objdetect dnn_superres features2d flann freetype fuzzy gapi hfs highgui img_hash imgcodecs imgproc intensity_transform line_descriptor ml objdetect optflow phase_unwrapping photo plot python3 superres surface_matching text tracking video videoio videostab xfeatures2d ximgproc xobjdetect xphoto
 --     Disabled:                    bgsegm bioinspired datasets dpm face quality rapid reg rgbd saliency shape stereo stitching structured_light world
@@ -196,14 +198,14 @@ Which wil
 --     Applications:                -
 --     Documentation:               NO
 --     Non-free algorithms:         YES
--- 
---   GUI: 
+--
+--   GUI:
 --     GTK+:                        YES (ver 3.24.20)
 --       GThread :                  YES (ver 2.64.3)
 --       GtkGlExt:                  NO
 --     VTK support:                 NO
--- 
---   Media I/O: 
+--
+--   Media I/O:
 --     ZLib:                        /usr/lib/x86_64-linux-gnu/libz.so (ver 1.2.11)
 --     JPEG:                        /usr/lib/x86_64-linux-gnu/libjpeg.so (ver 80)
 --     WEBP:                        /usr/lib/x86_64-linux-gnu/libwebp.so (ver encoder: 0x020e)
@@ -215,7 +217,7 @@ Which wil
 --     SUNRASTER:                   YES
 --     PXM:                         YES
 --     PFM:                         YES
--- 
+--
 --   Video I/O:
 --     DC1394:                      NO
 --     FFMPEG:                      YES
@@ -226,44 +228,44 @@ Which wil
 --       avresample:                NO
 --     GStreamer:                   YES (1.16.2)
 --     v4l/v4l2:                    YES (linux/videodev2.h)
--- 
+--
 --   Parallel framework:            pthreads
--- 
+--
 --   Trace:                         YES (with Intel ITT)
--- 
+--
 --   Other third-party libraries:
 --     Lapack:                      NO
 --     Eigen:                       NO
 --     Custom HAL:                  NO
 --     Protobuf:                    build (3.5.1)
--- 
+--
 --   NVIDIA CUDA:                   YES (ver 10.2, CUFFT CUBLAS FAST_MATH)
 --     NVIDIA GPU arch:             75
 --     NVIDIA PTX archs:
--- 
+--
 --   cuDNN:                         YES (ver 7.6.5)
--- 
+--
 --   OpenCL:                        YES (no extra features)
 --     Include path:                /work/vframe/3rdparty/opencv/3rdparty/include/opencl/1.2
 --     Link libraries:              Dynamic load
--- 
+--
 --   Python 3:
 --     Interpreter:                 /home/ubuntu/miniconda3/envs/vframe/bin/python (ver 3.7.6)
 --     Libraries:                   /home/ubuntu/miniconda3/envs/vframe/lib/libpython3.7m.so (ver 3.7.6)
 --     numpy:                       /home/ubuntu/miniconda3/envs/vframe/lib/python3.7/site-packages/numpy/core/include (ver 1.18.3)
 --     install path:                /home/ubuntu/miniconda3/envs/vframe/lib/python3.7/site-packages/cv2/python-3.7
--- 
+--
 --   Python (for build):            /home/ubuntu/miniconda3/envs/vframe/bin/python
--- 
+--
 --   Java:                          
 --     ant:                         NO
 --     JNI:                         NO
 --     Java wrappers:               NO
 --     Java tests:                  NO
--- 
+--
 --   Install to:                    /usr/local
 -- -----------------------------------------------------------------
--- 
+--
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /work/vframe/3rdparty/opencv/build

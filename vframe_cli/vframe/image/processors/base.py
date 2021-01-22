@@ -1,9 +1,9 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
 # Copyright (c) 2020 Adam Harvey and VFRAME
-# https://vframe.io 
+# https://vframe.io
 #
 #############################################################################
 
@@ -26,7 +26,7 @@ class NetProc:
   """
 
   def __init__(self, dnn_cfg):
-    """Instantiate an OpenCV DNN network model
+    """Instantiate an DNN network model
     """
     self.log = app_cfg.LOG
     self.dnn_cfg = dnn_cfg
@@ -38,7 +38,7 @@ class NetProc:
       self.net = cv.dnn.readNet(self.dnn_cfg.fp_model, self.dnn_cfg.fp_config)
     self.net.setPreferableBackend(self.dnn_cfg.dnn_backend)
     self.net.setPreferableTarget(self.dnn_cfg.dnn_target)
-    
+
     # load class labels
     if self.dnn_cfg.labels_exist:
       self.labels = file_utils.load_txt(dnn_cfg.fp_labels)  # line-delimited list of class labels
@@ -53,13 +53,13 @@ class NetProc:
     """Override me
     """
     pass
-    
+
 
   def _pre_process(self, im):
     """Pre-process image
     """
     cfg = self.dnn_cfg
-    
+
     if cfg.width == cfg.height and not cfg.width == cfg.height:
       cfg.width = min(cfg.width, cfg.height)
       cfg.height = cfg.width
@@ -128,7 +128,7 @@ class NetProc:
 # -----------------------------------------------------------------------------
 
 
-class ClassificationProc(NetProc):    
+class ClassificationProc(NetProc):
   """Classification inference processor
   """
   limit = 1
@@ -145,7 +145,7 @@ class ClassificationProc(NetProc):
         classify_result = ClassifyResult(idx, preds[idx], self.labels[idx])
         classify_results.append(classify_result)
 
-    return ClassifyResults(classify_results, self._perf_ms())
+    return ClassifyResults(classify_results)
 
 
   def features(self, im):
@@ -169,7 +169,7 @@ class DetectionProc(NetProc):
   def _nms(self, detect_results):
     """Apply non-maximum suppression and filter detection results
     :param detect_results: List[DetectResult]
-    :returns List[DetectResult] 
+    :returns List[DetectResult]
     """
     confidences = [float(d.confidence) for d in detect_results]
     boxes = [d.bbox.xywh_int for d in detect_results]

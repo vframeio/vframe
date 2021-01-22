@@ -179,7 +179,7 @@ class UltralightRetinaFaceProc(DetectionProc):
       bbox = BBox(*box, *self.frame_dim)
       detect_results.append(DetectResult(class_idx, prob, bbox, label))
 
-    return DetectResults(detect_results, self._perf_ms())
+    return DetectResults(detect_results)
 
 
 

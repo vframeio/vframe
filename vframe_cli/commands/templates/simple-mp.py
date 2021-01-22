@@ -12,7 +12,7 @@ import click
 
 @click.command('')
 @click.option('-n', '--iters', 'opt_iters', default=100)
-@click.option('-t', '--threads', 'opt_threads')
+@click.option('-t', '--threads', 'opt_threads', default=None, type=int)
 @click.pass_context
 def cli(ctx, opt_iters, opt_threads):
   """Multiprocessor simple template"""

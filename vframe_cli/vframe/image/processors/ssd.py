@@ -1,9 +1,9 @@
-############################################################################# 
+#############################################################################
 #
 # VFRAME
 # MIT License
 # Copyright (c) 2020 Adam Harvey and VFRAME
-# https://vframe.io 
+# https://vframe.io
 #
 #############################################################################
 
@@ -19,7 +19,7 @@ class SSDProc(DetectionProc):
     """
 
     detect_results = []
-
+    
     for detection in outs[0, 0]:
       confidence = float(detection[2])
       if confidence > self.dnn_cfg.threshold:
@@ -31,6 +31,6 @@ class SSDProc(DetectionProc):
         detect_results.append(detect_result)
 
     if self.dnn_cfg.nms:
-      detect_results = self._nms(detect_results, boxes, conf)
+      detect_results = self._nms(detect_results)
 
-    return DetectResults(detect_results, self._perf_ms())
+    return DetectResults(detect_results)

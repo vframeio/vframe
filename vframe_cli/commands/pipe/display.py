@@ -21,7 +21,7 @@ from vframe.utils.click_utils import processor
 @click.option('--pause/--no-pause', 'opt_pause', is_flag=True, 
   default=True,
   help="Pause between frames")
-@click.option('--autoplay', 'opt_autoplay', is_flag=True,
+@click.option('--auto', 'opt_autoplay', is_flag=True,
   help='Autoplay video')
 @click.option('--frame', 'opt_frame_type', default='draw',
   type=types.FrameImageVar,
@@ -31,6 +31,8 @@ from vframe.utils.click_utils import processor
 def cli(ctx, pipe, opt_delay, opt_pause, opt_autoplay, opt_frame_type):
   """Display images to screen"""
   
+  import time
+
   from vframe.settings import app_cfg
   from vframe.utils.display_utils import DisplayUtils
 
@@ -39,13 +41,14 @@ def cli(ctx, pipe, opt_delay, opt_pause, opt_autoplay, opt_frame_type):
   # initialize
 
   log = app_cfg.LOG
-  display_utils = DisplayUtils()
+  display_utils = DisplayUtils()  # TODO change to class method
   if opt_autoplay:
     opt_pause = False
-    try:
-      opt_delay =  int(header.mspf)  # milliseconds per frame
-    except Exception as e:
-      pass
+    frame_delay = 0
+  else:
+    frame_delay = opt_delay
+
+  st = time.time()
 
   # ---------------------------------------------------------------------------
   # process 
@@ -55,7 +58,20 @@ def cli(ctx, pipe, opt_delay, opt_pause, opt_autoplay, opt_frame_type):
     pipe_item = yield
     header = ctx.obj['header']
 
+    # if first video or new video, set frame delay based on video fps
+    if (opt_autoplay and not frame_delay) or (header.frame_index == header.last_frame_index):
+      try:
+        mspf =  int(header.mspf)  # milliseconds per frame
+      except Exception as e:
+        mspf = opt_delay
+
+    # dynamically adjust framerate
+    if opt_autoplay:
+      frame_delay = int(max(1, mspf - (time.time() - st)/1000))
+      st = time.time()
+    
+    # get and display image
     im = pipe_item.get_image(opt_frame_type)
-    display_utils.show_ctx(ctx, im, pause=opt_pause, delay=opt_delay)
+    display_utils.show_ctx(ctx, im, pause=opt_pause, delay=frame_delay)
 
     pipe.send(pipe_item)

@@ -22,7 +22,6 @@ maskrcnn:
   local: modelzoo/models/tensorflow/segmentation/mask_rcnn_inception_v2_coco/
   model: frozen_inference_graph.pb
   config: mask_rcnn_inception_v2_coco_2018_01_28.pbtxt
-  labels: labels.txt
   width: 800 # ?
   height: 800 # ?
   fit: False
