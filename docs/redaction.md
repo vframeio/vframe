@@ -26,19 +26,19 @@ source ../data/examples/filepaths.sh
 Simple face detection and blurring for images
 ```
 # Detect and blur faces using ssdface
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur draw display
+./cli.py pipe open -i $FACE_IMAGE detect -m ssdface redact draw display
 
 # Detect and blur faces using retinaface
-./cli.py pipe open -i $FACE_IMAGE detect -m retinaface blur draw display
+./cli.py pipe open -i $FACE_IMAGE detect -m retinaface redact draw display
 
 # Detect and blur faces using yoloface (custom cv build required)
-./cli.py pipe open -i $FACE_IMAGE detect -m yoloface blur draw display
+./cli.py pipe open -i $FACE_IMAGE detect -m yoloface redact draw display
 ```
 
 Simple face detection and blurring for videos
 ```
  # Detect and blur faces in a video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw display --auto
+./cli.py pipe open -i $FACE_VIDEO detect -m ssdface redact draw display --auto
 ```
 
 Save images or video
@@ -47,7 +47,7 @@ Save images or video
 ./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur save-images -o $DIR_IMAGES_OUT
 
 # Save video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw save-video -o $DIR_VIDEO_OUT
+./cli.py pipe open -i $FACE_VIDEO detect -m ssdface redact draw save-video -o $DIR_VIDEO_OUT
 ```
 
 Blur the detect face regions
@@ -56,13 +56,13 @@ Blur the detect face regions
 ./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur save-images -o $DIR_IMAGES_OUT
 
 # Detect and blur faces and save to new file, draw face bbox
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur draw save-images -o $DIR_IMAGES_OUT
+./cli.py pipe open -i $FACE_IMAGE detect -m ssdface redact draw save-images -o $DIR_IMAGES_OUT
 
 # rewrite as multi-line command for clarity
 ./cli.py pipe \
   open -i $FACE_IMAGE \
   detect -m ssdface \
-  blur \
+  redact \
   draw \
   save-images -o $DIR_IMAGES_OUT
 ```
@@ -73,7 +73,7 @@ Add `save-images` or `save-video` to the pipe commands to save redacted frames
 ./cli.py pipe open -i $FACE_IMAGE detect -m ssdface draw save-images $DIR_IMAGES_OUT
 
 # Save blurred face video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw save-video
+./cli.py pipe open -i $FACE_VIDEO detect -m ssdface redact draw save-video
 
 ```
 
@@ -85,14 +85,14 @@ Blur Directory of Images or Videos
 ./cli.py pipe \
   open -i ../data/images/ --exts jpg \
   detect -m ssdface \
-  blur \
+  redact \
   save_image -o ~/Downloads/ --suffix _redacted
 
 # Directory of MP4 videos
 ./cli.py pipe
   open -i ../data/images/ --exts mp4 \
   detect -m ssdface \
-  blur \
+  redact \
   save_video -o ~/Downloads/ --suffix _redacted
 ```
 
@@ -112,7 +112,7 @@ Blur all faces in a video and export detections to JSON file
 ./cli.py pipe \
   open -i ../data/media/input/samples/faces.mp4 \
   detect -m ssdface \
-  blur \
+  redact \
   save_data -o ../data/media/output/
 ```
 
@@ -122,7 +122,7 @@ Blur faces and save detections to JSON
 ./cli.py \
   pipe open -i ../data/media/input/samples/faces.mp4 \
   detect -m ssdface \
-  blur \
+  redact \
   save_data -o ../data/media/output/faces.json
 ```
 
@@ -227,7 +227,7 @@ Then blur the videos uses pre-computed detections
 FP_OUT=/path/to/videos_blurred/
 ./cli.py pipe \
   open -i ${FP}/merged.json \
-  blur \
+  redact \
   draw -C 255 255 255 \
   save_video -o ${FP}
 ```
@@ -246,14 +246,14 @@ By default, the detectors use the image size settings in the ModelZoo YAML confi
 ./cli.py pipe 
   open -i ../data/media/input/samples/faces.jpg \
   detect -m yoloface --width 960 \
-  blur \
+  redact \
   display
 
 # Decrease size (speeds up, but detects less small faces)
 ./cli.py pipe \
   open -i ../data/media/input/samples/faces.jpg \
   detect -m yoloface --width 448 \
-  blur \
+  redact \
   display
 ```
 
