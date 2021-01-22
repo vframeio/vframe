@@ -54,14 +54,14 @@ cd vframe_cli
 ./cli.py -h
 
 # Show list of commands in subgroup
-./cli.py utils.modelzoo
+./cli.py modelzoo
 
 # Test a model (auto-downloads model)
-./cli.py utils.modelzoo test -m coco_yolo3
+./cli.py modelzoo test -m coco
 
 # Speed test model for 20 iterations
-./cli.py utils.modelzoo fps -m coco_yolo3 --iters 20 --cpu  # use CPU
-./cli.py utils.modelzoo fps -m coco_yolo3 --iters 20 --gpu  # use GPU if available
+./cli.py modelzoo fps -m coco --iters 20 --cpu  # use CPU
+./cli.py modelzoo fps -m coco --iters 20 --gpu  # use GPU if available
 ```
 
 Read more about the [ModelZoo](docs/modelzoo.md)
