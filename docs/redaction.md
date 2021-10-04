@@ -7,14 +7,6 @@
 Detect and redact faces in images and videos. Save the results to JPG, PNG, MP4, or as JSON data files. 
 
 
-Capabilities:
-
-- ModelZoo options: YOLOV4, RetinaFace, RetinaFaceLight, and SSD MobileNet detection models
-- Export options: save to image, croplets, video, or JSON
-- GPU options: CUDA acceleration if OpenCV compiled with CUDA enabled
-- Merge options for using multiple models in ensemble
-
-
 ## Examples
 
 First, source the filepaths environment variables
