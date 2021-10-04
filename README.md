@@ -40,14 +40,14 @@ vf modelzoo
 ## ModelZoo
 ```
 # List of modelzoo commands
-./cli.py modelzoo list
+vf modelzoo list
 
 # Download a test model
-./cli.py modelzoo download -m coco
+vf modelzoo download -m coco
 
 # Speed test model for 20 iterations
-./cli.py modelzoo benchmark -m coco --iters 20 --device -1  # use CPU
-./cli.py modelzoo benchmark -m coco --iters 20 --device 0 # use GPU 0, 1, etc...
+vf modelzoo benchmark -m coco --iters 20 --device -1  # use CPU
+vf modelzoo benchmark -m coco --iters 20 --device 0 # use GPU 0, 1, etc...
 ```
 
 Read more about the [ModelZoo](docs/modelzoo.md)
@@ -57,10 +57,10 @@ Read more about the [ModelZoo](docs/modelzoo.md)
 ## Detect Objects
 ```
 # detect objects using COCO model (replace "image.jpg" with your image)
-./cli.py pipe open -i image.jpg detect -m coco draw display
+vf pipe open -i image.jpg detect -m coco draw display
 
 # detect objects using OpenImages model
-./cli.py pipe open -i image.jpg detect -m openimages draw display
+vf pipe open -i image.jpg detect -m openimages draw display
 ```
 
 Read more about [object detection](docs/object-detection.md) and the [ModelZoo](docs/modelzoo.md)
@@ -70,7 +70,7 @@ Read more about [object detection](docs/object-detection.md) and the [ModelZoo](
 ## Redacting (Blurring) Faces
 ```
 # Detect and blur faces in directory of images
-./cli.py pipe open -i input/ detect -m yoloface redact save_image -o output/
+vf pipe open -i input/ detect -m yoloface redact save_image -o output/
 ```
 
 Read more about [redaction](docs/redaction.md)
@@ -81,7 +81,7 @@ Read more about [redaction](docs/redaction.md)
 
 Convert a directory of images or video to JSON summary of detections
 ```
-./cli.py pipe open -i $d detect save-json -o path/to/output
+vf pipe open -i $d detect save-json -o path/to/output
 ```
 
 
@@ -89,7 +89,7 @@ Convert a directory of images or video to JSON summary of detections
 
 Convert a detection output file to CSV or HTML report
 ```
-./cli.py TODO
+vf TODO
 ```
 
 
@@ -97,7 +97,7 @@ Convert a detection output file to CSV or HTML report
 
 Pre-process a directory of media to understand the size range, dates, and total frames
 ```
-./cli.py TODO
+vf TODO
 ```
 
 
@@ -105,7 +105,7 @@ Pre-process a directory of media to understand the size range, dates, and total 
 
 Convert a directory of media to feature embeddings for use in image similarity searches
 ```
-./cli.py TODO
+vf TODO
 ```
 
 
