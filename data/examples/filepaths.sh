@@ -2,7 +2,7 @@
 # source environment variables for example scripts
 
 # base
-DIR_EXAMPLES="../data/examples"
+DIR_EXAMPLES="data/examples"
 DIR_IMAGES=${DIR_EXAMPLES}"/images"
 DIR_IMAGES_OUT=${DIR_IMAGES}"/output"
 DIR_VIDEOS=${DIR_EXAMPLES}"/videos"

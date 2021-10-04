@@ -1,0 +1,48 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+# ---------------------------------------------------------------------------
+# Logger
+# ---------------------------------------------------------------------------
+
+logger:
+  verbosity: 4  # disable 0
+  disable: False
+  logfile: ''
+
+# ---------------------------------------------------------------------------
+# List all ModelZoo configuration files
+# ---------------------------------------------------------------------------
+
+modelzoo:
+  - filepath: 'modelzoo/coco.yaml'            # detection: generic
+  - filepath: 'modelzoo/face-detection.yaml'  # detection: faces
+
+
+plugins:
+
+  # ---------------------------------------------------------------------------
+  # Included: Core
+  # ---------------------------------------------------------------------------
+  
+  - name: pipe
+    description: Image processing pipeline
+    pipe: True
+    scripts:
+      - filepath: commands/pipe  # core scripts
+
+
+  # ---------------------------------------------------------------------------
+  # Included: ModelZoo
+  # ---------------------------------------------------------------------------
+
+  - name: modelzoo
+    description: ModelZoo utility scripts
+    scripts:
+      - filepath: commands/modelzoo

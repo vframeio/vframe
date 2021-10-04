@@ -20,49 +20,42 @@ Capabilities:
 First, source the filepaths environment variables
 ```
 # source environment variables used for examples
-source ../data/examples/filepaths.sh
+source data/examples/filepaths.sh
 ```
 
 Simple face detection and blurring for images
 ```
-# Detect and blur faces using ssdface
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur draw display
-
-# Detect and blur faces using retinaface
-./cli.py pipe open -i $FACE_IMAGE detect -m retinaface blur draw display
-
-# Detect and blur faces using yoloface (custom cv build required)
-./cli.py pipe open -i $FACE_IMAGE detect -m yoloface blur draw display
+vf pipe open -i $FACE_IMAGE detect -m yoloface redact draw display
 ```
 
 Simple face detection and blurring for videos
 ```
  # Detect and blur faces in a video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw display --auto
+vf pipe open -i $FACE_VIDEO detect -m yoloface redact draw display --auto
 ```
 
 Save images or video
 ```
 # Save images
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur save-images -o $DIR_IMAGES_OUT
+vf pipe open -i $FACE_IMAGE detect -m yoloface blur save-images -o $DIR_IMAGES_OUT
 
 # Save video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw save-video -o $DIR_VIDEO_OUT
+vf pipe open -i $FACE_VIDEO detect -m yoloface redact draw save-video -o $DIR_VIDEO_OUT
 ```
 
 Blur the detect face regions
 ```
 # Detect and blur faces and save to new file
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur save-images -o $DIR_IMAGES_OUT
+vf pipe open -i $FACE_IMAGE detect -m yoloface blur save-images -o $DIR_IMAGES_OUT
 
 # Detect and blur faces and save to new file, draw face bbox
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface blur draw save-images -o $DIR_IMAGES_OUT
+vf pipe open -i $FACE_IMAGE detect -m yoloface redact draw save-images -o $DIR_IMAGES_OUT
 
 # rewrite as multi-line command for clarity
-./cli.py pipe \
+vf pipe \
   open -i $FACE_IMAGE \
-  detect -m ssdface \
-  blur \
+  detect -m yoloface \
+  redact \
   draw \
   save-images -o $DIR_IMAGES_OUT
 ```
@@ -70,10 +63,10 @@ Blur the detect face regions
 Add `save-images` or `save-video` to the pipe commands to save redacted frames
 ```
 # Save blurred face image
-./cli.py pipe open -i $FACE_IMAGE detect -m ssdface draw save-images $DIR_IMAGES_OUT
+vf pipe open -i $FACE_IMAGE detect -m yoloface draw save-images $DIR_IMAGES_OUT
 
 # Save blurred face video
-./cli.py pipe open -i $FACE_VIDEO detect -m ssdface blur draw save-video
+vf pipe open -i $FACE_VIDEO detect -m yoloface redact draw save-video
 
 ```
 
@@ -82,26 +75,26 @@ Add `save-images` or `save-video` to the pipe commands to save redacted frames
 Blur Directory of Images or Videos 
 ```
 # Directory of JPG images
-./cli.py pipe \
+vf pipe \
   open -i ../data/images/ --exts jpg \
-  detect -m ssdface \
-  blur \
-  save_image -o ~/Downloads/ --suffix _redacted
+  detect -m yoloface \
+  redact \
+  save-image -o ~/Downloads/ --suffix _redacted
 
 # Directory of MP4 videos
-./cli.py pipe
+vf pipe
   open -i ../data/images/ --exts mp4 \
-  detect -m ssdface \
-  blur \
-  save_video -o ~/Downloads/ --suffix _redacted
+  detect -m yoloface \
+  redact \
+  save-video -o ~/Downloads/ --suffix _redacted
 ```
 
 Expand BBox (eg: to cover ears)
 ```
 # Expand the bounding box to blur more than the face
-./cli.py pipe \
+vf pipe \
   open -i ../data/media/input/samples/faces.jpg \
-  detect -m ssdface \
+  detect -m yoloface \
   blur --expand 0.5 \
   display
 ```
@@ -109,30 +102,30 @@ Expand BBox (eg: to cover ears)
 Blur all faces in a video and export detections to JSON file
 ```
 # Blur faces in a single image
-./cli.py pipe \
+vf pipe \
   open -i ../data/media/input/samples/faces.mp4 \
-  detect -m ssdface \
-  blur \
+  detect -m yoloface \
+  redact \
   save_data -o ../data/media/output/
 ```
 
 Blur faces and save detections to JSON
 ```
 # Blur faces in a single image
-./cli.py \
+vf \
   pipe open -i ../data/media/input/samples/faces.mp4 \
-  detect -m ssdface \
-  blur \
+  detect -m yoloface \
+  redact \
   save_data -o ../data/media/output/faces.json
 ```
 
 Detector ensemble
 ```
 # Merge detections from multiple models
-./cli.py  pipe \
+vf  pipe \
   open -i ../data/media/input/samples/faces.jpg \
   detect -m yoloface \
-  detect -m ssdface \
+  detect -m yoloface \
   merge --to face \
   blur -n face \
   draw -c 255 255 255 -n face \
@@ -148,7 +141,7 @@ FP_VIDEOS=/path/to/videos
 FP_DETECTIONS=/path/to/detections
 GPU=0  # choose GPU index
 
-export CUDA_VISIBLE_DEVICES=${GPU}; ./cli.py pipe \
+export CUDA_VISIBLE_DEVICES=${GPU}; vf pipe \
        open -i ${FP_VIDEOS} -e mp4 --slice 0 1 \
        resize -w 960 -f original \
        detect -m retinaface -n retinaface_0 \
@@ -157,7 +150,7 @@ export CUDA_VISIBLE_DEVICES=${GPU}; ./cli.py pipe \
        merge --to retinaface  \
        save_data -o ${FP_DETECTIONS}/retinaface.json
 
-export CUDA_VISIBLE_DEVICES=${GPU}; ./cli.py pipe \
+export CUDA_VISIBLE_DEVICES=${GPU}; vf pipe \
        open -i ${FP_VIDEOS} -e mp4 --slice 0 1 \
        resize -w 960 -f original \
        detect -m yoloface -n yoloface_0 \
@@ -166,14 +159,14 @@ export CUDA_VISIBLE_DEVICES=${GPU}; ./cli.py pipe \
        merge --to yoloface \
        save_data -o ${FP_DETECTIONS}/yoloface.json
 
-export CUDA_VISIBLE_DEVICES=${GPU}; ./cli.py pipe \
+export CUDA_VISIBLE_DEVICES=${GPU}; vf pipe \
        open -i ${FP_VIDEOS} -e mp4 --slice 0 1 \
        resize -w 960 -f original \
-       detect -m ssdface -n ssdface_0 \
-       detect -m ssdface -r 90 -n ssdface_90 \
-       detect -m ssdface -r 270 -n ssdface_270 \
-       merge --to ssdface \
-       save_data -o ${FP_DETECTIONS}/ssdface.json
+       detect -m yoloface -n yoloface_0 \
+       detect -m yoloface -r 90 -n yoloface_90 \
+       detect -m yoloface -r 270 -n yoloface_270 \
+       merge --to yoloface \
+       save_data -o ${FP_DETECTIONS}/yoloface.json
 ```
 
 If GPU RAM is limited, run each command separately
@@ -183,12 +176,12 @@ If GPU RAM is limited, run each command separately
 
 FP_VIDEOS=/path/to/videos
 FP_METADATA=/path/to/metadata
-DETECTORS=(yoloface retinaface ssdface)
+DETECTORS=(yoloface retinaface yoloface)
 ROTS=(0 90 270)
 
 for DETECTOR in ${DETECTORS}; do
   for ROT in ${ROTS}; do
-    ./cli.py pipe \
+    vf pipe \
     open -i ${FP_VIDEO} -e mp4  \
     resize -w 960 -f original \
     detect -m ${DETECTOR} -n ${DETECTOR}_${ROT} -t 0.6 \
@@ -208,7 +201,7 @@ conda activate vframe
 
 Then merge all JSON files
 ```
-./cli.py dev merge-detections \
+vf dev merge-detections \
   -i [json1] \
   -i [json2] \
   -i [json3] \
@@ -217,7 +210,7 @@ Then merge all JSON files
 
 Then run NMS on the merged detections
 ```
-./cli.py dev merge-detections-nms \
+vf dev merge-detections-nms \
   -i ${FP_METADATA}/merged.json \
   -o ${FP_METADATA}/merged_nms.json
 ```
@@ -225,11 +218,11 @@ Then run NMS on the merged detections
 Then blur the videos uses pre-computed detections
 ```
 FP_OUT=/path/to/videos_blurred/
-./cli.py pipe \
+vf pipe \
   open -i ${FP}/merged.json \
-  blur \
+  redact \
   draw -C 255 255 255 \
-  save_video -o ${FP}
+  save-video -o ${FP}
 ```
 
 To be implemented:
@@ -243,17 +236,17 @@ By default, the detectors use the image size settings in the ModelZoo YAML confi
 
 ```
 # Increase size (slows down, but detects more small faces)
-./cli.py pipe 
+vf pipe 
   open -i ../data/media/input/samples/faces.jpg \
   detect -m yoloface --width 960 \
-  blur \
+  redact \
   display
 
 # Decrease size (speeds up, but detects less small faces)
-./cli.py pipe \
+vf pipe \
   open -i ../data/media/input/samples/faces.jpg \
   detect -m yoloface --width 448 \
-  blur \
+  redact \
   display
 ```
 

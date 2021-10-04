@@ -10,207 +10,61 @@
 
 ################################################################################
 #
-# DNN Face detectors
-# - retinaface: best overall accuracy and speed
-# - yoloface: slightly slower but better at small faces
-# - yoloface2: slightly better at small blurred faces
-# - ssdface: faster but only works on medium-large frontal faces
-# - retinalightface: experimental, avoid
-# - poseface: experimental, avoid
+# Face detectors
 #
 ################################################################################
 
 
 # -----------------------------------------------------------------------------
-# RetinaFace detector from InsightFace (best overall performance)
+# Anchors
 # -----------------------------------------------------------------------------
-retinaface:
-  # meta
-  name: InsightFace RetinaFace
-  origin: https://github.com/deepinsight/insightface/
-  credit: Copyright (c) 2018 Jiankang Deng and Jia Guo
-  license_tag: mit
-  # model
-  local: modelzoo/models/mxnet/detection/retinaface_r50_v1/
-  remote: https://download.vframe.io/v2/models/mxnet/detection/retinaface_r50_v1/
-  model: R50-0000.params
-  config: R50-symbol.json  # not used
-  # processor
-  processor: retinaface_mxnet
-  output: bbox
-  width: 960  # 1125x900, 1200x900, 1440x1152 (max)
-  height: 720
-  threshold: 0.8  # 0.5 greedy min
-  post_processor: retinaface_insightface
-  algorithm: net3
-  allow_resize: True
-  active: True
+
+anchors:
+
+  yoloface-base: &yoloface-base
+    credit: Developed by Adam Harvey for VFRAME
+    width: 640
+    height: 640
+    output: bbox
+    iou: 0.45
+    nms_threshold: 0.4
+    threshold: 0.6
+    resize_enabled: True
+    batch_enabled: True
+    # name: YOLO V5 Detector
+    # local: path/to/local/model.ext
+    # remote: https://example.com
+    # model: best.pt | best.onnx
+    # processor: yolov5_onnx | yolov5_pytorch
+
+  yoloface-base-pt: &yoloface-base-pt
+    <<: *yoloface-base
+    model: best.pt
+    processor: yolov5_pytorch
+
+  yoloface-base-onnx: &yoloface-base-onnx
+    <<: *yoloface-base
+    model: best.onnx
+    processor: yolov5_onnx
 
 
-# -----------------------------------------------------------------------------
-# YOLO Face
-# -----------------------------------------------------------------------------
-yoloface:
-  # meta
-  name: YOLO V4 Face Detection
-  credit: Copyright (c) 2020 Adam Harvey / VFRAME.io
-  # model
-  local: modelzoo/models/darknet/detection/yolo_v4_face/
-  remote: https://download.vframe.io/v2/models/darknet/detection/yolov4_face/
-  model: yolov4_40000.weights
-  config: yolov4_deploy.cfg
-  layers: ['yolo_139', 'yolo_150', 'yolo_161']
-  mean: [0,0,0]
-  scale: 0.00392156862745098  # 1/255
-  rgb: True
-  crop: False
-  # processor
-  processor: yolo
-  output: bbox
-  width: 800  # 800x800 recommended, use multiple of 32
-  height: 800  # 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 832, 864, 896, 928, 
-  threshold: 0.75  # 0.5 greedy min
-  nms_threshold: 0.4
-  nms: True
-  allow_resize: True
-  active: True
+models:
 
-yoloface2:
-  # meta
-  name: YOLO V4 Face Detection with Blur and Cutmix
-  credit: Copyright (c) 2020 Adam Harvey / VFRAME.io
-  # model
-  local: modelzoo/models/darknet/detection/yolo_v4_face_v2/
-  remote: https://download.vframe.io/v2/models/darknet/detection/yolov4_face_v2/
-  model: yolov4_28000.weights  # untested
-  config: yolov4_deploy.cfg
-  layers: ['yolo_139', 'yolo_150', 'yolo_161']
-  mean: [0,0,0]
-  scale: 0.00392156862745098  # 1/255
-  rgb: True
-  crop: False
-  # processor
-  processor: yolo
-  output: bbox
-  width: 800  # 800x800 recommended, use multiple of 32
-  height: 800  # 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 832, 864, 896, 928, 
-  threshold: 0.75  # 0.5 greedy min
-  nms_threshold: 0.75  
-  nms: True
-  allow_resize: True
-  active: True
+  yoloface-06-onnx:
+    <<: *yoloface-base-onnx
+    name: YOLOV5 RBK250
+    notes: Trained at 960x960, large model arch
+    local: onnx/detection/yoloface_06/
+    remote: https://download.vframe.io/v2/models/onnx/detection/yoloface_06/
 
-# -----------------------------------------------------------------------------
-# MobileNet SSD: quick but only works for large frontal faces
-# -----------------------------------------------------------------------------
-ssdface:
-  # meta
-  name: OpenCV SSD Face Detector
-  # model
-  local: modelzoo/models/caffe/detection/mobilenet_ssd_face/
-  remote: https://download.vframe.io/v2/models/caffe/detection/mobilenet_ssd_face/
-  model: opencv_face_detector.caffemodel
-  config: opencv_face_detector.prototxt
-  mean: [104, 177, 123]
-  scale: 1.0
-  width: 480
-  height: 480
-  rgb: False
-  crop: False
-  # processor
-  processor: ssd
-  output: bbox
-  threshold: 0.8
-  allow_resize: True
-  active: True
+  yoloface-06-pt: &yoloface-06-pt
+    <<: *yoloface-base-pt
+    name: YOLOV5 face detection
+    notes: Trained at 960x960, medium model arch
+    local: pytorch/detection/yoloface_06/
+    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_06/
+    width: 960
+    height: 960
 
-
-# -----------------------------------------------------------------------------
-# Experimental: Ultralight RetinaFace
-# -----------------------------------------------------------------------------
-retinafacelight:
-  # meta
-  name: UltraLight RetinaFace Detector
-  origin: https://github.com/Linzaer/Ultra-Light-Fast-Generic-Face-Detector-1MB
-  # model
-  url: https://download.vframe.io/caffe/detection/ultralight_retinaface/
-  local: modelzoo/models/caffe/detection/ultralight_retinaface/
-  remote: https://download.vframe.io/v2/models/caffe/detection/ultralight_retinaface/
-  model: RFB-320.caffemodel
-  #model: version-slim-640_simplified.onnx
-  config: RFB-320.prototxt
-  mean: [127, 127, 127]
-  scale: 0.0078125  # 1/128.0
-  width: 320
-  height: 240
-  rgb: False
-  crop: False
-  # processor
-  processor: ultralight
-  output: bbox
-  layers: ["boxes", "scores"]
-  threshold: 0.8
-  nms_threshold: 0.4
-  allow_resize: True
-  active: True
-
-
-# -----------------------------------------------------------------------------
-# Experimental: Face from pose using human body pose estimation
-# -----------------------------------------------------------------------------
-poseface:
-  # meta
-  name: Experimental OpenPose Human Pose-to-Face Estimation
-  url: https://github.com/CMU-Perceptual-Computing-Lab/openpose
-  processor: coco_poseface
-  output: bbox
-  # model
-  local: modelzoo/models/caffe/detection/openpose/
-  remote: https://download.vframe.io/v2/models/caffe/detection/openpose/
-  model: pose_iter_440000.caffemodel
-  config: pose_deploy_linevec.prototxt
-  # pre-process
-  mean: [0, 0, 0]  # BGR
-  scale: 0.00392156862745098
-  #width: 224  # width is variable
-  height: 368
-  rgb: False
-  crop: False
-  # processor
-  threshold: 0.5
-  allow_resize: True
-  # post processor
-  active: True
-
-
-
-# -----------------------------------------------------------------------------
-# YOLO Face
-# -----------------------------------------------------------------------------
-# yoloface_500k:
-#   # meta
-#   name: YOLO V3 500K Face Detector
-#   origin: https://github.com/dog-qiuqiu/MobileNetv2-YOLOV3
-#   credit: Developed by @dog-qiuqiu 2020. github.com/dog-qiuqiu
-#   # model
-#   local: modelzoo/models/darknet/detection/yolo_v3_face_500k/v2/
-#   remote: https://download.vframe.io/v2/models/darknet/yolo_v3_face_500k/v2/
-#   model: yoloface-500k-v2.weights
-#   config: yoloface-500k-v2.cfg
-
-#   layers: ['yolo_82', 'yolo_94', 'yolo_106']
-#   mean: [0,0,0]
-#   scale: 0.00392156862745098  # 1/255
-#   rgb: True
-#   crop: False
-#   # processor
-#   processor: yolo
-#   output: bbox
-#   width: 352  # 800x800 recommended, use multiple of 32
-#   height: 288  # 480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 832, 864, 896, 928, 
-#   threshold: 0.8  # use 0.5 for greedy, 0.75 for normal
-#   nms_threshold: 0.4
-#   nms: True
-#   allow_resize: True
-#   active: True
-
+  yoloface:
+    <<: *yoloface-06-pt

@@ -1,14 +1,9 @@
 # VFRAME: Visual Forensics, Redaction, and Metadata Extraction
 
-VFRAME is a computer vision toolkit designed for analyzing large media archives of images and videos. It includes a ModelZoo and a customizable plugin architecture to develop custom CLI tools. 
+VFRAME is a computer vision framework designed for analyzing large media archives of images and videos. It includes a ModelZoo and a customizable plugin architecture to develop custom CLI tools. VFRAME is still under development and code is subject to major changes.
 
-VFRAME is still under development and code is subject to major changes.
 
-The recommended way to use this VFRAME is with a custom OpenCV build. This utilizes NVIDIA GPUs for DNN inference and omits unused modules. The Conda environment yaml only includes a general CPU version of OpenCV, however CPU inference is too slow for production. Several [Docker](docker/) options are also included. Follow instructions below to setup VFRAME with OpenCV CUDA DNN enabled. 
-
-If you're having issues installing, read the [troubleshooting](docs/troubleshooting.md) guide before filing an issue.
-
-## Setup Conda Environment
+## Setup Conda or pip Environment
 
 ```
 # Clone this repo
@@ -16,38 +11,48 @@ git clone https://github.com/vframeio/vframe
 
 # Create Conda environment
 conda env create -f environment-linux.yml  # Linux CPU (Another step required for GPU)
-#conda env create -f environment-osx.yml  # MacOS CPU
 
-# Copy and edit .env variables
-cp .env-sample .env
+# Make an alias to vframe cli (recommended)
+alias vf="python /path/to/vframe/src/cli.py
+
+# or
+cd /path/to/vframe/
+python src/cli.py
 ```
 
-Setup [OpenCV DNN inference](docs/opencv.md) for GPU acceleration (requires NVIDIA GPU)
+To run the GPU-accelerated scripts on more recent GPUs (including RTX 3080 Ti or 3090) install PyTorch nightly from <https://pytorch.org/>.
 
 
 ## Test Installation
 ```
-# cd to CLI root
-cd vframe_cli
-
 # Show list of commands
-./cli.py -h
+vf
+
+# Show list of image processing commands
+vf pipe
+
+# Show list of modelzoo commands
+vf modelzoo
 ```
+
+
 
 ## ModelZoo
 ```
-# Show list of modelzoo commands
-./cli.py modelzoo
+# List of modelzoo commands
+./cli.py modelzoo list
 
-# Test a model (auto-downloads model)
-./cli.py modelzoo test -m coco
+# Download a test model
+./cli.py modelzoo download -m coco
 
 # Speed test model for 20 iterations
-./cli.py modelzoo benchmark -m coco --iters 20 --cpu  # use CPU
-./cli.py modelzoo benchmark -m coco --iters 20 --gpu  # use GPU if available
+./cli.py modelzoo benchmark -m coco --iters 20 --device -1  # use CPU
+./cli.py modelzoo benchmark -m coco --iters 20 --device 0 # use GPU 0, 1, etc...
 ```
 
 Read more about the [ModelZoo](docs/modelzoo.md)
+
+
 
 ## Detect Objects
 ```
@@ -60,7 +65,9 @@ Read more about the [ModelZoo](docs/modelzoo.md)
 
 Read more about [object detection](docs/object-detection.md) and the [ModelZoo](docs/modelzoo.md)
 
-## Blur Faces
+
+
+## Redacting (Blurring) Faces
 ```
 # Detect and blur faces in directory of images
 ./cli.py pipe open -i input/ detect -m yoloface redact save_image -o output/
@@ -68,13 +75,56 @@ Read more about [object detection](docs/object-detection.md) and the [ModelZoo](
 
 Read more about [redaction](docs/redaction.md)
 
-### Under Development
 
-- train object detector
-- synthetic data generator
-- face blur with tracking
-- search engine interface
-- cvat management
+
+## Batch Object Detection
+
+Convert a directory of images or video to JSON summary of detections
+```
+./cli.py pipe open -i $d detect save-json -o path/to/output
+```
+
+
+## TODO: Generate Report from Detections
+
+Convert a detection output file to CSV or HTML report
+```
+./cli.py TODO
+```
+
+
+## TODO: Analyzing Media Sizes
+
+Pre-process a directory of media to understand the size range, dates, and total frames
+```
+./cli.py TODO
+```
+
+
+## TODO: Generate Feature Embeddings
+
+Convert a directory of media to feature embeddings for use in image similarity searches
+```
+./cli.py TODO
+```
+
+
+## Road Map
+
+- Add OCR
+- Expand ModelZoo
+- Improve detection inference performance
+
+
+
+## TODO: Tips
+
+- Use the model benchmark and media sizes scripts to estimate processing time for larger collections of media
+- Explore the ModelZoo options at vframe.io
+- Create your own plugins or scripts to extend the list of commands for either pipe or modelzoo, or create your own plugin
+- Recommended hardware configuration
+- Common pitfalls and basic troubleshooting guide
+
 
 
 ## Acknowledgments

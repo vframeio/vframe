@@ -1,0 +1,4 @@
+model,fps,iterations,image_width,image_height,dnn_width,dnn_height,user_width,user_height,processor,opencv_version,python_version
+coco-sm,90.13,10,640,480,1280,1280,1280,1280,gpu,4.5.3,3.7.6
+coco-md,66.43,10,640,480,1280,1280,1280,1280,gpu,4.5.3,3.7.6
+coco-lg,51.75,10,640,480,1280,1280,1280,1280,gpu,4.5.3,3.7.6
