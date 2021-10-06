@@ -297,6 +297,14 @@ class MediaFile:
   def frame_detections_exist(self, labels=None, threshold=None):
     """Returns True if any frame contains any detection
     """
+    n = self.n_detections(labels=lables, threshold=threshold)
+    return n > 0
+
+
+  @property
+  def n_detections(self, labels=None, threshold=None):
+    """Returns True if any frame contains any detection
+    """
 
     if self.metadata:
       dets = []
@@ -307,7 +315,7 @@ class MediaFile:
         if labels:
           dets = [x for x in dets if x.label in labels]
 
-    return len(dets) > 0
+    return len(dets)
 
 
   @property
@@ -324,6 +332,10 @@ class MediaFile:
   @property
   def parent(self):
     return Path(self.filepath).parent
+
+  @property
+  def parent_name(self):
+    return Path(self.filepath).parent.name
 
   @property
   def filename(self):

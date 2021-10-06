@@ -18,7 +18,7 @@ from vframe.utils.click_utils import show_help
   help='Path to output directory')
 @click.option('--keep-subdirs', 'opt_keep_subdirs', is_flag=True,
   help='Keep subdirectory structure in output directory')
-@click.option('--type', 'opt_type', default='copy',
+@click.option('-t', '--type', 'opt_type', default='copy',
   type=click.Choice(['move', 'copy', 'symlink']))
 @processor
 @click.pass_context

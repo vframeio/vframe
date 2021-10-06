@@ -12,9 +12,20 @@ import click
 
 from vframe.utils.click_utils import processor
 
+accessors = {
+  '@filename': 'filename',
+  '@parent_name': 'parent_name',
+  '@filepath': 'filepath',
+  '@ext': 'ext',
+  '@width': 'width',
+  '@height': 'height',
+  '@n_frames': 'n_frames',
+  '@n_detections': 'n_detections'
+}
+
 @click.command('')
 @click.option('-t', '--text', 'opt_text', required=True,
-  help='Caption text')
+  help=f'Caption text. Accessors: {", ".join(accessors.keys())}')
 @click.option('-x', '--x', 'opt_x', required=True, default=0,
   help='X position in pixels. Use negative for distance from bottom.')
 @click.option('-y', '--y', 'opt_y', required=True, default=0,
@@ -22,9 +33,9 @@ from vframe.utils.click_utils import processor
 @click.option('-c', '--color', 'opt_color', 
   default=(0,255,0),
   help='font color in RGB int (eg 0 255 0)')
-@click.option('--size', 'opt_font_size', default=16,
+@click.option('--font-size', 'opt_font_size', default=16,
   help='Font size for labels')
-@click.option('--bg', 'opt_bg', is_flag=True,
+@click.option('--bg/--no-bg', 'opt_bg', is_flag=True, default=True,
   help='Add text background')
 @click.option('--bg-color', 'opt_color_bg', default=(0,0,0))
 @click.option('--bg-padding', 'opt_padding_text', default=None, type=int)
@@ -40,6 +51,13 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
   from vframe.models.geometry import Point
   from vframe.utils import im_utils, draw_utils
   
+
+  """
+  - Replace $text with attribute if exists, else warn
+  - $filename: M.filename
+  - $frame_index: M.frame_index
+  """
+
   # ---------------------------------------------------------------------------
   # initialize
   
@@ -60,6 +78,15 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
       continue
 
     im = M.images.get(FrameImage.DRAW)
+    text = opt_text
+
+    for k,v in accessors.items():
+      if k in text:
+        try:
+          text = text.replace(k, str(getattr(M, v)))
+        except Exception as e:
+          LOG.error(f'{k}:{v} is not a valid text accessor. Error: {e}')
+
 
     # draw text
     h,w,c = im.shape
@@ -75,7 +102,7 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
     pt = Point(*xy, *dim)
     
     # draw text
-    im = draw_utils.draw_text(im, opt_text, pt, font_color=color_text, font_size=opt_font_size, 
+    im = draw_utils.draw_text(im, text, pt, font_color=color_text, font_size=opt_font_size, 
       bg=opt_bg, padding_text=opt_padding_text, color_bg=color_bg, upper=False)
     
     M.images[FrameImage.DRAW] = im

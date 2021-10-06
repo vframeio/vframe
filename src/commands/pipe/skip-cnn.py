@@ -18,12 +18,12 @@ from vframe.utils.click_utils import processor, show_help
   default=None,
   type=ModelZooClickVar,
   help=show_help(ModelZoo))
-@click.option('--feat-thresh', 'opt_feat_thresh', default=0.25, type=click.FloatRange(0,1),
+@click.option('-t', '--threshold', 'opt_threshold', default=0.25, type=click.FloatRange(0,1),
   help='Number of frames to decimate/skip for every frame read (0.05)')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_model_enum, opt_feat_thresh, opt_all_frames):
+def cli(ctx, sink, opt_model_enum, opt_threshold, opt_all_frames):
   """Skip similar frames using CNN features"""
   
   from pathlib import Path
@@ -47,7 +47,7 @@ def cli(ctx, sink, opt_model_enum, opt_feat_thresh, opt_all_frames):
     cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
     feat_pre = np.zeros(dnn_cfg.dimensions)
     features = [feat_pre]
-    feat_thresh = 1.0 - opt_feat_thresh
+    feat_thresh = 1.0 - opt_threshold
 
 
   while True:

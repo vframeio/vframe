@@ -10,15 +10,14 @@
 
 import click
 
-from vframe.models.types import ModelZooClickVar, ModelZoo
 from vframe.utils.click_utils import processor, show_help
 
 @click.command('')
 @click.option('--type', 'opt_type', 
   default='phash', type=click.Choice(['phash', 'ahash', 'dhash']),
   help='Hashing function')
-@click.option('--threshold', 'opt_thresh', 
-  default=0.05, type=click.FloatRange(0,1),
+@click.option('-t', '--threshold', 'opt_thresh', 
+  default=0.035, type=click.FloatRange(0,1),
   help='Hash threshold')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @processor

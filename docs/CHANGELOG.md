@@ -13,6 +13,8 @@ VFRAME is experimental, unstable and not yet recommended for production workflow
 
 ### Added
 - ONNX inference for YOLOV5 models
+- PyTorch inference for YOLOV5 models
+- Batch inference for PyTorch YOLOV5 models
 - `pipe open` grouping for images, videos, and pre-processed items
 - CHANGELOG to track changes
 

@@ -12,6 +12,9 @@ git clone https://github.com/vframeio/vframe
 # Create Conda environment
 conda env create -f environment-linux.yml  # Linux CPU (Another step required for GPU)
 
+# Activate
+conda activate vframe
+
 # Make an alias to vframe cli (recommended)
 alias vf="python /path/to/vframe/src/cli.py
 
@@ -58,9 +61,6 @@ Read more about the [ModelZoo](docs/modelzoo.md)
 ```
 # detect objects using COCO model (replace "image.jpg" with your image)
 vf pipe open -i image.jpg detect -m coco draw display
-
-# detect objects using OpenImages model
-vf pipe open -i image.jpg detect -m openimages draw display
 ```
 
 Read more about [object detection](docs/object-detection.md) and the [ModelZoo](docs/modelzoo.md)
@@ -70,7 +70,7 @@ Read more about [object detection](docs/object-detection.md) and the [ModelZoo](
 ## Redacting (Blurring) Faces
 ```
 # Detect and blur faces in directory of images
-vf pipe open -i input/ detect -m yoloface redact save_image -o output/
+vf pipe open -i input/ detect -m yoloface redact save-images -o output/
 ```
 
 Read more about [redaction](docs/redaction.md)
@@ -81,31 +81,7 @@ Read more about [redaction](docs/redaction.md)
 
 Convert a directory of images or video to JSON summary of detections
 ```
-vf pipe open -i $d detect save-json -o path/to/output
-```
-
-
-## TODO: Generate Report from Detections
-
-Convert a detection output file to CSV or HTML report
-```
-vf TODO
-```
-
-
-## TODO: Analyzing Media Sizes
-
-Pre-process a directory of media to understand the size range, dates, and total frames
-```
-vf TODO
-```
-
-
-## TODO: Generate Feature Embeddings
-
-Convert a directory of media to feature embeddings for use in image similarity searches
-```
-vf TODO
+vf pipe open -i $d detect save-json -o output/
 ```
 
 
@@ -114,16 +90,6 @@ vf TODO
 - Add OCR
 - Expand ModelZoo
 - Improve detection inference performance
-
-
-
-## TODO: Tips
-
-- Use the model benchmark and media sizes scripts to estimate processing time for larger collections of media
-- Explore the ModelZoo options at vframe.io
-- Create your own plugins or scripts to extend the list of commands for either pipe or modelzoo, or create your own plugin
-- Recommended hardware configuration
-- Common pitfalls and basic troubleshooting guide
 
 
 
