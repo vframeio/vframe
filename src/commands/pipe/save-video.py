@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
   import cv2 as cv
   
   from vframe.settings import app_cfg
-  from vframe.settings.app_cfg import LOG
+  from vframe.settings.app_cfg import LOG, USE_DRAW_FRAME_KEY
   from vframe.utils.file_utils import ensure_dir
 
 
@@ -51,6 +51,9 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
   # initialize
 
   
+  if opt_frame_type == FrameImage.DRAW:
+    ctx.obj[USE_DRAW_FRAME_KEY] = True
+
   ext = opt_ext.name.lower()
   four_cc = cv.VideoWriter_fourcc(*f'{opt_codec}')
 

@@ -32,12 +32,14 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
   
   import time
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
   from vframe.utils.display_utils import DisplayUtils
 
   
   # ---------------------------------------------------------------------------
   # initialize
+
+  ctx.obj[USE_DRAW_FRAME_KEY] = True
 
   display_utils = DisplayUtils()
   target_mspf = 1000 / opt_fps

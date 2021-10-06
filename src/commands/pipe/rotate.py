@@ -28,7 +28,10 @@ def cli(ctx, sink, opt_rotate):
   import cv2 as cv
   from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
 
-  frame_types = [FrameImage.DRAW, FrameImage.ORIGINAL]
+  frame_types = [FrameImage.ORIGINAL]
+  if ctx.obj[USE_DRAW_FRAME_KEY]:
+    frame_types.append(FrameImage.DRAW)
+    
   cv_rot_val = ROTATE_VALS[opt_rotate]
 
   while True:

@@ -20,11 +20,9 @@ from vframe.utils.click_utils import show_help
   help='Color in RGB int (eg 0 255 0)')
 @click.option('-a', '--alpha', 'opt_alpha', default=0.5,
   help='Opacity of background image. Use 1.0 for solid fill.')
-@click.option('-n', '--frame-name', 'opt_frame_type', default='original',
-  type=FrameImageVar, help=show_help(FrameImage))
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_color, opt_alpha, opt_frame_type):
+def cli(ctx, sink, opt_color, opt_alpha):
   """Add or composite background"""
   
   import cv2 as cv
@@ -32,6 +30,9 @@ def cli(ctx, sink, opt_color, opt_alpha, opt_frame_type):
   from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
   from vframe.models import types
   from vframe.utils import im_utils
+
+
+  ctx.obj[USE_DRAW_FRAME_KEY] = True
 
   while True:
 
@@ -42,7 +43,7 @@ def cli(ctx, sink, opt_color, opt_alpha, opt_frame_type):
       sink.send(M)
       continue
 
-    im = M.images[opt_frame_type]
+    im = M.images[FrameImage.DRAW]
 
     # create colorfill image
     h,w,c = im.shape

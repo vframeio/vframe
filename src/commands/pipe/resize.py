@@ -32,13 +32,15 @@ from vframe.utils.click_utils import show_help
 def cli(ctx, sink, opt_width, opt_height, opt_frame_type, opt_all_frames, opt_interp):
   """Resize image"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
   from vframe.utils.im_utils import resize
 
   if not opt_width or opt_height:
     raise click.UsageError('-w/--width or -h/--height required')
 
   frame_types = [FrameImage.DRAW, FrameImage.ORIGINAL] if opt_all_frames else [opt_frame_type]
+  if FrameImage.DRAW in frame_types:
+    ctx.obj[USE_DRAW_FRAME_KEY] = True
   
   while True:
 

@@ -20,9 +20,10 @@ from vframe.utils.click_utils import processor, show_help
   default=0.035, type=click.FloatRange(0,1),
   help='Hash threshold')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
+@click.option('--prehash', 'opt_prehash', is_flag=True,)
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames):
+def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
   """Skip similar frames using perceptual hash"""
   
   from pathlib import Path
@@ -31,7 +32,8 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames):
   import numpy as np
   import imagehash
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_PHASH_KEY
+  from vframe.settings.app_cfg import USE_DRAW_FRAME_KEY
   from vframe.utils.im_utils import resize, np2pil
   from vframe.models.types import FrameImage, MediaType
 
@@ -53,6 +55,8 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames):
   highfreq_factor = 4
   hash_im_size = hash_size * highfreq_factor
   hash_thresh_int = opt_thresh * 64
+
+  ctx.obj[USE_PHASH_KEY] = opt_prehash
 
 
   while True:
@@ -82,11 +86,16 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames):
     # -------------------------------------------------------------------------
     # perceptual hash thresholding
 
-    im = M.images.get(FrameImage.ORIGINAL)
-    im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
-    im = resize(im, width=hash_im_size, height=hash_im_size, force_fit=True)
-    hash_cur = hasher(np2pil(im))
+    if opt_prehash:
+      hash_cur = M.phash
+    else:
+      im = M.images.get(FrameImage.ORIGINAL)
+      im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+      im = resize(im, width=hash_im_size, height=hash_im_size, force_fit=True)
+      hash_cur = hasher(np2pil(im))
+
     hash_changed = (hash_cur - hash_pre) > hash_thresh_int
+    
     if hash_changed and opt_all_frames:
       hash_changed = all([abs(hash_cur - x) > hash_thresh_int for x in hashes])
       if hash_changed:

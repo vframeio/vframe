@@ -42,6 +42,8 @@ LOG = logging.getLogger('vframe')
 # -----------------------------------------------------------------------------
 
 SKIP_FRAME_KEY = 'SKIP_FRAME'
+USE_PHASH_KEY = 'USE_PHASH'
+USE_DRAW_FRAME_KEY = 'USE_DRAW_FRAME'
 FRAME_BUFFER_SIZE = 2048
 
 

@@ -21,17 +21,18 @@ from vframe.utils.click_utils import generator
   help='Recursive glob')
 @click.option('--slice', 'opt_slice', type=(int, int), default=(-1, -1),
   help="Slice list of inputs")
-@click.option('--sparse', 'opt_sparse', is_flag=True,
-  help='Don\'t process frames, only iterate videos to create filelist')
+@click.option('--no-load', 'opt_no_load', is_flag=True,
+  help='Don\'t load frames, only iterate images/videos')
 @generator
 @click.pass_context
-def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_sparse):
+def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
   """Open media for processing"""
 
   from tqdm import tqdm
   import dacite
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import USE_PHASH_KEY, USE_DRAW_FRAME_KEY
   from vframe.models.media import MediaFileReader
   from vframe.utils.sys_utils import SignalInterrupt
 
@@ -39,13 +40,18 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_sparse):
   # ---------------------------------------------------------------------------
   # init
 
+  print('init open')
+
   sigint = SignalInterrupt()
 
   init_obj = {
     'filepath': opt_input,
     'exts': tuple(opt_exts),
     'slice_idxs': opt_slice,
-    'recursive': opt_recursive
+    'recursive': opt_recursive,
+    'use_prehash': ctx.obj.get(USE_PHASH_KEY, False),
+    'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME_KEY, False),
+    
     }
 
   # init media file reader
@@ -55,13 +61,13 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_sparse):
   # process media
   for m in tqdm(r.iter_files(), total=r.n_files, desc='Files', leave=False):
 
-    m.skip_all_frames = opt_sparse
+    m.skip_all_frames = opt_no_load
 
     if sigint.interrupted:
       m.unload()
       return
     
-    for f in tqdm(m.iter_frames(), total=m.n_frames, desc=m.fn, disable=m.n_frames <= 1, leave=False):
+    for ok in tqdm(m.iter_frames(), total=m.n_frames, desc=m.fn, disable=m.n_frames <= 1, leave=False):
     
       if not m.vstream.frame_count > 0:
         continue

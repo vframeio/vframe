@@ -52,7 +52,7 @@ anchors:
 
 models:
 
-  yoloface-07-onnx:
+  yoloface-07-onnx: &yoloface-07-onnx
     <<: *yoloface-base-onnx
     notes: Trained at 960-lg
     local: onnx/detection/yoloface_07/
@@ -71,5 +71,11 @@ models:
   yoloface-07: &yoloface-07
     <<: *yoloface-07-pt
 
+  yoloface-pt:
+    <<: *yoloface-07
+
   yoloface:
     <<: *yoloface-07
+
+  yoloface-onnx:
+    <<: *yoloface-07-onnx

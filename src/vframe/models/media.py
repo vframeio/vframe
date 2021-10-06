@@ -45,6 +45,8 @@ class MediaFileReader:
   slice_idxs: Tuple[int, int]  # 
   recursive: bool=False  # recursively glob filepath
   ext_upper: bool=True  # glob lower and upper exts
+  use_prehash: bool=False
+  use_draw_frame: bool=False
 
   def __post_init__(self):
     fp = self.filepath
@@ -104,7 +106,7 @@ class MediaFileReader:
       if i > 0:
         self._frames_processed.append(self._files[i - 1].n_frames)
         self._files[i - 1].unload()  # unload previous
-      self._files[i].load()  # load current
+      self._files[i].load(use_draw_frame=self.use_draw_frame, use_prehash=self.use_prehash)
       yield self._files[i]
     # post iter
     self._frames_processed.append(self._files[i].n_frames)
@@ -161,7 +163,7 @@ class MediaFile:
 
   def __post_init__(self):
     self.images = {}  # stores image data
-    self.date = date_modified(self.filepath)  # using modified to get created
+    # self.date = date_modified(self.filepath)  # using modified to get created
     self.metadata = {}
     if self.ext in app_cfg.VALID_PIPE_IMAGE_EXTS:
       self.type = MediaType.IMAGE
@@ -177,11 +179,13 @@ class MediaFile:
     return mf
 
 
-  def load(self):
+  def load(self, use_draw_frame=False, use_prehash=False):
     """Loads the media file
     """
+    self.use_prehash = use_prehash
+    self.use_draw_frame = use_draw_frame
     try:
-      self.vstream = FileVideoStream(self.filepath, seek=self.frame_idx_start)
+      self.vstream = FileVideoStream(self.filepath, seek=self.frame_idx_start, use_prehash=use_prehash)
       
       if not self.frame_idx_end:
         self.frame_idx_end = self.n_frames - 1
@@ -221,13 +225,15 @@ class MediaFile:
     frame_data = []
     for frame_idx, _frame_data in self.metadata.items():
       frame_data.append({k:v.to_dict() for k,v in _frame_data.items()})
+
+    # only get date if requested
     return {
       'file_meta': {
         'filepath': self.filepath,
         'width': self.vstream.width,
         'height': self.vstream.height,
         'n_frames': self.n_frames,
-        'date': str(self.date),
+        'date': str(date_modified(self.filepath)),
       },
       'frames_meta': frame_data
       }
@@ -244,18 +250,28 @@ class MediaFile:
       self.metadata = {}
       yield 
       return
+
     # iter
     for index in range(self.n_frames):
       # che
       if not self.vstream.running():
         LOG.warn(f'Corrupt video: {self.filepath}. Exited at frame: {index}/{self.n_frames}. No data saved.')
         return
-      im = self.vstream.read_frame()
+      
+      if self.use_prehash:
+        im, self.phash = self.vstream.read_frame_phash()
+      else:
+        im = self.vstream.read_frame()
+
       self.images = {}  # stores image data
       self.metadata.setdefault(index, {})  # blank if no precomputed meta
       self.images[FrameImage.ORIGINAL] = im
-      self.images[FrameImage.DRAW] = im.copy()  # disable unless needed
-      yield im
+      if self.use_draw_frame:
+        self.images[FrameImage.DRAW] = im.copy()
+
+      # TODO: not using this var
+      yield True
+
     # post iter
     self.processed_fps = (self.n_frames + 1) / (time.perf_counter() - self._start_time)
 

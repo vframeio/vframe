@@ -17,11 +17,13 @@ from pymediainfo import MediaInfo
 from PIL import Image
 import cv2 as cv
 import dacite
+import imagehash
 
 from vframe.settings import app_cfg
 from vframe.settings.app_cfg import LOG
 from vframe.models.mediameta import MediaMeta
 from vframe.utils import file_utils
+from vframe.utils.im_utils import pil2np, np2pil, resize
 
 
 
@@ -42,7 +44,7 @@ class FileVideoStream:
 
   frame_count = 0  
 
-  def __init__(self, fp, seek=0, queue_size=512):
+  def __init__(self, fp, seek=0, queue_size=512, use_prehash=False):
     """Threaded video reader
     """
 
@@ -50,6 +52,8 @@ class FileVideoStream:
     # self.vcap = cv.VideoCapture(str(fp), cv.CAP_FFMPEG)
     
     self.is_image = Path(fp).suffix[1:].lower() in ['jpg', 'png']
+    self.use_prehash = use_prehash
+    # LOG.debug(f'use use_prehash: {self.use_prehash}')
     
     # TODO: explore further. currently not working
     # self.vcap.set(cv.CAP_PROP_HW_ACCELERATION, 0.0)
@@ -61,8 +65,8 @@ class FileVideoStream:
 
     if self.is_image:
       self.fps = 25.0  # default 25.0 for still image
-      im = cv.imread(fp)
-      self.height, self.width = im.shape[:2]
+      im = Image.open(fp)
+      self.width, self.height = im.size
       self.dim = (self.width, self.height)
       self.index = -1
       self.frame_read_index = 0
@@ -90,6 +94,8 @@ class FileVideoStream:
           self.index = -1
         # initialize queue used to store frames
         self.queue = Queue(maxsize=queue_size)
+        if self.use_prehash:
+          self.queue_phash = Queue(maxsize=queue_size)
         # initialize thread
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
@@ -124,7 +130,14 @@ class FileVideoStream:
           self.stopped = True
           break
         else:
+          # frame
           self.queue.put(frame)
+          # add phash
+          if self.use_prehash:
+            frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+            frame = resize(frame, width=32, height=32, force_fit=True)
+            phash = imagehash.phash(np2pil(frame))
+            self.queue_phash.put(phash)
       else:
         time.sleep(0.1)
 
@@ -135,6 +148,8 @@ class FileVideoStream:
   def release(self):
     if self.frame_count > 0:
       del self.queue
+      if self.use_prehash:
+        del self.queue_phash
       if not self.is_image:
         self.vcap.release()
 
@@ -142,7 +157,19 @@ class FileVideoStream:
   def read_frame(self):
     # return next frame in the queue
     self.index += 1
-    return self.queue.get()
+    if self.is_image:
+      return pil2np(self.queue.get())
+    else:
+      return self.queue.get()
+
+
+  def read_frame_phash(self):
+    # return next frame in the queue
+    self.index += 1
+    if self.is_image:
+      return (pil2np(self.queue.get()), self.queue_phash.get())
+    else:
+      return (self.queue.get(), self.queue_phash.get())
 
 
   # check if all available video frames read

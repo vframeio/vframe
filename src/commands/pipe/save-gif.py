@@ -48,7 +48,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
   import cv2 as cv
   from PIL import Image
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
   from vframe.models.types import MediaType
   from vframe.utils.im_utils import np2pil, write_animated_gif
   from vframe.utils.file_utils import ensure_dir, filesize
@@ -56,6 +56,9 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
 
   # ---------------------------------------------------------------------------
   # initialize
+
+  if opt_frame_type == FrameImage.DRAW:
+    ctx.obj[USE_DRAW_FRAME_KEY] = True
   
   frames = None
   fp_parent = None

@@ -11,15 +11,15 @@ import click
 
 from vframe.utils.click_utils import processor
 from vframe.utils.click_utils import show_help
-from vframe.models.types import ModelZooClickVar, ModelZoo, FrameImage
+from vframe.models.types import BatchModelZooClickVar, BatchModelZoo, FrameImage
 from vframe.settings import app_cfg
 
 @click.command('')
 @click.option('-m', '--model', 'opt_model_enum', 
   default=app_cfg.DEFAULT_DETECT_MODEL,
-  type=ModelZooClickVar,
-  help=show_help(ModelZoo))
-@click.option('--device', 'opt_device', default=0,
+  type=BatchModelZooClickVar,
+  help=show_help(BatchModelZoo))
+@click.option('-d', '--device', 'opt_device', default=0,
   help='GPU device for inference (use -1 for CPU)')
 @click.option('-s', '--size', 'opt_dnn_size', default=(None, None), type=(int, int),
   help='DNN blob image size. Overrides config file')
@@ -27,25 +27,23 @@ from vframe.settings import app_cfg
   help='Detection threshold. Overrides config file')
 @click.option('--name', '-n', 'opt_data_key', default=None,
   help='Name of data key')
+@click.option('--verbose', 'opt_verbose', is_flag=True)
+@click.option('--batch-size', 'opt_batch_size', default=16,
+  type=click.IntRange(1, 48),
+  help='Inference batch size')
 @click.option('-r', '--rotate', 'opt_rotate', 
   type=click.Choice(app_cfg.ROTATE_VALS.keys()), 
   default='0',
   help='Rotate image this many degrees in counter-clockwise direction before detection')
-@click.option('--verbose', 'opt_verbose', is_flag=True)
 @processor
 @click.pass_context
 def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold, 
-  opt_dnn_size, opt_rotate, opt_verbose):
-  """Detect objects"""
-  
-  from os.path import join
-  from pathlib import Path
-  import traceback
+  opt_dnn_size, opt_batch_size, opt_rotate, opt_verbose):
+  """Detect objects with batch inference"""
 
   import cv2 as cv
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, modelzoo
-  from vframe.models.dnn import DNN
   from vframe.image.dnn_factory import DNNFactory
 
   
@@ -54,7 +52,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   # override dnn_cfg vars with cli vars
   dnn_cfg.override(device=opt_device, size=opt_dnn_size, threshold=opt_dnn_threshold)
-    
+
   # rotate cv, np vals
   cv_rot_val = app_cfg.ROTATE_VALS[opt_rotate]
   np_rot_val =  int(opt_rotate) // 90  # counter-clockwise 90 deg rotations
@@ -65,50 +63,92 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
   # create cvmodel
   cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
 
+  Q = []
+
+  if opt_batch_size > 1 and not dnn_cfg.batch_enabled:
+    opt_batch_size = 1
+    LOG.warn(f'Batch processing not enabled for this model. Reset batch size to 1')
 
   while True:
 
     # get pipe data
     M = yield
 
-    # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if opt_batch_size == 1:
+
+      # skip frame if flagged
+      if ctx.opts[SKIP_FRAME_KEY]:
+        sink.send(M)
+        continue
+
+      # TODO: copy results from previous frame is SIM_FRAME_KEY
+      # if ctx.opts[SIM_FRAME_KEY]:
+      #   # copy last frame detections if exist
+      #   # results = M.inherit_from_last_frame(opt_data_key)
+        
+      #   if M.index > 1:
+      #     results = M.metadata.get(M.index - 1)
+      #     if results:
+      #       M.metadata[M.index] = results.copy()
+        
+      im = M.images.get(FrameImage.ORIGINAL)
+      
+      # rotate if optioned  
+      if cv_rot_val is not None:
+        im = cv.rotate(im, cv_rot_val)
+
+      # detect
+      results = cvmodel.infer(im)
+      if isinstance(results, list):
+        results = results[0]
+
+      # rotate if optioned
+      if results and np_rot_val != 0:
+        for detect_results in results.detections:
+          detect_results.bbox = detect_results.bbox.rot90(np_rot_val)
+
+      # update data
+      if len(results.detections) > 0:
+        if opt_verbose:
+          LOG.debug(f'{cvmodel.dnn_cfg.name} detected: {len(results.detections)} objects')
+
+        # update media file metadata
+        M.metadata.get(M.index).update({opt_data_key: results})
+
+
+    else:
+
+      # create batch
+      n = len([skip for idx, im, skip in Q if not skip])
+      
+      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts[SKIP_FRAME_KEY]])
+      
+      if n < opt_batch_size and not (M.is_last_item):
+        sink.send(M)
+      else:
+        # setup batch
+        ims = [im for idx, im, skip in Q if not skip]
+        idxs = [idx for idx, im, skip in Q if not skip]
+
+        # rotate if optioned  
+        if cv_rot_val is not None:
+          ims = [cv.rotate(im, cv_rot_val) for im in ims]
+
+        # inference
+        batch_results = cvmodel.infer(ims)
+
+        # convert to result objects
+        for results, idx in zip(batch_results, idxs):
+
+          # rotate if optioned
+          if results and np_rot_val != 0:
+            for detect_results in results.detections:
+              detect_results.bbox = detect_results.bbox.rot90(np_rot_val)
+
+          # update data
+          if len(results.detections) > 0:
+            M.metadata.get(idx).update({opt_data_key: results})
+
+        Q = []
+
       sink.send(M)
-      continue
-
-    # TODO: copy results from previous frame is SIM_FRAME_KEY
-    # if ctx.opts[SIM_FRAME_KEY]:
-    #   # copy last frame detections if exist
-    #   # results = M.inherit_from_last_frame(opt_data_key)
-      
-    #   if M.index > 1:
-    #     results = M.metadata.get(M.index - 1)
-    #     if results:
-    #       M.metadata[M.index] = results.copy()
-      
-    im = M.images.get(FrameImage.ORIGINAL)
-    
-    # rotate if optioned  
-    if cv_rot_val is not None:
-      im = cv.rotate(im, cv_rot_val)
-
-    # detect
-    results = cvmodel.infer(im)
-    if isinstance(results, list):
-      results = results[0]
-
-    # rotate if optioned
-    if results and np_rot_val != 0:
-      for detect_results in results.detections:
-        detect_results.bbox = detect_results.bbox.rot90(np_rot_val)
-
-    # update data
-    if len(results.detections) > 0:
-      if opt_verbose:
-        LOG.debug(f'{cvmodel.dnn_cfg.name} detected: {len(results.detections)} objects')
-
-      # update media file metadata
-      M.metadata.get(M.index).update({opt_data_key: results})
-  
-    # continue processing
-    sink.send(M)

@@ -45,7 +45,7 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
   opt_bg, opt_color_bg, opt_padding_text):
   """Add text caption"""
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
   from vframe.models.types import FrameImage
   from vframe.models.color import Color
   from vframe.models.geometry import Point
@@ -61,6 +61,8 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
   # ---------------------------------------------------------------------------
   # initialize
   
+  ctx.obj[USE_DRAW_FRAME_KEY] = True
+
   color_text = Color.from_rgb_int(opt_color)
   color_bg = Color.from_rgb_int(opt_color_bg)
 
