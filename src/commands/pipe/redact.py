@@ -30,12 +30,12 @@ redact_types = ['pixellate', 'blur', 'softblur']
 def cli(ctx, sink, opt_data_keys, opt_factor, opt_iters, opt_expand, opt_redact_type):
   """Blur-redact BBoxes"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.models.types import FrameImage
   from vframe.utils import im_utils
 
 
-  ctx.obj[USE_DRAW_FRAME_KEY] = True
+  ctx.obj[USE_DRAW_FRAME] = True
 
 
   while True:
@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_data_keys, opt_factor, opt_iters, opt_expand, opt_redact_
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

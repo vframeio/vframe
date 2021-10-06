@@ -37,7 +37,7 @@ def cli(ctx, sink, opt_model_enum, opt_device, opt_dnn_size, opt_dnn_threshold, 
   import cv2 as cv
   from sklearn.metrics.pairwise import cosine_similarity
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, modelzoo
   from vframe.utils.im_utils import resize, np2pil
   from vframe.image.dnn_factory import DNNFactory
 
@@ -54,7 +54,7 @@ def cli(ctx, sink, opt_model_enum, opt_device, opt_dnn_size, opt_dnn_threshold, 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
       

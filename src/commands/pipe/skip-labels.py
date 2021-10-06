@@ -22,7 +22,7 @@ from vframe.utils.click_utils import processor
 def cli(ctx, sink, opt_includes, opt_excludes):
   """Skip frames if include/exclude labels"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
     
   
   while True:
@@ -30,7 +30,7 @@ def cli(ctx, sink, opt_includes, opt_excludes):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -39,6 +39,6 @@ def cli(ctx, sink, opt_includes, opt_excludes):
     valid_exc = M.excludes_labels(opt_excludes) if opt_excludes else True
 
     skip = not (valid_inc or valid_exc)
-    ctx.opts[SKIP_FRAME_KEY] = skip
+    ctx.opts[SKIP_FRAME] = skip
     
     sink.send(M)

@@ -21,7 +21,7 @@ def cli(ctx, sink, opt_frame_interval):
   """Skip frames at regular interval"""
   
   from vframe.models.types import MediaType
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
     
 
   while True:
@@ -30,12 +30,12 @@ def cli(ctx, sink, opt_frame_interval):
     R = ctx.obj['reader']
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 
     idx = R.index if M.type == MediaType.IMAGE else M.index
     skip_frame = idx % opt_frame_interval  # valid frame = 0
-    ctx.opts[SKIP_FRAME_KEY] = skip_frame
+    ctx.opts[SKIP_FRAME] = skip_frame
     
     sink.send(M)

@@ -49,7 +49,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
 
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, modelzoo
   from vframe.models.dnn import DNN
   from vframe.image.dnn_factory import DNNFactory
   from vframe.models.geometry import BBox
@@ -83,7 +83,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

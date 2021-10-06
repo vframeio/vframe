@@ -32,14 +32,14 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
   
   import time
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.utils.display_utils import DisplayUtils
 
   
   # ---------------------------------------------------------------------------
   # initialize
 
-  ctx.obj[USE_DRAW_FRAME_KEY] = True
+  ctx.obj[USE_DRAW_FRAME] = True
 
   display_utils = DisplayUtils()
   target_mspf = 1000 / opt_fps
@@ -54,7 +54,7 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
     

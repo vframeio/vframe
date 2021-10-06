@@ -31,7 +31,6 @@ anchors:
     nms_threshold: 0.4
     threshold: 0.6
     resize_enabled: True
-    batch_enabled: True
     # local: path/to/local/model.ext
     # remote: https://example.com
     # model: best.pt | best.onnx
@@ -41,6 +40,7 @@ anchors:
   yoloface-base-pt: &yoloface-base-pt
     <<: *yoloface-base
     model: best.pt
+    batch_enabled: True
     processor: yolov5_pytorch
 
 

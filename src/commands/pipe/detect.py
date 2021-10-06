@@ -11,14 +11,14 @@ import click
 
 from vframe.utils.click_utils import processor
 from vframe.utils.click_utils import show_help
-from vframe.models.types import BatchModelZooClickVar, BatchModelZoo, FrameImage
+from vframe.models.types import ModelZooClickVar, ModelZoo, FrameImage
 from vframe.settings import app_cfg
 
 @click.command('')
 @click.option('-m', '--model', 'opt_model_enum', 
   default=app_cfg.DEFAULT_DETECT_MODEL,
-  type=BatchModelZooClickVar,
-  help=show_help(BatchModelZoo))
+  type=ModelZooClickVar,
+  help=show_help(ModelZoo))
 @click.option('-d', '--device', 'opt_device', default=0,
   help='GPU device for inference (use -1 for CPU)')
 @click.option('-s', '--size', 'opt_dnn_size', default=(None, None), type=(int, int),
@@ -43,15 +43,20 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, modelzoo
   from vframe.image.dnn_factory import DNNFactory
 
   
   model_name = opt_model_enum.name.lower()
   dnn_cfg = modelzoo.get(model_name)
 
+  if opt_batch_size > 1 and not dnn_cfg.batch_enabled:
+    opt_batch_size = 1
+    LOG.warn(f'Batch processing not enabled for this model. Batch size reset to 1')
+
   # override dnn_cfg vars with cli vars
   dnn_cfg.override(device=opt_device, size=opt_dnn_size, threshold=opt_dnn_threshold)
+  
 
   # rotate cv, np vals
   cv_rot_val = app_cfg.ROTATE_VALS[opt_rotate]
@@ -65,9 +70,6 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   Q = []
 
-  if opt_batch_size > 1 and not dnn_cfg.batch_enabled:
-    opt_batch_size = 1
-    LOG.warn(f'Batch processing not enabled for this model. Reset batch size to 1')
 
   while True:
 
@@ -77,7 +79,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     if opt_batch_size == 1:
 
       # skip frame if flagged
-      if ctx.opts[SKIP_FRAME_KEY]:
+      if ctx.opts[SKIP_FRAME]:
         sink.send(M)
         continue
 
@@ -121,7 +123,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
       # create batch
       n = len([skip for idx, im, skip in Q if not skip])
       
-      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts[SKIP_FRAME_KEY]])
+      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts[SKIP_FRAME]])
       
       if n < opt_batch_size and not (M.is_last_item):
         sink.send(M)

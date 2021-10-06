@@ -130,8 +130,6 @@ def dict_to_enum(name, cfg):
 
 
 ModelZoo = dict_to_enum('ModelZoo', modelzoo)
-batch_modelzoo = {k:v for k,v in modelzoo.items() if v.batch_enabled}
-BatchModelZoo = dict_to_enum('ModelZoo', batch_modelzoo)
 
 
 
@@ -148,7 +146,7 @@ ProcessorVar = ParamVar(Processor)
 AnnoyMetricVar = ParamVar(AnnoyMetric)
 HaarcascadeVar = ParamVar(Haarcascade)
 ModelZooClickVar = ParamVar(ModelZoo)
-BatchModelZooClickVar = ParamVar(BatchModelZoo)
+
 
 # ---------------------------------------------------------------------
 # Helpers

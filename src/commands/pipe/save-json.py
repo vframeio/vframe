@@ -22,7 +22,7 @@ from vframe.utils.click_utils import processor
 def cli(ctx, sink, opt_fp_out, opt_minify, opt_verbose):
   """Save frame data as JSON"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
   from vframe.utils.file_utils import get_ext, write_json
 
   

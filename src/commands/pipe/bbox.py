@@ -23,7 +23,7 @@ from vframe.utils.click_utils import processor
 def cli(ctx, sink, opt_data_key, opt_square, opt_expand):
   """Modify BBoxes"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
   from vframe.models import types
 
 
@@ -32,7 +32,7 @@ def cli(ctx, sink, opt_data_key, opt_square, opt_expand):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

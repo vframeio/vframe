@@ -25,7 +25,7 @@ from vframe.utils.click_utils import processor
 def cli(ctx, sink, opt_threshold, opt_labels, opt_skip):
   """Skip frames based on presence/absence of detections"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
     
 
   while True:
@@ -33,13 +33,13 @@ def cli(ctx, sink, opt_threshold, opt_labels, opt_skip):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 
     # returns True if dets exist > threshold
     exist = M.frame_detections_exist(threshold=opt_threshold, labels=opt_labels)
     skip = not exist if opt_skip else exist
-    ctx.opts[SKIP_FRAME_KEY] = skip
+    ctx.opts[SKIP_FRAME] = skip
     
     sink.send(M)

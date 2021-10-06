@@ -32,8 +32,8 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
   import numpy as np
   import imagehash
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_PHASH_KEY
-  from vframe.settings.app_cfg import USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PHASH
+  from vframe.settings.app_cfg import USE_DRAW_FRAME
   from vframe.utils.im_utils import resize, np2pil
   from vframe.models.types import FrameImage, MediaType
 
@@ -56,7 +56,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
   hash_im_size = hash_size * highfreq_factor
   hash_thresh_int = opt_thresh * 64
 
-  ctx.obj[USE_PHASH_KEY] = opt_prehash
+  ctx.obj[USE_PHASH] = opt_prehash
 
 
   while True:
@@ -64,7 +64,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -107,6 +107,6 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
     # -------------------------------------------------------------------------
     # set flag
 
-    ctx.opts[SKIP_FRAME_KEY] = not hash_changed
+    ctx.opts[SKIP_FRAME] = not hash_changed
     
     sink.send(M)

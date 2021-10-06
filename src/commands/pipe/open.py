@@ -31,8 +31,8 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
   from tqdm import tqdm
   import dacite
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
-  from vframe.settings.app_cfg import USE_PHASH_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
+  from vframe.settings.app_cfg import USE_PHASH, USE_DRAW_FRAME
   from vframe.models.media import MediaFileReader
   from vframe.utils.sys_utils import SignalInterrupt
 
@@ -49,8 +49,8 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
     'exts': tuple(opt_exts),
     'slice_idxs': opt_slice,
     'recursive': opt_recursive,
-    'use_prehash': ctx.obj.get(USE_PHASH_KEY, False),
-    'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME_KEY, False),
+    'use_prehash': ctx.obj.get(USE_PHASH, False),
+    'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME, False),
     
     }
 
@@ -78,7 +78,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
         return
     
       # init frame-iter presets
-      ctx.opts[SKIP_FRAME_KEY] = False
+      ctx.opts[SKIP_FRAME] = False
       sink.send(m)
 
   # print stats

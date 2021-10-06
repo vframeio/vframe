@@ -69,8 +69,8 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
   
   from os.path import join
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
-  from vframe.settings.app_cfg import USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import USE_DRAW_FRAME
   from vframe.models.types import FrameImage
   from vframe.models.color import Color
   from vframe.utils import draw_utils
@@ -79,7 +79,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
   # ---------------------------------------------------------------------------
   # initialize
 
-  ctx.obj[USE_DRAW_FRAME_KEY] = True
+  ctx.obj[USE_DRAW_FRAME] = True
 
   if all(v is not None for v in opt_color):
     opt_color_source = 'fixed'
@@ -93,7 +93,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

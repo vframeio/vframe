@@ -48,7 +48,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
   import cv2 as cv
   from PIL import Image
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.models.types import MediaType
   from vframe.utils.im_utils import np2pil, write_animated_gif
   from vframe.utils.file_utils import ensure_dir, filesize
@@ -58,7 +58,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
   # initialize
 
   if opt_frame_type == FrameImage.DRAW:
-    ctx.obj[USE_DRAW_FRAME_KEY] = True
+    ctx.obj[USE_DRAW_FRAME] = True
   
   frames = None
   fp_parent = None
@@ -96,7 +96,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
       fp_parent = None
 
     # check if new file in new subdir and start new gif
-    if not ctx.opts[SKIP_FRAME_KEY] and \
+    if not ctx.opts[SKIP_FRAME] and \
       frames is None and \
       M.parent != fp_parent:
 
@@ -127,7 +127,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
 
 
     # check if frame is usable and add to stack
-    if not ctx.opts[SKIP_FRAME_KEY] and frames is not None:
+    if not ctx.opts[SKIP_FRAME] and frames is not None:
       im = M.images.get(opt_frame_type)
       im_pil = np2pil(im).convert(**convert_kwargs)
       frames.append(im_pil)

@@ -30,7 +30,7 @@ def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_type):
   import shutil
 
   from vframe.models.types import MediaType
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
   from vframe.utils.file_utils import ensure_dir
 
   while True:
@@ -38,7 +38,7 @@ def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_type):
     M = yield # media
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
     

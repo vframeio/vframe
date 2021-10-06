@@ -32,7 +32,7 @@ from vframe.utils.click_utils import show_help
 def cli(ctx, sink, opt_width, opt_height, opt_frame_type, opt_all_frames, opt_interp):
   """Resize image"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.utils.im_utils import resize
 
   if not opt_width or opt_height:
@@ -40,14 +40,14 @@ def cli(ctx, sink, opt_width, opt_height, opt_frame_type, opt_all_frames, opt_in
 
   frame_types = [FrameImage.DRAW, FrameImage.ORIGINAL] if opt_all_frames else [opt_frame_type]
   if FrameImage.DRAW in frame_types:
-    ctx.obj[USE_DRAW_FRAME_KEY] = True
+    ctx.obj[USE_DRAW_FRAME] = True
   
   while True:
 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
   

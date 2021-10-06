@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
   import cv2 as cv
   
   from vframe.settings import app_cfg
-  from vframe.settings.app_cfg import LOG, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, USE_DRAW_FRAME
   from vframe.utils.file_utils import ensure_dir
 
 
@@ -52,7 +52,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
 
   
   if opt_frame_type == FrameImage.DRAW:
-    ctx.obj[USE_DRAW_FRAME_KEY] = True
+    ctx.obj[USE_DRAW_FRAME] = True
 
   ext = opt_ext.name.lower()
   four_cc = cv.VideoWriter_fourcc(*f'{opt_codec}')
@@ -71,7 +71,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
     if M.type == MediaType.VIDEO:
       
       # start new video
-      if not ctx.opts[app_cfg.SKIP_FRAME_KEY] and video_out is None and M.filepath != filepath:
+      if not ctx.opts[app_cfg.SKIP_FRAME] and video_out is None and M.filepath != filepath:
         # configure file io
         # add relative subdir to output destination
         if opt_keep_subdirs and Path(M.filepath).parent != Path(R.filepath):
@@ -95,7 +95,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
         filepath = M.filepath
 
       # add frame
-      if not ctx.opts[app_cfg.SKIP_FRAME_KEY] and video_out is not None:
+      if not ctx.opts[app_cfg.SKIP_FRAME] and video_out is not None:
         im = M.images.get(opt_frame_type)
         video_out.write(im)
 

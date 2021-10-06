@@ -27,19 +27,19 @@ def cli(ctx, sink, opt_color, opt_alpha):
   
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
   from vframe.models import types
   from vframe.utils import im_utils
 
 
-  ctx.obj[USE_DRAW_FRAME_KEY] = True
+  ctx.obj[USE_DRAW_FRAME] = True
 
   while True:
 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

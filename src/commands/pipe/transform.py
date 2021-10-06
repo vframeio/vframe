@@ -32,18 +32,18 @@ from vframe.utils.im_utils import IMAGE_TRANSFORMS
 def cli(ctx, sink, opt_filter, opt_frame_type, opt_shuffle):
   """Apply image filter/transform"""
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY, USE_DRAW_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   
 
   if opt_frame_type == FrameImage.DRAW:
-    ctx.obj[USE_DRAW_FRAME_KEY] = True
+    ctx.obj[USE_DRAW_FRAME] = True
 
   while True:
 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
 

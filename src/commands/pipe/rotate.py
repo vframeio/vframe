@@ -10,7 +10,7 @@
 
 import click
 
-from vframe.settings.app_cfg import ROTATE_VALS, SKIP_FRAME_KEY
+from vframe.settings.app_cfg import ROTATE_VALS, SKIP_FRAME
 from vframe.models.types import FrameImage, FrameImageVar
 from vframe.utils.click_utils import processor, show_help
 
@@ -26,10 +26,10 @@ def cli(ctx, sink, opt_rotate):
   """Rotate frame"""
   
   import cv2 as cv
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
 
   frame_types = [FrameImage.ORIGINAL]
-  if ctx.obj[USE_DRAW_FRAME_KEY]:
+  if ctx.obj[USE_DRAW_FRAME]:
     frame_types.append(FrameImage.DRAW)
     
   cv_rot_val = ROTATE_VALS[opt_rotate]
@@ -38,7 +38,7 @@ def cli(ctx, sink, opt_rotate):
 
     M = yield
 
-    if not ctx.opts[SKIP_FRAME_KEY]:
+    if not ctx.opts[SKIP_FRAME]:
       
       # resize
       for frame_type in frame_types:

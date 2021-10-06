@@ -25,7 +25,7 @@ def cli(ctx, sink, opt_type):
 
   from pprint import pprint
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME_KEY
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME
 
   opt_data_keys = None
 
@@ -34,7 +34,7 @@ def cli(ctx, sink, opt_type):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME_KEY]:
+    if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
     
