@@ -42,18 +42,16 @@ TODO
 
 class FileVideoStream:
 
-  frame_count = 0  
+  frame_count = 0
 
-  def __init__(self, fp, seek=0, queue_size=512, use_prehash=False):
+  def __init__(self, fp, queue_size=512, use_prehash=False):
     """Threaded video reader
     """
-
     # TODO: cv.CAP_FFMPEG, cv.CAP_GSTREAMER
     # self.vcap = cv.VideoCapture(str(fp), cv.CAP_FFMPEG)
-    
+
     self.is_image = Path(fp).suffix[1:].lower() in ['jpg', 'png']
     self.use_prehash = use_prehash
-    # LOG.debug(f'use use_prehash: {self.use_prehash}')
     
     # TODO: explore further. currently not working
     # self.vcap.set(cv.CAP_PROP_HW_ACCELERATION, 0.0)
@@ -77,6 +75,7 @@ class FileVideoStream:
 
     else:
       self.vcap = cv.VideoCapture(str(fp), cv.CAP_FFMPEG)
+      self.queue = Queue(maxsize=queue_size)
       try:
         self.height = int(self.vcap.get(cv.CAP_PROP_FRAME_HEIGHT))
         self.width = int(self.vcap.get(cv.CAP_PROP_FRAME_WIDTH))
@@ -87,25 +86,21 @@ class FileVideoStream:
         self.vcap_cc = self.vcap.get(cv.CAP_PROP_FOURCC)  
         self.fps = self.vcap.get(cv.CAP_PROP_FPS)  # default 25.0 for still image
         self.stopped = False
-        if seek > 0:
-          self.vcap.set(cv.CAP_PROP_POS_FRAMES, seek)
-          self.index = seek - 1
-        else:
-          self.index = -1
+        self.index = -1
         # initialize queue used to store frames
-        self.queue = Queue(maxsize=queue_size)
         if self.use_prehash:
           self.queue_phash = Queue(maxsize=queue_size)
         # initialize thread
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
         self.frame_read_index = 0
+        self.spf = 1 / self.fps  # seconds per frame
+        self.mspf = self.spf * 1000  # milliseconds per frame
       except Exception as e:
-        LOG.error(f'Video file corrupt: {fp}')
+        # TODO: add error loggin
+        LOG.error(f'Skipping corrupt file: {fp}. Error: {e}')
 
     self.dim = (self.width, self.height)
-    self.spf = 1 / self.fps  # seconds per frame
-    self.mspf = self.spf * 1000  # milliseconds per frame
 
 
   def start(self):
@@ -134,8 +129,8 @@ class FileVideoStream:
           self.queue.put(frame)
           # add phash
           if self.use_prehash:
+            frame = cv.resize(frame, (32, 32), interpolation=cv.INTER_NEAREST)
             frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            frame = resize(frame, width=32, height=32, force_fit=True)
             phash = imagehash.phash(np2pil(frame))
             self.queue_phash.put(phash)
       else:

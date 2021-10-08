@@ -303,7 +303,7 @@ def write_json(fp_out, data, minify=True, ensure_path=True, sort_keys=True, verb
     else:
       json.dump(data, fp, indent=indent, sort_keys=sort_keys, cls=NumpyEncoder)
   if verbose:
-    LOG.info('Wrote JSON: {}'.format(fp_out))
+    LOG.info(f'Wrote {len(data)} items to: {fp_out}')
 
 
 def write_csv(fp_out, data, header=None):

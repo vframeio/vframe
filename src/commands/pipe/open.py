@@ -21,18 +21,18 @@ from vframe.utils.click_utils import generator
   help='Recursive glob')
 @click.option('--slice', 'opt_slice', type=(int, int), default=(-1, -1),
   help="Slice list of inputs")
-@click.option('--no-load', 'opt_no_load', is_flag=True,
-  help='Don\'t load frames, only iterate images/videos')
+@click.option('--skip-frames', 'opt_skip_frames', is_flag=True,
+  help='Skip all frames, only iterate files')
 @generator
 @click.pass_context
-def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
+def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_skip_frames):
   """Open media for processing"""
 
   from tqdm import tqdm
   import dacite
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME
-  from vframe.settings.app_cfg import USE_PHASH, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, READER, SKIP_FILE
+  from vframe.settings.app_cfg import USE_PREHASH, USE_DRAW_FRAME
   from vframe.models.media import MediaFileReader
   from vframe.utils.sys_utils import SignalInterrupt
 
@@ -40,7 +40,6 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
   # ---------------------------------------------------------------------------
   # init
 
-  print('init open')
 
   sigint = SignalInterrupt()
 
@@ -49,27 +48,31 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
     'exts': tuple(opt_exts),
     'slice_idxs': opt_slice,
     'recursive': opt_recursive,
-    'use_prehash': ctx.obj.get(USE_PHASH, False),
+    'use_prehash': ctx.obj.get(USE_PREHASH, False),
     'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME, False),
-    
     }
 
   # init media file reader
   r = dacite.from_dict(data_class=MediaFileReader, data=init_obj)
-  ctx.obj['reader'] = r
+  ctx.obj[READER] = r
 
   # process media
   for m in tqdm(r.iter_files(), total=r.n_files, desc='Files', leave=False):
-
-    m.skip_all_frames = opt_no_load
+    
+    ctx.obj[SKIP_FILE] = False
+    m.skip_all_frames = opt_skip_frames
+    ctx.opts[SKIP_FRAME] = opt_skip_frames
 
     if sigint.interrupted:
       m.unload()
       return
     
     for ok in tqdm(m.iter_frames(), total=m.n_frames, desc=m.fn, disable=m.n_frames <= 1, leave=False):
-    
-      if not m.vstream.frame_count > 0:
+      
+      if ctx.obj.get(SKIP_FILE, False):
+        m.skip_file()
+
+      if not m.frame_count > 0:
         continue
     
       # check for ctl-c, exit gracefully
@@ -78,7 +81,6 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_no_load):
         return
     
       # init frame-iter presets
-      ctx.opts[SKIP_FRAME] = False
       sink.send(m)
 
   # print stats

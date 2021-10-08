@@ -11,46 +11,58 @@
 import click
 
 from vframe.utils.click_utils import processor
+from vframe.settings.app_cfg import caption_accessors, compare_accessors
+caption_accessors.update(compare_accessors)
+accessors = caption_accessors
 
-opt_choices = ['detections']
 
 @click.command('')
-@click.option('-t', '--type', 'opt_type',
- type=click.Choice(opt_choices), default='detections',
-  help='Debug action type')
+@click.option('-a', '--attribute', 'opt_attrs', required=True, multiple=True,
+  type=click.Choice(list(accessors.keys())),)
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_type):
-  """Print frame data"""
+def cli(ctx, sink, opt_attrs):
+  """Debug media attributes"""
 
   from pprint import pprint
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, READER
+  from vframe.models.types import MediaType
 
   opt_data_keys = None
 
   while True:
 
     M = yield
+    R = ctx.obj[READER]
+
+    opt_attrs_file = [a for a in opt_attrs if a in compare_accessors]
+    opt_attrs_frame = [a for a in opt_attrs if a in caption_accessors]
 
     # skip frame if flagged
     if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
     
-    if opt_type == 'detections':
+    text = []
 
-      all_keys = list(M.metadata.get(M.index).keys())
-      if not opt_data_keys:
-        data_keys = all_keys
-      else:
-        data_keys = [k for k in opt_data_keys if k in all_keys]
+    if (M.type == MediaType.VIDEO and M.is_first_item) or M.type == MediaType.IMAGE:
+      # beginning of new media file      
+      for attr in opt_attrs_file:
+        try:
+          text.append(f'{attr}: {getattr(M, accessors.get(attr))}')
+        except Exception as e:
+          LOG.error(f'{attr} is not a valid accessor. Error: {e}')
 
+      LOG.debug(f'File: {", ".join(text)}')
 
-      for data_key in data_keys:
-        # draw bbox, labels, mask
-        item_data = M.metadata.get(M.index).get(data_key)
-        LOG.debug(f'{data_key} detections: {len(item_data.detections)}')
+    text = []
+    for attr in opt_attrs_frame:
+      try:
+        text.append(f'{attr}: {getattr(M, accessors.get(attr))}')
+      except Exception as e:
+        LOG.error(f'{attr} is not a valid accessor. Error: {e}')
+    LOG.debug(f'File: {", ".join(text)}')
 
     
     sink.send(M)

@@ -33,6 +33,7 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
   import time
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import PAUSED, READER
   from vframe.utils.display_utils import DisplayUtils
 
   
@@ -43,7 +44,7 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
 
   display_utils = DisplayUtils()
   target_mspf = 1000 / opt_fps
-  ctx.opts['paused'] = opt_pause
+  ctx.opts[PAUSED] = opt_pause
   st = time.time()
 
   # ---------------------------------------------------------------------------
@@ -59,13 +60,16 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
       continue
     
     # override pause if single image
-    if ctx.obj['reader'].n_files == 1 and M.type == MediaType.IMAGE:
-      ctx.opts['paused'] = True
+    if ctx.obj[READER].n_files == 1 and M.type == MediaType.IMAGE:
+      ctx.opts[PAUSED] = True
+    
     # dynamically adjust framerate
     actual_mspf = (time.time() - st) / 1000
     frame_delay_ms = int(max(1, target_mspf - actual_mspf))
+    
     # get and display image
     fde = M.frame_detections_exist
+
     if not opt_filter or ((fde and opt_filter == 'detections') or (fde == False and opt_filter == 'no-detections')):
       im = M.images.get(opt_frame_type)
       display_utils.show_ctx(ctx, im, delay=frame_delay_ms)

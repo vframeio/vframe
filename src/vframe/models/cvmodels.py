@@ -12,7 +12,7 @@ from os.path import join
 from dataclasses import dataclass, field
 from typing import Dict, Tuple, List
 from enum import Enum
-import platform
+import datetime
 
 import dacite
 import cv2 as cv
@@ -306,25 +306,23 @@ class FileMeta:
   filepath: str
   height: int
   width: int
-  n_frames: int
+  frame_count: int
+  datetime: str
 
 
 @dataclass
 class ProcessedFile:
   # represents a processed media file and its metadata
   file_meta: FileMeta
-  frames_meta: List[dict]=field(default_factory=lambda: [], repr=False)
-  detections: List[dict]=field(default_factory=lambda: [])
-  # TODO: add MediaMeta prop for pymediainfo
+  frames_meta: dict=field(default_factory=lambda: {}, repr=False)
+  detections: dict=field(default_factory=lambda: {})
 
   def __post_init__(self):
-    # convert key:value frame meta back into DetectResults
-    # TODO: improve data structure for Detect/ClassifyResults
-    for frame_meta in self.frames_meta:
+    for i, frame_meta in self.frames_meta.items():
       frame_dets = {}
       for data_key, detections in frame_meta.items():
         frame_dets[data_key] = dacite.from_dict(data=detections, data_class=DetectResults)
-      self.detections.append(frame_dets)
+      self.detections[int(i)] = frame_dets
 
 
   @classmethod
@@ -332,6 +330,7 @@ class ProcessedFile:
     """Converts DataFrame annotation to ProcessedFile
     Images only. Not compatible with videos.
     """
+    LOG.debug('TODO')
     fp_im = join(Path(fp_csv).parent, DN_REAL, fn)
     date = date_modified(fp_im)  # using modified to get created
     file_meta = FileMeta(fp_im, df[0].dw, df[0].dh, 1, date)

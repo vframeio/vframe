@@ -14,7 +14,7 @@ import logging
 import cv2 as cv
 
 from vframe.settings import app_cfg
-from vframe.settings.app_cfg import LOG
+from vframe.settings.app_cfg import LOG, PAUSED
 
 
 
@@ -51,7 +51,7 @@ class DisplayUtils:
 
 
   def show_ctx(self, ctx, im, delay=1):
-    if ctx.opts['paused']:
+    if ctx.opts.get(PAUSED):
       self.pause_ctx(ctx)
     cv.imshow(app_cfg.CV_WINDOW_NAME, im)
     self.handle_keyboard_ctx(ctx, delay)
@@ -81,7 +81,7 @@ class DisplayUtils:
   def pause_ctx(self, ctx):
     """Handle pause during pipeline processing
     """
-    ctx.opts['paused'] = True
+    ctx.opts[PAUSED] = True
 
 
   def handle_keyboard_ctx(self, ctx, opt_delay):
@@ -89,7 +89,7 @@ class DisplayUtils:
     """
 
     ctx.opts.setdefault('display_previous', False)
-    ctx.opts.setdefault('paused', False)
+    ctx.opts.setdefault(PAUSED, False)
 
     while True:
 
@@ -100,8 +100,8 @@ class DisplayUtils:
         cv.destroyAllWindows()
         sys.exit('Exiting because Q or ESC was pressed')
       elif k == ord(' '):
-        if ctx.opts['paused']:
-          ctx.opts['paused'] = False
+        if ctx.opts.get(PAUSED):
+          ctx.opts[PAUSED] = False
           break
         else:
           self.pause_ctx(ctx)
@@ -118,5 +118,5 @@ class DisplayUtils:
             h           : show this help
             space       : pause/unpause
         """)
-      if not ctx.opts['paused']:
+      if not ctx.opts.get(PAUSED):
         break

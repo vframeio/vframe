@@ -51,7 +51,7 @@ def cli(ctx, sink, opt_data_keys, opt_factor, opt_iters, opt_expand, opt_redact_
     dim = im.shape[:2][::-1]
     
     # get data keys
-    all_keys = list(M.metadata.get(M.index).keys())
+    all_keys = list(M.metadata.get[M.index].keys())
     if not opt_data_keys:
       data_keys = all_keys
     else:
@@ -63,7 +63,7 @@ def cli(ctx, sink, opt_data_keys, opt_factor, opt_iters, opt_expand, opt_redact_
     for data_key in data_keys:
       
       # get data
-      item_data = M.metadata.get(M.index).get(data_key)
+      item_data = M.metadata.get[M.index].get(data_key)
 
       # blur data
       if item_data:

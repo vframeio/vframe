@@ -24,7 +24,7 @@ from vframe.settings import app_cfg
 from vframe.settings.app_cfg import DN_REAL
 from vframe.settings.app_cfg import LOG
 from vframe.models.types import MediaType, FrameImage
-from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile
+from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile, FileMeta
 from vframe.utils.file_utils import glob_multi, load_file, get_ext, date_modified
 from vframe.utils.video_utils import FileVideoStream
 from vframe.models.geometry import BBox, Point
@@ -47,11 +47,12 @@ class MediaFileReader:
   ext_upper: bool=True  # glob lower and upper exts
   use_prehash: bool=False
   use_draw_frame: bool=False
+  skip_if_expression: str=None
 
   def __post_init__(self):
     fp = self.filepath
     self.index = 0
-    self._frames_processed = []
+    self._n_frames_processed = []
     self._files = []
 
     # JSON
@@ -98,18 +99,23 @@ class MediaFileReader:
     """
     # init
     self._start_time = time.perf_counter()
+    
     if not len(self._files):
       return
+    
     # iter
     for i in range(len(self._files)):
       self.index = i
+      
       if i > 0:
-        self._frames_processed.append(self._files[i - 1].n_frames)
+        self._n_frames_processed.append(self._files[i - 1].n_frames)
         self._files[i - 1].unload()  # unload previous
+
       self._files[i].load(use_draw_frame=self.use_draw_frame, use_prehash=self.use_prehash)
       yield self._files[i]
+    
     # post iter
-    self._frames_processed.append(self._files[i].n_frames)
+    self._n_frames_processed.append(self._files[i].n_frames)
     self._files[i].unload()
 
 
@@ -131,12 +137,16 @@ class MediaFileReader:
 
   @property
   def stats(self):
-    te = (time.perf_counter() - self._start_time)
-    nfr = sum(self._frames_processed)
-    frps = nfr / te
-    fipm = (self.index + 1) / ((time.perf_counter() - self._start_time) / 60)
-    t = f'{self.n_files:,} files, {nfr:,} frames at '
-    t += f'{int(fipm):,} files/m, {frps:.2f} frames/s. Total: {te:.2f}s'
+    et = time.perf_counter() - self._start_time
+    nf = sum(self._n_frames_processed)
+    fps = nf / et
+    fpm = (self.index + 1) / ((time.perf_counter() - self._start_time) / 60)
+    t = f'Files: {self.n_files:,}. '
+    t += f'Frames: {nf:,}. '
+    t += f'Files/min: {fpm:.2f}. '
+    t += f'FPS: {fps:.2f}. '
+    t += (f'Time: {time.strftime("%H:%M:%S", time.gmtime(et))}. ')
+    t += f'Seconds: {et:.6f}'
     return t
   
   
@@ -155,28 +165,25 @@ class MediaFile:
   """
   filepath: str
   metadata_priors: List[DetectResults]=field(default_factory=lambda: [])
-  dim: Tuple=field(default_factory=lambda: ())
-  frame_idx_start: int=0
-  frame_idx_end: int=None
+  file_meta: FileMeta=None
   skip_all_frames: bool=False
 
 
   def __post_init__(self):
+    self.metadata = self.metadata_priors if self.metadata_priors else {}
     self.images = {}  # stores image data
-    # self.date = date_modified(self.filepath)  # using modified to get created
-    self.metadata = {}
+    self._datetime = None  # TODO: move to file_meta
     if self.ext in app_cfg.VALID_PIPE_IMAGE_EXTS:
       self.type = MediaType.IMAGE
     elif self.ext in app_cfg.VALID_PIPE_VIDEO_EXTS:
       self.type = MediaType.VIDEO
     self.vstream = None
+    self._skip_file = False
 
 
   @classmethod
   def from_processed_file(cls, pf):
-    fm = pf.file_meta
-    mf = MediaFile(fm.filepath, pf.detections, (fm.width, fm.height))
-    return mf
+    return cls(pf.file_meta.filepath, pf.detections, pf.file_meta)
 
 
   def load(self, use_draw_frame=False, use_prehash=False):
@@ -184,18 +191,11 @@ class MediaFile:
     """
     self.use_prehash = use_prehash
     self.use_draw_frame = use_draw_frame
-    try:
-      self.vstream = FileVideoStream(self.filepath, seek=self.frame_idx_start, use_prehash=use_prehash)
-      
-      if not self.frame_idx_end:
-        self.frame_idx_end = self.n_frames - 1
 
-      self.metadata = {i:{} for i in range(self.n_frames)}
-      for i in range(self.n_frames):
-        if self.metadata_priors:
-          self.metadata[i] = self.metadata_priors[i]
-        else:
-          self.metadata[i] = {}
+    try:
+      self.vstream = FileVideoStream(self.filepath, use_prehash=use_prehash)
+      
+      self.frame_idx_end = self.n_frames - 1
       self.images = {}
       video_ok = self.vstream.start()  # starts threaded media reader
       
@@ -212,19 +212,26 @@ class MediaFile:
   def unload(self):
     """Unloads media and delete image/frame vars. Called on media file release
     """
+
     if self.vstream is not None:
       self.vstream.stop()
       self.vstream.release()
     del self.images
     del self.metadata
 
+  def skip_file(self):
+    self._skip_file = True
+    self._n_frames_processed = 0
+
 
   def to_dict(self):
     """Serializes metadata for export to JSON
     """
-    frame_data = []
-    for frame_idx, _frame_data in self.metadata.items():
-      frame_data.append({k:v.to_dict() for k,v in _frame_data.items()})
+    frames_meta = {}
+    for frame_idx, frame_meta in self.metadata.items():
+      meta = {k:v.to_dict() for k,v in frame_meta.items() if v}
+      if meta:
+        frames_meta[frame_idx] = meta
 
     # only get date if requested
     return {
@@ -232,21 +239,23 @@ class MediaFile:
         'filepath': self.filepath,
         'width': self.vstream.width,
         'height': self.vstream.height,
-        'n_frames': self.n_frames,
-        'date': str(date_modified(self.filepath)),
+        'frame_count': self.n_frames,
+        'datetime': str(self.datetime),
       },
-      'frames_meta': frame_data
+      'frames_meta': frames_meta
       }
 
 
   def iter_frames(self):
     """Generator yielding next frame
     """
+
     # init
     self._start_time = time.perf_counter()
 
+
     # skip frames for dummy processing
-    if self.skip_all_frames:
+    if self.skip_all_frames or self._skip_file:
       self.metadata = {}
       yield 
       return
@@ -269,7 +278,6 @@ class MediaFile:
       if self.use_draw_frame:
         self.images[FrameImage.DRAW] = im.copy()
 
-      # TODO: not using this var
       yield True
 
     # post iter
@@ -375,8 +383,8 @@ class MediaFile:
 
   @property
   def width(self):
-    if self.dim:
-      return self.dim[0]
+    if self.file_meta:
+      return self.file_meta.width
     elif self.vstream is not None:
       return self.vstream.width
     else:
@@ -386,8 +394,8 @@ class MediaFile:
 
   @property
   def height(self):
-    if self.dim:
-      return self.dim[1]
+    if self.file_meta:
+      return self.file_meta.height
     elif self.vstream is not None:
       return self.vstream.height
     else:
@@ -397,24 +405,34 @@ class MediaFile:
 
   @property
   def n_frames(self):
-    if self.metadata_priors:
-      return len(self.metadata_priors)
+    if self.file_meta:
+      return self.file_meta.frame_count
     elif self.vstream is not None:
       return self.vstream.frame_count
     else:
       return 0
 
-
   @property
-  def N(self):
-    LOG.warn('Deprecated. Use n_frames')
+  def frame_count(self):
     return self.n_frames
 
+  @property
+  def datetime(self):
+    if not self._datetime:
+      self._datetime = date_modified(self.filepath)  # datetime format
+    return self._datetime
+
+  @property
+  def date(self):
+    return self.datetime.date()
 
   @property
   def is_last_item(self):
     return any([self.skip_all_frames, (self.index >= self.n_frames - 1)])
 
+  @property
+  def is_first_item(self):
+    return any([self.skip_all_frames, (self.index == 1)])
 
   @property
   def fps(self):

@@ -11,21 +11,12 @@
 import click
 
 from vframe.utils.click_utils import processor
+from vframe.settings.app_cfg import caption_accessors as accessors
 
-accessors = {
-  '@filename': 'filename',
-  '@parent_name': 'parent_name',
-  '@filepath': 'filepath',
-  '@ext': 'ext',
-  '@width': 'width',
-  '@height': 'height',
-  '@n_frames': 'n_frames',
-  '@n_detections': 'n_detections'
-}
 
 @click.command('')
 @click.option('-t', '--text', 'opt_text', required=True,
-  help=f'Caption text. Accessors: {", ".join(accessors.keys())}')
+  help=f'Caption text. Attributes: {", ".join(accessors.keys())}')
 @click.option('-x', '--x', 'opt_x', required=True, default=0,
   help='X position in pixels. Use negative for distance from bottom.')
 @click.option('-y', '--y', 'opt_y', required=True, default=0,

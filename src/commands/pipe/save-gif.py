@@ -48,7 +48,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
   import cv2 as cv
   from PIL import Image
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME, READER
   from vframe.models.types import MediaType
   from vframe.utils.im_utils import np2pil, write_animated_gif
   from vframe.utils.file_utils import ensure_dir, filesize
@@ -87,7 +87,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
   while True:
     
     M = yield
-    R = ctx.obj['reader']
+    R = ctx.obj[READER]
 
     # Check if last file in a subdir
     if M.parent != fp_parent and frames is not None:

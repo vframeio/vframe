@@ -49,7 +49,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   import cv2 as cv
   
   from vframe.models.types import MediaType
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME, READER
   from vframe.utils.file_utils import zpad, get_ext, ensure_dir
 
 
@@ -69,7 +69,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   while True:
     
     M = yield
-    R = ctx.obj['reader']
+    R = ctx.obj[READER]
 
     # skip frame if flagged
     if ctx.opts[SKIP_FRAME]:

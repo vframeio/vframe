@@ -13,7 +13,7 @@ import click
 from vframe.utils.click_utils import processor
 
 @click.command('')
-@click.option('--interval', 'opt_frame_interval', default=2,
+@click.option('-i', '--interval', 'opt_frame_interval', default=2,
   help='Number of frames to decimate/skip for every frame read')
 @processor
 @click.pass_context
@@ -21,13 +21,13 @@ def cli(ctx, sink, opt_frame_interval):
   """Skip frames at regular interval"""
   
   from vframe.models.types import MediaType
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, READER
     
 
   while True:
 
     M = yield
-    R = ctx.obj['reader']
+    R = ctx.obj[READER]
 
     # skip frame if flagged
     if ctx.opts[SKIP_FRAME]:

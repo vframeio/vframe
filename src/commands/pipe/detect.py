@@ -28,7 +28,7 @@ from vframe.settings import app_cfg
 @click.option('--name', '-n', 'opt_data_key', default=None,
   help='Name of data key')
 @click.option('--verbose', 'opt_verbose', is_flag=True)
-@click.option('--batch-size', 'opt_batch_size', default=16,
+@click.option('--batch-size', 'opt_batch_size', default=1,
   type=click.IntRange(1, 48),
   help='Inference batch size')
 @click.option('-r', '--rotate', 'opt_rotate', 
@@ -79,7 +79,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     if opt_batch_size == 1:
 
       # skip frame if flagged
-      if ctx.opts[SKIP_FRAME]:
+      if ctx.opts.get(SKIP_FRAME):
         sink.send(M)
         continue
 
@@ -115,7 +115,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
           LOG.debug(f'{cvmodel.dnn_cfg.name} detected: {len(results.detections)} objects')
 
         # update media file metadata
-        M.metadata.get(M.index).update({opt_data_key: results})
+        M.metadata[M.index].update({opt_data_key: results})
 
 
     else:
@@ -123,7 +123,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
       # create batch
       n = len([skip for idx, im, skip in Q if not skip])
       
-      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts[SKIP_FRAME]])
+      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts.get(SKIP_FRAME)])
       
       if n < opt_batch_size and not (M.is_last_item):
         sink.send(M)
@@ -149,8 +149,9 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
           # update data
           if len(results.detections) > 0:
-            M.metadata.get(idx).update({opt_data_key: results})
+            # M.metadata.get(idx).update({opt_data_key: results})
+            M.metadata[idx].update({opt_data_key: results})
 
         Q = []
 
-      sink.send(M)
+    sink.send(M)

@@ -13,6 +13,7 @@ from pathlib import Path
 import logging
 from dataclasses import dataclass, field, asdict
 from dotenv import load_dotenv
+import operator
 
 import yaml
 import cv2 as cv
@@ -42,9 +43,34 @@ LOG = logging.getLogger('vframe')
 # -----------------------------------------------------------------------------
 
 SKIP_FRAME = 'SKIP_FRAME'
-USE_PHASH = 'USE_PHASH'
+SKIP_FILE = 'SKIP_FILE'
+USE_PREHASH = 'USE_PREHASH'
+READER = 'MEDIA_READER'
+PAUSED = 'PAUSED'
 USE_DRAW_FRAME = 'USE_DRAW_FRAME'
 FRAME_BUFFER_SIZE = 2048
+
+# -----------------------------------------------------------------------------
+# Caption accessors
+# -----------------------------------------------------------------------------
+
+caption_accessors = {
+  '@filename': 'filename',
+  '@parent_name': 'parent_name',
+  '@filepath': 'filepath',
+  '@ext': 'ext',
+  '@width': 'width',
+  '@height': 'height',
+  '@frames': 'n_frames',
+  '@detections': 'n_detections'
+}
+
+compare_accessors = {
+  '@width': 'width',
+  '@height': 'height',
+  '@frames': 'n_frames',
+  '@date': 'date'
+}
 
 
 # -----------------------------------------------------------------------------

@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
   import cv2 as cv
   
   from vframe.settings import app_cfg
-  from vframe.settings.app_cfg import LOG, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import LOG, USE_DRAW_FRAME, READER
   from vframe.utils.file_utils import ensure_dir
 
 
@@ -66,7 +66,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
   while True:
     
     M = yield
-    R = ctx.obj['reader']
+    R = ctx.obj[READER]
 
     if M.type == MediaType.VIDEO:
       

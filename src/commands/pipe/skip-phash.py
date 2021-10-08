@@ -18,7 +18,7 @@ from vframe.utils.click_utils import processor, show_help
   help='Hashing function')
 @click.option('-t', '--threshold', 'opt_thresh', 
   default=0.035, type=click.FloatRange(0,1),
-  help='Hash threshold')
+  help='Skip frames if similarity below threshold. Higher skips more frames.')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @click.option('--prehash', 'opt_prehash', is_flag=True,)
 @processor
@@ -32,7 +32,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
   import numpy as np
   import imagehash
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PHASH
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PREHASH
   from vframe.settings.app_cfg import USE_DRAW_FRAME
   from vframe.utils.im_utils import resize, np2pil
   from vframe.models.types import FrameImage, MediaType
@@ -47,16 +47,17 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
     'dhash': imagehash.dhash
   }
   hasher = hash_functions.get(opt_type)
-  # blank image to init
-  im_blank = Image.new('RGB', (100,100), (0,0,0))
-  hash_pre = imagehash.phash(im_blank)
-  hashes = [hash_pre]
   hash_size = 8
   highfreq_factor = 4
-  hash_im_size = hash_size * highfreq_factor
+  hash_wh = hash_size * highfreq_factor
   hash_thresh_int = opt_thresh * 64
 
-  ctx.obj[USE_PHASH] = opt_prehash
+  # blank image to init
+  im_blank = Image.new('RGB', (hash_wh,hash_wh), (0,0,0))
+  hash_pre = imagehash.phash(im_blank)
+  hashes = [hash_pre]
+
+  ctx.obj[USE_PREHASH] = opt_prehash
 
 
   while True:
@@ -64,17 +65,17 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.opts.get(SKIP_FRAME):
       sink.send(M)
       continue
 
     # -------------------------------------------------------------------------
-    # init
+    # check for new media
 
     if (M.type == MediaType.VIDEO and cur_file != M.filepath) or \
       (M.type == MediaType.IMAGE and cur_subdir != Path(M.filepath).parent):
-      # reset hashes
-      im_blank = Image.new('RGB', (100,100), (0,0,0))
+      # new file, reset hashes
+      im_blank = Image.new('RGB', (hash_wh, hash_wh), (0,0,0))
       hash_pre = imagehash.phash(im_blank)
       del hashes
       hashes = [hash_pre]
@@ -90,8 +91,8 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
       hash_cur = M.phash
     else:
       im = M.images.get(FrameImage.ORIGINAL)
+      im = resize(im, width=hash_wh, height=hash_wh, interp=cv.INTER_NEAREST, force_fit=True)
       im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
-      im = resize(im, width=hash_im_size, height=hash_im_size, force_fit=True)
       hash_cur = hasher(np2pil(im))
 
     hash_changed = (hash_cur - hash_pre) > hash_thresh_int
@@ -105,7 +106,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
 
 
     # -------------------------------------------------------------------------
-    # set flag
+    # skip frame if hash has not changed (ie same looking frame)
 
     ctx.opts[SKIP_FRAME] = not hash_changed
     

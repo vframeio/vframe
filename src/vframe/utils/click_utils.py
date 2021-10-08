@@ -8,6 +8,8 @@
 #############################################################################
 
 from functools import update_wrapper, wraps
+import operator
+from datetime import date, datetime
 
 import click
 
@@ -16,6 +18,7 @@ from typing import List
 import logging
 
 #from vframe.utils.click_utils import ClickSimple, ClickComplex
+from vframe.settings.app_cfg import compare_accessors as accessors
 
 
 # -----------------------------------------------------------------------------
@@ -120,3 +123,75 @@ class ParamVar(click.ParamType):
       return self.ops[value.lower()]
     except:
       self.fail('{} is not a valid option'.format(value, param, ctx))
+
+
+# --------------------------------------------------------
+# Comparison operator options
+# --------------------------------------------------------
+
+operators = {
+  '+' : operator.add,
+  '-' : operator.sub,
+  '*' : operator.mul,
+  '/' : operator.truediv,
+  '%' : operator.mod,
+  '^' : operator.xor,
+  '<': operator.lt,
+  '>': operator.gt,
+  '>=': operator.ge,
+  '<=': operator.le,
+  '==': operator.eq,
+  '!=': operator.ne,
+}
+
+
+@dataclass
+class OptionOperator:
+  attribute: str
+  operator: operator
+  value: str
+
+  def __post_init__(self):
+    if self.attribute == 'date':
+      try:
+        self.date = date.fromisoformat(self.value)
+      except ValueError as e:
+        e = f'{self.value}\nUse ISO format YYYY-MM-DD'
+        raise ValueError(e)
+    else:
+      self.value_int = int(self.value)
+
+  def evaulate(self, val):
+    if self.attribute == 'date':
+      return self.operator(self.date, val)
+    else:
+      return self.operator(self.value_int, val)
+
+  @classmethod
+  def from_opt_val(cls, val):
+    a, o, v = val.split(' ')
+    if not a in accessors.keys():
+      e = f'{a}\nUse: {", ".join(list(accessors.keys()))}'
+      raise ValueError(e)
+    if not o in operators.keys():
+      e = f'{o}\nUse: {", ".join(list(operators.keys()))}'
+      raise ValueError(e)
+    return cls(accessors.get(a), operators.get(o), v)
+
+
+def operator_validator(ctx, param, value):
+  try:
+    return OptionOperator.from_opt_val(value)
+  except ValueError as e:
+    raise click.BadParameter(e)
+  return False
+
+def operator_validator_multi(ctx, param, values):
+  results = []
+  for value in values:
+    try:
+      results.append(OptionOperator.from_opt_val(value))
+    except ValueError as e:
+      raise click.BadParameter(e)
+  return results
+  return False

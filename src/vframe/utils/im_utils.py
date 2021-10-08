@@ -610,8 +610,7 @@ def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR)
       scale_x = scale_y
       w, h = int(scale_x * im_width), int(scale_y * im_height)
     w,h = int(w), int(h)
-    im = cv.resize(im, (w ,h), interpolation=interp)
-    return im
+    return cv.resize(im, (w ,h), interpolation=interp)
 
 
 

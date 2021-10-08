@@ -133,7 +133,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
     # update data
     if results:
       metadata = {opt_data_key: results}
-      M.metadata.get(M.index).update(metadata)
+      M.metadata.get[M.index].update(metadata)
     
     # continue processing
     sink.send(M)

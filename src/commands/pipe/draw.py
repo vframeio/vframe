@@ -100,7 +100,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
     im = M.images.get(FrameImage.DRAW)
     dim = im.shape[:2][::-1]
     
-    all_keys = list(M.metadata.get(M.index).keys())
+    all_keys = list(M.metadata[M.index].keys())
     if not opt_data_keys:
       data_keys = all_keys
     else:
@@ -108,7 +108,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
 
     for data_key in data_keys:
 
-      item_data = M.metadata.get(M.index).get(data_key)
+      item_data = M.metadata[M.index].get(data_key)
 
       if item_data:
         # draw bbox, labels, mask
