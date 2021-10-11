@@ -309,6 +309,21 @@ class FileMeta:
   frame_count: int
   datetime: str
 
+  def __post_init__(self):
+    self.datetime = datetime.datetime.fromisoformat(self.datetime)
+
+  @property
+  def n_frames(self):
+    return self.frame_count
+
+  @property
+  def date(self):
+    return self.datetime.date()
+
+  @property
+  def year(self):
+    return self.datetime.year
+
 
 @dataclass
 class ProcessedFile:

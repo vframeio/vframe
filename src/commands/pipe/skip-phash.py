@@ -17,7 +17,7 @@ from vframe.utils.click_utils import processor, show_help
   default='phash', type=click.Choice(['phash', 'ahash', 'dhash']),
   help='Hashing function')
 @click.option('-t', '--threshold', 'opt_thresh', 
-  default=0.035, type=click.FloatRange(0,1),
+  default=0.05, type=click.FloatRange(0,1),
   help='Skip frames if similarity below threshold. Higher skips more frames.')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @click.option('--prehash', 'opt_prehash', is_flag=True,)
@@ -32,7 +32,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
   import numpy as np
   import imagehash
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PREHASH
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PREHASH, SKIP_FILE
   from vframe.settings.app_cfg import USE_DRAW_FRAME
   from vframe.utils.im_utils import resize, np2pil
   from vframe.models.types import FrameImage, MediaType
@@ -65,7 +65,7 @@ def cli(ctx, sink, opt_thresh, opt_type, opt_all_frames, opt_prehash):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts.get(SKIP_FRAME):
+    if ctx.opts.get(SKIP_FRAME) or ctx.opts.get(SKIP_FILE):
       sink.send(M)
       continue
 

@@ -27,8 +27,9 @@ def cli(ctx, sink, opt_color, opt_alpha):
   
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.models import types
+  from vframe.models.types import FrameImage
   from vframe.utils import im_utils
 
 
@@ -51,6 +52,5 @@ def cli(ctx, sink, opt_color, opt_alpha):
     im_fill[:,:,:] = opt_color[::-1]  # rgb to bgr
     im = cv.addWeighted(im, 1 - opt_alpha, im_fill, opt_alpha, 1.0)
 
-    M.images[opt_frame_type] = im
+    M.images[FrameImage.DRAW] = im
     sink.send(M)
-

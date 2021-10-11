@@ -25,7 +25,7 @@ from vframe.settings.app_cfg import DN_REAL
 from vframe.settings.app_cfg import LOG
 from vframe.models.types import MediaType, FrameImage
 from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile, FileMeta
-from vframe.utils.file_utils import glob_multi, load_file, get_ext, date_modified
+from vframe.utils.file_utils import glob_multi, load_json, load_txt, get_ext, date_modified
 from vframe.utils.video_utils import FileVideoStream
 from vframe.models.geometry import BBox, Point
 
@@ -48,6 +48,8 @@ class MediaFileReader:
   use_prehash: bool=False
   use_draw_frame: bool=False
   skip_if_expression: str=None
+  media_filters: List=field(default_factory=lambda:[])
+  skip_all_frames: bool=False
 
   def __post_init__(self):
     fp = self.filepath
@@ -55,18 +57,47 @@ class MediaFileReader:
     self._n_frames_processed = []
     self._files = []
 
-    # JSON
+    # JSON: pre-processed files
     if get_ext(fp).lower() == 'json':
-      items = load_file(fp)
+      
+      # load 
+      items = load_json(fp)
+
+      # init MediaFiles
       for item in items:
+        
         pf = dacite.from_dict(data=item, data_class=ProcessedFile)
-        # self._files.append(MediaFile(pf.file_meta.filepath, pf.detections))
-        self._files.append(MediaFile.from_processed_file(pf))
+
+        # filter media
+        skip_results = []
+        for media_filter in self.media_filters:
+          val = getattr(pf.file_meta, media_filter.attribute)
+          skip_results.append(media_filter.evaulate(val))
+
+        if not any(skip_results):
+          self._files.append(MediaFile.from_processed_file(pf))
+
       # slice
       if len(self._files) > 0:
         idx_from = max(0, self.slice_idxs[0])
         idx_to = len(self._files) if self.slice_idxs[1] == -1 else self.slice_idxs[1]
         self._files = self._files[idx_from:idx_to]
+
+    # TXT: filelist
+    elif get_ext(fp).lower() == 'txt':
+
+      # load list, removing empty
+      self._files = load_txt(fp)
+      self._files = [f for f in self._files if f]
+      
+      # slice
+      if len(self._files) > 0:
+        idx_from = max(0, self.slice_idxs[0])
+        idx_to = len(self._files) if self.slice_idxs[1] == -1 else self.slice_idxs[1]
+        self._files = self._files[idx_from:idx_to]
+
+      # init MediaFiles
+      self._files = [MediaFile(fp) for fp in self._files]
 
     # Files and directories
     else:
@@ -90,7 +121,7 @@ class MediaFileReader:
         self._files = self._files[idx_from:idx_to]
         # create empty metadata placeholders
 
-      # final init
+      # init MediaFiles
       self._files = [MediaFile(fp) for fp in self._files]
 
   
@@ -111,7 +142,9 @@ class MediaFileReader:
         self._n_frames_processed.append(self._files[i - 1].n_frames)
         self._files[i - 1].unload()  # unload previous
 
-      self._files[i].load(use_draw_frame=self.use_draw_frame, use_prehash=self.use_prehash)
+      self._files[i].load(use_draw_frame=self.use_draw_frame, 
+        use_prehash=self.use_prehash,
+        skip_all_frames=self.skip_all_frames)
       yield self._files[i]
     
     # post iter
@@ -186,11 +219,14 @@ class MediaFile:
     return cls(pf.file_meta.filepath, pf.detections, pf.file_meta)
 
 
-  def load(self, use_draw_frame=False, use_prehash=False):
+  def load(self, use_draw_frame=False, use_prehash=False, skip_all_frames=False):
     """Loads the media file
     """
     self.use_prehash = use_prehash
     self.use_draw_frame = use_draw_frame
+    if self.file_meta and (self._skip_file or skip_all_frames):
+      self.vstream = None
+      return
 
     try:
       self.vstream = FileVideoStream(self.filepath, use_prehash=use_prehash)
@@ -237,8 +273,8 @@ class MediaFile:
     return {
       'file_meta': {
         'filepath': self.filepath,
-        'width': self.vstream.width,
-        'height': self.vstream.height,
+        'width': self.width,
+        'height': self.height,
         'frame_count': self.n_frames,
         'datetime': str(self.datetime),
       },
@@ -321,11 +357,10 @@ class MediaFile:
   def frame_detections_exist(self, labels=None, threshold=None):
     """Returns True if any frame contains any detection
     """
-    n = self.n_detections(labels=lables, threshold=threshold)
+    n = self.n_detections(labels=labels, threshold=threshold)
     return n > 0
 
 
-  @property
   def n_detections(self, labels=None, threshold=None):
     """Returns True if any frame contains any detection
     """
@@ -378,7 +413,10 @@ class MediaFile:
 
   @property
   def index(self):
-    return self.vstream.index
+    if self.vstream:
+      return self.vstream.index
+    else:
+      return 0
   
 
   @property
@@ -418,13 +456,18 @@ class MediaFile:
 
   @property
   def datetime(self):
-    if not self._datetime:
-      self._datetime = date_modified(self.filepath)  # datetime format
-    return self._datetime
+    if self.file_meta:
+      return self.file_meta.datetime
+    else:
+      return date_modified(self.filepath)  # datetime format
 
   @property
   def date(self):
     return self.datetime.date()
+
+  @property
+  def year(self):
+    return self.datetime.year
 
   @property
   def is_last_item(self):

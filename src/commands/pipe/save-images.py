@@ -56,7 +56,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   # ---------------------------------------------------------------------------
   # initialize
 
-  if opt_frame_type == FrameImage.DRAW:
+  if opt_frame_type == types.FrameImage.DRAW:
     ctx.obj[USE_DRAW_FRAME] = True
 
   ensure_dir(opt_dir_out)

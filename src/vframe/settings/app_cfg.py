@@ -48,6 +48,8 @@ USE_PREHASH = 'USE_PREHASH'
 READER = 'MEDIA_READER'
 PAUSED = 'PAUSED'
 USE_DRAW_FRAME = 'USE_DRAW_FRAME'
+MEDIA_FILTERS = 'MEDIA_FILTERS'
+SKIP_MEDIA_FILTERS = 'SKIP_MEDIA_FILTERS'
 FRAME_BUFFER_SIZE = 2048
 
 # -----------------------------------------------------------------------------
@@ -61,15 +63,16 @@ caption_accessors = {
   '@ext': 'ext',
   '@width': 'width',
   '@height': 'height',
-  '@frames': 'n_frames',
+  '@frames': 'frame_count',
   '@detections': 'n_detections'
 }
 
 compare_accessors = {
   '@width': 'width',
   '@height': 'height',
-  '@frames': 'n_frames',
-  '@date': 'date'
+  '@frames': 'frame_count',
+  '@date': 'date',
+  '@year': 'year',
 }
 
 
@@ -111,6 +114,7 @@ FP_HELVETICA_BOLD = join(DIR_FONTS, 'helvetica/Helvetica-Bold.ttf')
 # model config filenames
 FN_CSV_SUMMARY  = 'summary.csv'
 FN_LABEL_COLORS = 'label_colors.json'
+FN_CHECKSUM = 'sha256.txt'
 
 # synthetic files
 FN_METADATA = 'metadata.csv'  # filename

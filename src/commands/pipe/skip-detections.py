@@ -33,7 +33,7 @@ def cli(ctx, sink, opt_threshold, opt_labels, opt_skip):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.opts.get(SKIP_FRAME):
       sink.send(M)
       continue
 

@@ -19,6 +19,7 @@ import logging
 
 #from vframe.utils.click_utils import ClickSimple, ClickComplex
 from vframe.settings.app_cfg import compare_accessors as accessors
+from vframe.settings.app_cfg import LOG
 
 
 # -----------------------------------------------------------------------------
@@ -150,6 +151,7 @@ class OptionOperator:
   attribute: str
   operator: operator
   value: str
+  is_skip: bool=True
 
   def __post_init__(self):
     if self.attribute == 'date':
@@ -163,9 +165,11 @@ class OptionOperator:
 
   def evaulate(self, val):
     if self.attribute == 'date':
-      return self.operator(self.date, val)
+      result = self.operator(val, self.date)
     else:
-      return self.operator(self.value_int, val)
+      result = self.operator(val, self.value_int)
+    return result if self.is_skip else not result
+
 
   @classmethod
   def from_opt_val(cls, val):

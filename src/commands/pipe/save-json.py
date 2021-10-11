@@ -22,7 +22,7 @@ from vframe.utils.click_utils import processor
 def cli(ctx, sink, opt_fp_out, opt_minify, opt_verbose):
   """Save frame data as JSON"""
   
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, READER, SKIP_FILE
+  from vframe.settings.app_cfg import LOG, READER, SKIP_FILE
   from vframe.utils.file_utils import get_ext, write_json
 
   
@@ -45,13 +45,12 @@ def cli(ctx, sink, opt_fp_out, opt_minify, opt_verbose):
     M = yield
     R = ctx.obj[READER]
 
-    if M.is_last_item and not ctx.obj[SKIP_FILE]:
+    if (M.is_last_item or ctx.obj.get(SKIP_FILE, False)) and not ctx.obj[SKIP_FILE]:
       # append after processing each file
       metadata.append(M.to_dict())
 
-    if R.is_last_item and M.is_last_item:
+    if R.is_last_item and (M.is_last_item or ctx.obj.get(SKIP_FILE, False)):
       # save after processing all files
-      LOG.debug('save json')
       write_json(opt_fp_out, metadata, minify=opt_minify, verbose=opt_verbose)
     
     sink.send(M)
