@@ -14,6 +14,8 @@ from vframe.settings import app_cfg
 from vframe.models import types
 from vframe.utils import click_utils
 from vframe.utils.click_utils import processor
+from vframe.settings.app_cfg import filename_accessors as accessors
+
 
 @click.command('')
 @click.option('-o', '--output', 'opt_dir_out', required=True,
@@ -26,9 +28,9 @@ from vframe.utils.click_utils import processor
   type=types.FrameImageVar,
   help=click_utils.show_help(types.FrameImage))
 @click.option('--prefix', 'opt_prefix', default='',
-  help='Filename prefix')
+  help=f'Filename prefix, accessors: {", ".join(accessors.keys())}')
 @click.option('--suffix', 'opt_suffix', default='',
-  help='Filename suffix')
+  help=f'Filename suffix, accessors: {", ".join(accessors.keys())}')
 @click.option('--numbered', 'opt_numbered', is_flag=True,
   help='Number files sequentially')
 @click.option('-z', '--zeros', 'opt_n_zeros', default=app_cfg.ZERO_PADDING)
@@ -36,7 +38,7 @@ from vframe.utils.click_utils import processor
   type=click.FloatRange(0,1, clamp=True), show_default=True,
   help='JPEG write quality')
 @click.option('--subdirs', 'opt_keep_subdirs', is_flag=True,
-  help='Keep subdirectory structure in output directory')
+  help='Recreate subdirectory structure relative to input directory')
 @processor
 @click.pass_context
 def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
@@ -62,6 +64,14 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   ensure_dir(opt_dir_out)
   frame_count = 0
 
+  def replace_accessor(text, M):
+    for k,v in accessors.items():
+      if k in text:
+        try:
+          text = text.replace(k, str(getattr(M, v)))
+        except Exception as e:
+          LOG.error(f'{k}:{v} is not a valid text accessor. Error: {e}')
+    return text
 
   # ---------------------------------------------------------------------------
   # process 
@@ -75,6 +85,10 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
     if ctx.opts[SKIP_FRAME]:
       sink.send(M)
       continue
+
+    # replace accessors with attributes
+    prefix = replace_accessor(opt_prefix, M) if opt_prefix else opt_prefix
+    suffix = replace_accessor(opt_suffix, M) if opt_suffix else opt_suffix
       
     im = M.images.get(opt_frame_type)
 
@@ -98,14 +112,14 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
     # output filepath
     if M.type == types.MediaType.IMAGE:
       ext = opt_ext.name.lower() if opt_ext else get_ext(M.filename)
-      fn = f'{opt_prefix}{stem}{opt_suffix}.{ext}'
+      fn = f'{prefix}{stem}{suffix}.{ext}'
       fp_out = join(fp_dir_out, fn)
       
     elif M.type == types.MediaType.VIDEO:
       ext = opt_ext.name.lower() if opt_ext is not None else 'jpg'
-      fn = f'{zpad(M.index, z=opt_n_zeros)}.{ext}'
+      fn = f'{prefix}{zpad(M.index, z=opt_n_zeros)}{suffix}.{ext}'
       fp_out = join(fp_dir_out, Path(M.filepath).stem, fn)
-
+  
     ensure_dir(fp_out)
 
     # write image

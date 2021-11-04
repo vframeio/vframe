@@ -14,11 +14,14 @@ from enum import Enum
 from functools import lru_cache
 import time
 import traceback
+from random import shuffle
 
 import cv2 as cv
 from PIL import Image
 from dataclasses import asdict
 import dacite
+from tqdm import tqdm
+import numpy as np
 
 from vframe.settings import app_cfg
 from vframe.settings.app_cfg import DN_REAL
@@ -26,6 +29,7 @@ from vframe.settings.app_cfg import LOG
 from vframe.models.types import MediaType, FrameImage
 from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile, FileMeta
 from vframe.utils.file_utils import glob_multi, load_json, load_txt, get_ext, date_modified
+from vframe.utils.file_utils import get_sha256
 from vframe.utils.video_utils import FileVideoStream
 from vframe.models.geometry import BBox, Point
 
@@ -50,6 +54,8 @@ class MediaFileReader:
   skip_if_expression: str=None
   media_filters: List=field(default_factory=lambda:[])
   skip_all_frames: bool=False
+  skip_check_exist: bool=True
+  opt_randomize: bool=False
 
   def __post_init__(self):
     fp = self.filepath
@@ -64,9 +70,12 @@ class MediaFileReader:
       items = load_json(fp)
 
       # init MediaFiles
-      for item in items:
+      for item in tqdm(items, desc='Initializing files'):
         
         pf = dacite.from_dict(data=item, data_class=ProcessedFile)
+
+        if self.skip_check_exist and not Path(pf.file_meta.filepath).is_file():
+          continue
 
         # filter media
         skip_results = []
@@ -76,6 +85,10 @@ class MediaFileReader:
 
         if not any(skip_results):
           self._files.append(MediaFile.from_processed_file(pf))
+
+      # randomize if optioned
+      if self.opt_randomize:
+        shuffle(self._files)
 
       # slice
       if len(self._files) > 0:
@@ -88,8 +101,15 @@ class MediaFileReader:
 
       # load list, removing empty
       self._files = load_txt(fp)
-      self._files = [f for f in self._files if f]
+      if self.skip_check_exist:
+        self._files = [f for f in self._files if f]
+      else:
+        self._files = [f for f in tqdm(self._files, desc='Checking files') if Path(f).is_file()]
       
+      # randomize if optioned
+      if self.opt_randomize:
+        shuffle(self._files)
+
       # slice
       if len(self._files) > 0:
         idx_from = max(0, self.slice_idxs[0])
@@ -114,6 +134,10 @@ class MediaFileReader:
       elif not Path(fp).exists():
         LOG.error(f'File {fp} does not exist')
 
+      # randomize if optioned
+      if self.opt_randomize:
+        shuffle(self._files)
+
       # slice
       if len(self._files) > 0:
         idx_from = max(0, self.slice_idxs[0])
@@ -125,6 +149,11 @@ class MediaFileReader:
       self._files = [MediaFile(fp) for fp in self._files]
 
   
+
+  def split_into_threads(self, n):
+    return np.array_split(np.array(self._files), n)
+
+
   def iter_files(self):
     """Generator yielding next MediaFile
     """
@@ -200,6 +229,7 @@ class MediaFile:
   metadata_priors: List[DetectResults]=field(default_factory=lambda: [])
   file_meta: FileMeta=None
   skip_all_frames: bool=False
+  use_sha256: bool=False
 
 
   def __post_init__(self):
@@ -212,6 +242,7 @@ class MediaFile:
       self.type = MediaType.VIDEO
     self.vstream = None
     self._skip_file = False
+
 
 
   @classmethod
@@ -236,6 +267,7 @@ class MediaFile:
       video_ok = self.vstream.start()  # starts threaded media reader
       
       if not video_ok:
+        self._skip_file = True
         return False
       else:
         self.processed_fps = 0
@@ -255,7 +287,7 @@ class MediaFile:
     del self.images
     del self.metadata
 
-  def skip_file(self):
+  def set_skip_file(self):
     self._skip_file = True
     self._n_frames_processed = 0
 
@@ -277,6 +309,7 @@ class MediaFile:
         'height': self.height,
         'frame_count': self.n_frames,
         'datetime': str(self.datetime),
+        'sha256': self.sha256,
       },
       'frames_meta': frames_meta
       }
@@ -298,10 +331,15 @@ class MediaFile:
 
     # iter
     for index in range(self.n_frames):
-      # che
+
+      # check if video stopped running before iterating all frames
       if not self.vstream.running():
         LOG.warn(f'Corrupt video: {self.filepath}. Exited at frame: {index}/{self.n_frames}. No data saved.')
+        # break
+        self._skip_file = True
+        yield 
         return
+        # return
       
       if self.use_prehash:
         im, self.phash = self.vstream.read_frame_phash()
@@ -357,11 +395,11 @@ class MediaFile:
   def frame_detections_exist(self, labels=None, threshold=None):
     """Returns True if any frame contains any detection
     """
-    n = self.n_detections(labels=labels, threshold=threshold)
+    n = self.n_detections_filtered(labels=labels, threshold=threshold)
     return n > 0
 
 
-  def n_detections(self, labels=None, threshold=None):
+  def n_detections_filtered(self, labels=None, threshold=None):
     """Returns True if any frame contains any detection
     """
 
@@ -370,11 +408,21 @@ class MediaFile:
       for k, dr in self.metadata.get(self.index).items():
         dets = dr.detections
         if threshold:
-          dets = [x for x in dets if x.conf > threshold]
+          dets = [x for x in dets if x.conf >= threshold]
         if labels:
           dets = [x for x in dets if x.label in labels]
 
     return len(dets)
+
+  @property
+  def n_detections(self):
+    """Returns True if any frame contains any detection
+    """
+
+    if self.metadata:
+      return sum([len(v.detections) for k,v in self.metadata.get(self.index).items()])
+    else:
+      return 0
 
 
   @property
@@ -393,31 +441,31 @@ class MediaFile:
     return Path(self.filepath).parent
 
   @property
-  def parent_name(self):
+  def parentname(self):
     return Path(self.filepath).parent.name
 
   @property
   def filename(self):
     return Path(self.filepath).name
 
+  @property
+  def filestem(self):
+    return Path(self.filepath).stem
 
   @property
   def fn(self):
     return self.filename
 
-
   @property
   def ext(self):
     return get_ext(self.filename)
   
-
   @property
   def index(self):
     if self.vstream:
       return self.vstream.index
     else:
       return 0
-  
 
   @property
   def width(self):
@@ -429,7 +477,6 @@ class MediaFile:
       LOG.warn('media width not initialized')
       return 0
 
-
   @property
   def height(self):
     if self.file_meta:
@@ -440,7 +487,6 @@ class MediaFile:
       LOG.warn('media height not initialized')
       return 0
   
-
   @property
   def n_frames(self):
     if self.file_meta:
@@ -460,6 +506,15 @@ class MediaFile:
       return self.file_meta.datetime
     else:
       return date_modified(self.filepath)  # datetime format
+
+  @property
+  def sha256(self):
+    if self.use_sha256 and self.file_meta and self.file_meta.sha256:
+      return self.file_meta.sha256
+    elif self.use_sha256:
+      return get_sha256(self.filepath)
+    else:
+      return ''
 
   @property
   def date(self):

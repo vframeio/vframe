@@ -23,9 +23,15 @@ from vframe.utils.click_utils import generator
   help="Slice list of inputs")
 @click.option('--skip-frames', 'opt_skip_frames', is_flag=True,
   help='Skip all frames, only iterate files')
+@click.option('--skip-check-exist', 'opt_skip_check_exist', 
+  is_flag=True, default=True,
+  help='Check files existence before processing')
+@click.option('--randomize', 'opt_randomize', is_flag=True, 
+  help='Randomize file list before slicing')
 @generator
 @click.pass_context
-def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_skip_frames):
+def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, 
+  opt_skip_frames, opt_skip_check_exist, opt_randomize):
   """Open media for processing"""
 
   from tqdm import tqdm
@@ -53,7 +59,9 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_skip_frame
     'use_prehash': ctx.obj.get(USE_PREHASH, False),
     'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME, False),
     'media_filters': ctx.obj.get(MEDIA_FILTERS, []),
-    'skip_all_frames': opt_skip_frames
+    'skip_all_frames': opt_skip_frames,
+    'skip_check_exist': opt_skip_check_exist,
+    'opt_randomize': opt_randomize,
     }
 
   # init media file reader
@@ -78,20 +86,18 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, opt_skip_frame
     
     for ok in tqdm(m.iter_frames(), total=m.n_frames, desc=m.fn, disable=m.n_frames <= 1, leave=False):
       
-      ctx.opts[SKIP_FRAME] = opt_skip_frames
+      ctx.opts[SKIP_FRAME] = (opt_skip_frames or m.skip_all_frames)
 
-      if ctx.obj.get(SKIP_FILE, False):
-        m.skip_file()
-
-      # if not m.frame_count > 0:
-      #   continue
+      # TODO: cleanup
+      if ctx.obj.get(SKIP_FILE, False) or m._skip_file:
+        ctx.obj[SKIP_FILE] = True
+        m.set_skip_file()
     
       # check for ctl-c, exit gracefully
       if sigint.interrupted:
         m.unload()
         return
     
-      # init frame-iter presets
       sink.send(m)
 
 

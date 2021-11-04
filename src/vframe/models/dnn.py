@@ -13,6 +13,8 @@ from typing import Dict, Tuple, List
 import logging
 from pathlib import Path
 
+from vframe.models.color import Color
+
 LOG = logging.getLogger('vframe')
 
 @dataclass
@@ -31,6 +33,7 @@ class DNN:
   # model file locations
   config: str=''  # filename prototxt, pbtxt, .cfg, etc
   labels: str = 'labels.txt'  # filename path to labels.txt line-delimeted
+  colors: str='colors.txt'  # line-delimeted hex colors #FF0000
   # preprocessing
   mean: List[float] = field(default_factory=lambda: [])
   scale: float=0.0
@@ -94,6 +97,15 @@ class DNN:
     else:
       self.fp_license = None
 
+    # colors
+    fp = join(self.local, self.colors)
+    if self.colors and Path(fp).is_file():
+      with open(fp, 'rt') as fp:
+        lines = fp.read().rstrip('\n').split('\n')
+      self.colorlist = [Color.from_rgb_hex_str(x) for x in lines]
+    else:
+      self.colorlist = None
+
     # # update device
     # if not self.device or any(self.device) == -1:
     #   self.device = -1  # CPU
@@ -102,13 +114,13 @@ class DNN:
     # device: 0  # gpu FIXME conflicts with gpu property
 
 
-  def override(self, device=0, size=(None, None), threshold=None):
+  def override(self, device=0, dnn_size=(None, None), threshold=None, **kwargs):
     self.device = device
-    if all(size):
+    if all(dnn_size):
       if not self.resize_enabled:
-        log.warn(f'Resizing DNN input size not permitted for this model')
+        LOG.warn(f'Resizing DNN input size not permitted for this model')
       else:
-        self.width, self.height = size
+        self.width, self.height = dnn_size
     if threshold is not None:
       self.threshold = threshold
 

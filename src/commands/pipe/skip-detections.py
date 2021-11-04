@@ -18,11 +18,12 @@ from vframe.utils.click_utils import processor
   help='Threshold below which frames are skipped (1.0 = all skipped, 0.0 = none skipped)')
 @click.option('--label', 'opt_labels', multiple=True,
   help='Detection label')
-@click.option('--skip/--keep', 'opt_skip', is_flag=True, default=True,
+@click.option('--keep', 'opt_keep', is_flag=True,
   help='Inverts threshold to keep frames below threshold')
+@click.option('--override', 'opt_override', is_flag=True)
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_threshold, opt_labels, opt_skip):
+def cli(ctx, sink, opt_threshold, opt_labels, opt_keep, opt_override):
   """Skip frames based on presence/absence of detections"""
   
   from vframe.settings.app_cfg import LOG, SKIP_FRAME
@@ -37,9 +38,12 @@ def cli(ctx, sink, opt_threshold, opt_labels, opt_skip):
       sink.send(M)
       continue
 
-    # returns True if dets exist > threshold
-    exist = M.frame_detections_exist(threshold=opt_threshold, labels=opt_labels)
-    skip = not exist if opt_skip else exist
-    ctx.opts[SKIP_FRAME] = skip
+    # skip if no detections exist above the threshold
+    skip = not M.frame_detections_exist(threshold=opt_threshold, labels=opt_labels)
+    skip = not skip if opt_keep else skip
+    if opt_override:
+      ctx.opts[SKIP_FRAME] = skip
+    else:
+      ctx.opts[SKIP_FRAME] = (ctx.opts.get(SKIP_FRAME) or skip)
     
     sink.send(M)

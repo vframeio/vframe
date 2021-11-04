@@ -13,10 +13,10 @@ import click
 from vframe.utils.click_utils import processor
 
 # TODO: enumerate
-color_styles = ['random', 'preset', 'fixed']
+color_styles = ['preset', 'fixed']
 
 @click.command('')
-@click.option( '-d', '--data', 'opt_data_keys', 
+@click.option( '-n', '--name', 'opt_data_keys', 
   multiple=True,
   help='Name of data key for ROIs')
 @click.option('--bbox/--no-bbox', 'opt_bbox', is_flag=True, default=True,
@@ -38,15 +38,13 @@ color_styles = ['random', 'preset', 'fixed']
 @click.option('--expand', 'opt_expand', default=None, 
   type=click.FloatRange(0.0, 1.0, clamp=True),
   help='Percentage to expand bbox')
-@click.option('--mask-alpha', 'opt_mask_alpha', default=0.6,
-  help='Mask color weight')
 @click.option('-c', '--color', 'opt_color', 
-  type=(int, int, int), default=(0, 0, 255),
+  type=(int, int, int), default=(0, 255, 0),
   help='Color in RGB int (eg 0 255 0)')
-@click.option('--color-source', 'opt_color_source', default='random', 
+@click.option('--color-source', 'opt_color_source', default='preset', 
   type=click.Choice(color_styles),
   help="Assign color to bbox and label background")
-@click.option('--label-size', 'opt_size_label', default=12,
+@click.option('--font-size', 'opt_size_font', default=12,
   help='Text size')
 @click.option('--label-color', 'opt_color_label', 
   type=(int, int, int), default=(None, None, None),
@@ -57,36 +55,26 @@ color_styles = ['random', 'preset', 'fixed']
 @click.option('--label-index', 'opt_label_index', 
   is_flag=True,
   help='Label padding')
-@click.option('-t', '--threshold', 'opt_threshold', default=0.0,
-  help='Minimum detection confidence to draw')
+@click.option('--exclude-label', 'opt_exclude_labels', multiple=True, default=[''])
 @processor
 @click.pass_context
 def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, opt_conf, 
-  opt_mask, opt_rbbox, opt_stroke, opt_size_label, opt_expand, 
-  opt_mask_alpha, opt_color_source, opt_color_label, opt_color, opt_padding_label,
-  opt_label_index, opt_threshold):
+  opt_mask, opt_rbbox, opt_stroke, opt_size_font, opt_expand, 
+  opt_color_source, opt_color_label, opt_color, opt_padding_label,
+  opt_label_index, opt_exclude_labels):
   """Draw bboxes and labels"""
   
   from os.path import join
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
-  from vframe.settings.app_cfg import USE_DRAW_FRAME
+  from vframe.settings.app_cfg import USE_DRAW_FRAME, OBJECT_COLORS
   from vframe.models.types import FrameImage
   from vframe.models.color import Color
   from vframe.utils import draw_utils
 
 
-  # ---------------------------------------------------------------------------
-  # initialize
-
   ctx.obj[USE_DRAW_FRAME] = True
 
-  if all(v is not None for v in opt_color):
-    opt_color_source = 'fixed'
-
-
-  # ---------------------------------------------------------------------------
-  # process
 
   while True:
 
@@ -108,38 +96,25 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
 
     for data_key in data_keys:
 
+      color_presets = ctx.opts.get(OBJECT_COLORS, {}).get(data_key, None)
+
       item_data = M.metadata[M.index].get(data_key)
 
       if item_data:
         # draw bbox, labels, mask
         for obj_idx, detection in enumerate(item_data.detections):
+          
+          if opt_exclude_labels and detection.label in opt_exclude_labels:
+            continue
+            
           bbox = detection.bbox.redim(dim)
 
-          # FIXME
-          if opt_color_source == 'random':
-            color = Color.random()
-          elif opt_color_source == 'fixed':
-            color = Color.from_rgb_int(opt_color)
-          elif opt_color_source == 'preset':
-            # TODO: load JSON colors from .yaml
-            # TODO: add tracking ID based colors
-            LOG.warn('Not yet implemented')
-            color = Color.from_rgb_int((255,0,0))
-          
-          # TODO: implement mask-segmentation drawing
-          # # draw mask
-          # if opt_mask and item_data.task_type == types.Processor.SEGMENTATION:
-          #   mask = detection.mask
-          #   im = draw_utils.draw_mask(im, bbox, mask, 
-          #     color=color, color_weight=opt_mask_alpha)
-
-          # TODO: implement rotated BBox drawing
-          # # draw rotated bbox
-          # if opt_rbbox and item_data.task_type == types.Processor.DETECTION_ROTATED:
-          #   im = draw_utils.draw_rotated_bbox_pil(im, detection.rbbox, 
-          #     stroke=opt_stroke, color=color)
-
           if opt_bbox:
+
+            if opt_color_source == 'preset' and color_presets:
+              color = color_presets[detection.index]
+            else:
+              color = Color.from_rgb_int(opt_color)
             
             # prepare label
             if not opt_no_labels:
@@ -159,7 +134,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
             # draw bbox and optional labeling
             im = draw_utils.draw_bbox(im, bbox, color=color,
               stroke=opt_stroke, expand=opt_expand,
-              label=label, size_label=opt_size_label, padding_label=opt_padding_label,
+              label=label, size_label=opt_size_font, padding_label=opt_padding_label,
               )
 
     # update pipe with modified image

@@ -26,7 +26,7 @@ def cli(ctx, sink, opt_rotate):
   """Rotate frame"""
   
   import cv2 as cv
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
 
   frame_types = [FrameImage.ORIGINAL]
   if ctx.obj[USE_DRAW_FRAME]:

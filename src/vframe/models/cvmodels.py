@@ -45,6 +45,7 @@ class BenchmarkResult:
   processor: str=''
   opencv_version: str=''
   python_version: str=''
+  batch_size: int=1
 
   def __post_init__(self):
     self.opencv_version = cv.__version__
@@ -308,6 +309,7 @@ class FileMeta:
   width: int
   frame_count: int
   datetime: str
+  # sha256: str=''
 
   def __post_init__(self):
     self.datetime = datetime.datetime.fromisoformat(self.datetime)

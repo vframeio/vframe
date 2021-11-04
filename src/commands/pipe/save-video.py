@@ -88,7 +88,6 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
         dim = M.images.get(opt_frame_type).shape[:2][::-1]
         fps = opt_fps if opt_fps else M.fps
         # init new video writer
-        LOG.debug(f'Start video: {fp_out}')
         video_out = cv.VideoWriter(fp_out, four_cc, fps, tuple(dim))
         video_out.set(cv.VIDEOWRITER_PROP_QUALITY, 1)
         # store reference to current file to check for new media
@@ -102,7 +101,6 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
       # end video
       if M.is_last_item and video_out is not None:
         video_out.release()
-        LOG.debug(f'End video: {fp_out}')
         video_out = None
         filepath = None
 

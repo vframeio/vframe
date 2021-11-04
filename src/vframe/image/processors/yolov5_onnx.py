@@ -14,7 +14,7 @@ import numpy as np
 import cv2 as cv
 
 from vframe.image.processors.utils.yolov5_utils import letterbox, non_max_suppression
-from vframe.settings import app_cfg
+from vframe.settings.app_cfg import LOG
 from vframe.models.geometry import BBox
 from vframe.image.processors.base import DetectionProc
 from vframe.models.cvmodels import DetectResult, DetectResults
@@ -41,7 +41,7 @@ class YOLOV5ONNXProc(DetectionProc):
     if cfg.labels_exist:
       self.labels = load_txt(cfg.fp_labels)  # line-delimited class labels
     else:
-      app_cfg.LOG.debug(f'Labels file missing: {cfg.fp_labels}')
+      LOG.debug(f'Labels file missing: {cfg.fp_labels}')
       self.labels = []
 
 

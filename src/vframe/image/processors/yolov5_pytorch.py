@@ -56,14 +56,14 @@ class YOLOV5PyTorchProc(DetectionProc):
       logging.getLogger("").handlers.clear()
     except Exception as e:
       pass
-    self.model.half = True  # to FP16
+    self.model.half = False  # to FP16
     self.model.conf = cfg.threshold
     self.model.iou = cfg.iou
 
     # load labels
     self.labels = load_txt(cfg.fp_labels) if cfg.labels_exist else []
     if not self.labels:
-      self.log.debug(f'No labels or missing file: {cfg.fp_labels}')
+      LOG.debug(f'No labels or missing file: {cfg.fp_labels}')
 
 
   def fps_batch(self, n_iters=10, dim=(640,480), batch_size=12):
@@ -73,10 +73,10 @@ class YOLOV5PyTorchProc(DetectionProc):
     """
     ims = [create_random_im(*dim) for i in range(batch_size)]
     _ = self.infer(random.choice(ims))  # warmup
-    st = time.time()
+    st = time.perf_counter()
     for i in range(n_iters):
       _ = self.infer(ims)
-    fps = batch_size * n_iters / (time.time() - st)
+    fps = batch_size * n_iters / (time.perf_counter() - st)
     return fps
     
 
@@ -89,11 +89,11 @@ class YOLOV5PyTorchProc(DetectionProc):
     if not ims:
       return []
     self.dim = ims[0].shape[:2][::-1]
-    ims_pil_batch = [np2pil(im) for im in ims]
-    dims = [im.size for im in ims_pil_batch]
-    batch_outputs = self.model(ims_pil_batch, size=self.cfg.width)
-    batch_results = self._post_process(batch_outputs, dims)
-    return batch_results
+    
+    ims_batch = [np2pil(im) for im in ims]
+    dims = [im.size for im in ims_batch]
+    batch_outputs = self.model(ims_batch, size=self.cfg.width)
+    return self._post_process(batch_outputs, dims)
 
 
   def _post_process(self, outputs, dims):
@@ -104,7 +104,7 @@ class YOLOV5PyTorchProc(DetectionProc):
       idx_dets = []
       idx_outputs = idx_outputs.tolist()
       if not idx_outputs:
-        batch_dets.append(DetectResults(idx_dets))
+        batch_dets.append(DetectResults(idx_dets))  # empty results
         continue
       for idx_output in idx_outputs:
         if idx_output:

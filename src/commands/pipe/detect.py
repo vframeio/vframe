@@ -21,7 +21,7 @@ from vframe.settings import app_cfg
   help=show_help(ModelZoo))
 @click.option('-d', '--device', 'opt_device', default=0,
   help='GPU device for inference (use -1 for CPU)')
-@click.option('-s', '--size', 'opt_dnn_size', default=(None, None), type=(int, int),
+@click.option('-s', '--size', 'opt_dnn_size', type=(int, int), default=(0,0),
   help='DNN blob image size. Overrides config file')
 @click.option('-t', '--threshold', 'opt_dnn_threshold', default=None, type=float,
   help='Detection threshold. Overrides config file')
@@ -29,7 +29,7 @@ from vframe.settings import app_cfg
   help='Name of data key')
 @click.option('--verbose', 'opt_verbose', is_flag=True)
 @click.option('--batch-size', 'opt_batch_size', default=1,
-  type=click.IntRange(1, 48),
+  type=click.IntRange(1, 64),
   help='Inference batch size')
 @click.option('-r', '--rotate', 'opt_rotate', 
   type=click.Choice(app_cfg.ROTATE_VALS.keys()), 
@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, OBJECT_COLORS, modelzoo
   from vframe.image.dnn_factory import DNNFactory
 
   
@@ -55,9 +55,8 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     LOG.warn(f'Batch processing not enabled for this model. Batch size reset to 1')
 
   # override dnn_cfg vars with cli vars
-  dnn_cfg.override(device=opt_device, size=opt_dnn_size, threshold=opt_dnn_threshold)
+  dnn_cfg.override(device=opt_device, dnn_size=opt_dnn_size, threshold=opt_dnn_threshold)
   
-
   # rotate cv, np vals
   cv_rot_val = app_cfg.ROTATE_VALS[opt_rotate]
   np_rot_val =  int(opt_rotate) // 90  # counter-clockwise 90 deg rotations
@@ -68,6 +67,10 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
   # create cvmodel
   cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
 
+  # add globally accessible colors
+  ctx.opts.setdefault(OBJECT_COLORS, {})
+  ctx.opts[OBJECT_COLORS][opt_data_key] = dnn_cfg.colorlist
+
   Q = []
 
 
@@ -76,12 +79,11 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     # get pipe data
     M = yield
 
-    if opt_batch_size == 1:
-
-      # skip frame if flagged
-      if ctx.opts.get(SKIP_FRAME):
+    if ctx.opts.get(SKIP_FRAME):
         sink.send(M)
         continue
+
+    if opt_batch_size == 1:
 
       # TODO: copy results from previous frame is SIM_FRAME_KEY
       # if ctx.opts[SIM_FRAME_KEY]:
@@ -149,7 +151,6 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
           # update data
           if len(results.detections) > 0:
-            # M.metadata.get(idx).update({opt_data_key: results})
             M.metadata[idx].update({opt_data_key: results})
 
         Q = []

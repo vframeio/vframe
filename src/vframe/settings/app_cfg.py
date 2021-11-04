@@ -50,16 +50,21 @@ PAUSED = 'PAUSED'
 USE_DRAW_FRAME = 'USE_DRAW_FRAME'
 MEDIA_FILTERS = 'MEDIA_FILTERS'
 SKIP_MEDIA_FILTERS = 'SKIP_MEDIA_FILTERS'
+OBJECT_COLORS = 'OBJECT_COLORS'
 FRAME_BUFFER_SIZE = 2048
 
 # -----------------------------------------------------------------------------
 # Caption accessors
+# NB: @accessors can not include another name
+# eg: use @filename:filename and @filepath:filepath
+# eg: !use @filename:filename and @filename_parent:filename_parent
 # -----------------------------------------------------------------------------
 
 caption_accessors = {
   '@filename': 'filename',
-  '@parent_name': 'parent_name',
+  '@filestem': 'filestem',
   '@filepath': 'filepath',
+  '@parentname': 'parentname',
   '@ext': 'ext',
   '@width': 'width',
   '@height': 'height',
@@ -73,6 +78,12 @@ compare_accessors = {
   '@frames': 'frame_count',
   '@date': 'date',
   '@year': 'year',
+}
+
+filename_accessors = {
+  '@filename': 'filename',
+  '@filestem': 'filestem',
+  '@parentname': 'parentname',
 }
 
 

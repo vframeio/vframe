@@ -49,7 +49,7 @@ def cli(ctx, sink, opt_filter, opt_frame_type, opt_shuffle):
 
     # apply
     im = M.images[opt_frame_type]
-    im = IMAGE_TRANSFORMS.get(filter_name)(im, fac)
+    im = IMAGE_TRANSFORMS.get(opt_filter[0])(im, opt_filter[1])
     M.images[opt_frame_type] = im
 
     # update

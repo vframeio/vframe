@@ -62,20 +62,49 @@ models:
 
   yoloface-07-pt: &yoloface-07-pt
     <<: *yoloface-base-pt
-    notes: Trained at 960-lg
+    notes: yolov5l6 trained at 960
     local: pytorch/detection/yoloface_07/
     remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_07/
     width: 1280
     height: 1280
 
-  yoloface-07: &yoloface-07
-    <<: *yoloface-07-pt
-
-  yoloface-pt:
-    <<: *yoloface-07
+  yoloface-14-nn: &yoloface-14-nn
+    <<: *yoloface-base-pt
+    notes: yolov5n6 trained at 640
+    local: pytorch/detection/yoloface_14_nn/
+    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_14_nn/
 
   yoloface:
-    <<: *yoloface-07
-
+    <<: *yoloface-07-pt
+  
   yoloface-onnx:
     <<: *yoloface-07-onnx
+
+  yoloface-nn:
+    <<: *yoloface-14-nn
+
+
+  # -----------------------------------------------------------------------------
+  # MobileNet SSD
+  # -----------------------------------------------------------------------------
+  ssdface:
+    # meta
+    name: OpenCV SSD Face Detector
+    notes: Poor performnace on smaller faces, ok performance on large frontal faces
+    # model
+    local: modelzoo/models/caffe/detection/mobilenet_ssd_face/
+    remote: https://download.vframe.io/v2/models/caffe/detection/mobilenet_ssd_face/
+    model: opencv_face_detector.caffemodel
+    config: opencv_face_detector.prototxt
+    mean: [104, 177, 123]
+    scale: 1.0
+    width: 480
+    height: 480
+    rgb: False
+    crop: False
+    # processor
+    processor: ssd
+    output: bbox
+    threshold: 0.8
+    resize_enabled: True
+    active: True

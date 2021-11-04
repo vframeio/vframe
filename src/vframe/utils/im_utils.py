@@ -18,6 +18,9 @@ import cv2 as cv
 from PIL import Image, ImageDraw, ImageEnhance
 import numpy as np
 import imageio
+from imagehash import ImageHash
+import scipy.fftpack # imagehash
+
 try:
   imageio.plugins.freeimage.download()
 except Exception as e:
@@ -25,6 +28,24 @@ except Exception as e:
 
 from vframe.utils.misc_utils import oddify, evenify
 from vframe.models.geometry import BBox
+
+# -----------------------------------------------------------------------------
+#
+# Hashing and similarity
+#
+# -----------------------------------------------------------------------------
+
+def phash(im, hash_size=8, highfreq_factor=4):
+  """Perceptual hash rewritten from https://github.com/JohannesBuchner/imagehash/blob/master/imagehash.py#L197
+  """
+  wh = hash_size * highfreq_factor
+  im = cv.resize(im, (wh, wh), interpolation=cv.INTER_NEAREST)
+  im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+  dct = scipy.fftpack.dct(scipy.fftpack.dct(im, axis=0), axis=1)
+  dctlowfreq = dct[:hash_size, :hash_size]
+  med = np.median(dctlowfreq)
+  diff = dctlowfreq > med
+  return ImageHash(diff)
 
 # -----------------------------------------------------------------------------
 #
@@ -361,7 +382,7 @@ def crop_roi(im, bbox):
   return im_roi
 
 
-def blur_bbox(im, bboxes, per=0.33, iters=1):
+def blur_bboxes(im, bboxes, fac=0.33, iters=1):
   """Blur ROI
   :param im: (np.ndarray) image BGR
   :param bbox: (BBox)
@@ -378,7 +399,7 @@ def blur_bbox(im, bboxes, per=0.33, iters=1):
     x1, y1, x2, y2 = bbox.xyxy_int
     im_roi = im[y1:y2, x1:x2]
     h,w,c = im_roi.shape
-    ksize = int(max(per * w, per * h))
+    ksize = int(max(fac * w, fac * h))
     ksize = ksize if ksize % 2 else ksize + 1
     for n in range(iters):
       im_roi = cv.blur(im_roi, ksize=(ksize,ksize))
@@ -387,7 +408,7 @@ def blur_bbox(im, bboxes, per=0.33, iters=1):
   return im
 
 
-def pixellate_bbox(im, bboxes, cell_size=(5,6), expand_per=0.0):
+def pixellate_bboxes(im, bboxes, cell_size=(5,6), expand_per=0.0):
   """Pixellates ROI using Nearest Neighbor inerpolation
   :param im: (numpy.ndarray) image BGR
   :param bbox: (BBox)

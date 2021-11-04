@@ -21,7 +21,7 @@ from vframe.utils.click_utils import show_help
   help="Draw image width")
 @click.option('-h', '--height', 'opt_height', default=None, type=int,
   help="Draw image height")
-@click.option('-f', '--frame-name', 'opt_frame_type', default='original',
+@click.option('-f', '--frame', 'opt_frame_type', default='original',
   type=FrameImageVar, help=show_help(FrameImage))
 @click.option('-a', '--all/--single', 'opt_all_frames', is_flag=True, default=True,
   help='Resize all frames')

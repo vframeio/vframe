@@ -47,14 +47,14 @@ from vframe.settings.app_cfg import LOG
 # Encode/Decode
 # ----------------------------------------------------------------------
 
-def sha256(fp_in, block_size=65536):
+def get_sha256(fp, block_size=65536):
   """Generates SHA256 hash for a file
-  :param fp_in: (str) filepath
+  :param fp: (str) filepath
   :param block_size: (int) byte size of block
   :returns: (str) hash
   """
   sha256 = hashlib.sha256()
-  with open(fp_in, 'rb') as fp:
+  with open(fp, 'rb') as fp:
     for block in iter(lambda: fp.read(block_size), b''):
       sha256.update(block)
   return sha256.hexdigest()

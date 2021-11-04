@@ -15,9 +15,10 @@ from vframe.utils.click_utils import processor
 @click.command('')
 @click.option('-i', '--interval', 'opt_frame_interval', default=2,
   help='Number of frames to decimate/skip for every frame read')
+@click.option('--override', 'opt_override', is_flag=True)
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_frame_interval):
+def cli(ctx, sink, opt_frame_interval, opt_override):
   """Skip frames at regular interval"""
   
   from vframe.models.types import MediaType
@@ -35,7 +36,11 @@ def cli(ctx, sink, opt_frame_interval):
       continue
 
     idx = R.index if M.type == MediaType.IMAGE else M.index
-    skip_frame = idx % opt_frame_interval  # valid frame = 0
-    ctx.opts[SKIP_FRAME] = skip_frame
+    skip = idx % opt_frame_interval  # valid frame = 0
+
+    if opt_override:
+      ctx.opts[SKIP_FRAME] = skip
+    else:
+      ctx.opts[SKIP_FRAME] = (ctx.opts[SKIP_FRAME] or skip)
     
     sink.send(M)

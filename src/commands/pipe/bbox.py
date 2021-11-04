@@ -37,7 +37,7 @@ def cli(ctx, sink, opt_data_key, opt_square, opt_expand):
       continue
 
     frame_data = M.metadata.get(opt_data_key)
-    im = M.get_image(types.FrameImage.DRAW)
+    im = M.images.get(types.FrameImage.DRAW)
     dim = im.shape[:2][::-1]
 
     if frame_data:

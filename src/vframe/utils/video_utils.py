@@ -17,13 +17,12 @@ from pymediainfo import MediaInfo
 from PIL import Image
 import cv2 as cv
 import dacite
-import imagehash
 
 from vframe.settings import app_cfg
 from vframe.settings.app_cfg import LOG
 from vframe.models.mediameta import MediaMeta
 from vframe.utils import file_utils
-from vframe.utils.im_utils import pil2np, np2pil, resize
+from vframe.utils.im_utils import pil2np, np2pil, resize, phash
 
 
 
@@ -129,10 +128,8 @@ class FileVideoStream:
           self.queue.put(frame)
           # add phash
           if self.use_prehash:
-            frame = cv.resize(frame, (32, 32), interpolation=cv.INTER_NEAREST)
-            frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-            phash = imagehash.phash(np2pil(frame))
-            self.queue_phash.put(phash)
+            h = phash(frame)
+            self.queue_phash.put(h)
       else:
         time.sleep(0.1)
 

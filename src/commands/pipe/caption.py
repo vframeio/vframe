@@ -77,6 +77,7 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
       if k in text:
         try:
           text = text.replace(k, str(getattr(M, v)))
+          LOG.debug(text)
         except Exception as e:
           LOG.error(f'{k}:{v} is not a valid text accessor. Error: {e}')
 

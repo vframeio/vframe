@@ -12,6 +12,7 @@ from dacite import from_dict
 from vframe.settings.app_cfg import SRES_ENABLED, modelzoo
 from vframe.models.dnn import DNN
 from vframe.utils.model_utils import download_model
+from vframe.image.processors.ssd import SSDProc
 from vframe.image.processors.yolov5_onnx import YOLOV5ONNXProc
 from vframe.image.processors.yolov5_pytorch import YOLOV5PyTorchProc
 # conditional imports
@@ -25,6 +26,7 @@ if SRES_ENABLED:
 class DNNFactory:
 
   processors = {
+    'ssd': SSDProc,
     'yolov5_onnx': YOLOV5ONNXProc,
     'yolov5_pytorch': YOLOV5PyTorchProc,
   }
