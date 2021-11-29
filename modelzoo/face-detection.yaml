@@ -68,20 +68,30 @@ models:
     width: 1280
     height: 1280
 
-  yoloface-14-nn: &yoloface-14-nn
+  yoloface-18-nn: &yoloface-18-nn
     <<: *yoloface-base-pt
     notes: yolov5n6 trained at 640
-    local: pytorch/detection/yoloface_14_nn/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_14_nn/
+    local: pytorch/detection/yoloface_18_nn/
+    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_18_nn/
+
+  yoloface-18-sm: &yoloface-18-sm
+    <<: *yoloface-base-pt
+    notes: yolov5n6 trained at 640
+    local: pytorch/detection/yoloface_18_sm/
+    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_18_sm/
 
   yoloface:
-    <<: *yoloface-07-pt
+    <<: *yoloface-18-sm
   
+  yoloface-nn:
+    <<: *yoloface-18-nn
+
+  yoloface-sm:
+    <<: *yoloface-18-sm
+
   yoloface-onnx:
     <<: *yoloface-07-onnx
 
-  yoloface-nn:
-    <<: *yoloface-14-nn
 
 
   # -----------------------------------------------------------------------------
