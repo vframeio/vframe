@@ -54,7 +54,7 @@ class MediaFileReader:
   skip_if_expression: str=None
   media_filters: List=field(default_factory=lambda:[])
   skip_all_frames: bool=False
-  skip_check_exist: bool=True
+  opt_check_exist: bool=False
   opt_randomize: bool=False
 
   def __post_init__(self):
@@ -70,11 +70,12 @@ class MediaFileReader:
       items = load_json(fp)
 
       # init MediaFiles
+      # TODO: make multithreaded
       for item in tqdm(items, desc='Initializing files'):
         
         pf = dacite.from_dict(data=item, data_class=ProcessedFile)
 
-        if self.skip_check_exist and not Path(pf.file_meta.filepath).is_file():
+        if self.opt_check_exist and not Path(pf.file_meta.filepath).is_file():
           continue
 
         # filter media
@@ -101,10 +102,10 @@ class MediaFileReader:
 
       # load list, removing empty
       self._files = load_txt(fp)
-      if self.skip_check_exist:
-        self._files = [f for f in self._files if f]
-      else:
+      if self.opt_check_exist:
         self._files = [f for f in tqdm(self._files, desc='Checking files') if Path(f).is_file()]
+      else:
+        self._files = [f for f in self._files if f]
       
       # randomize if optioned
       if self.opt_randomize:
@@ -335,8 +336,8 @@ class MediaFile:
       # check if video stopped running before iterating all frames
       if not self.vstream.running():
         LOG.warn(f'Corrupt video: {self.filepath}. Exited at frame: {index}/{self.n_frames}. No data saved.')
-        # break
         self._skip_file = True
+        self.metadata = {}
         yield 
         return
         # return
@@ -399,13 +400,13 @@ class MediaFile:
     return n > 0
 
 
-  def n_detections_filtered(self, labels=None, threshold=None):
-    """Returns True if any frame contains any detection
+  def n_detections_filtered(self, labels=None, threshold=None, index=None):
+    """Returns True if any frame contains any detection at current index
     """
-
+    index = index if index else self.index
+    dets = []
     if self.metadata:
-      dets = []
-      for k, dr in self.metadata.get(self.index).items():
+      for k, dr in self.metadata.get(index).items():
         dets = dr.detections
         if threshold:
           dets = [x for x in dets if x.conf >= threshold]
@@ -413,6 +414,14 @@ class MediaFile:
           dets = [x for x in dets if x.label in labels]
 
     return len(dets)
+
+  def n_detections_filtered_total(self, labels=None, threshold=None):
+
+    n = 0
+    for i in range(self.n_frames):
+      if i in self.metadata.keys():
+        n += self.n_detections_filtered(labels=labels, threshold=threshold, index=i)
+    return n
 
   @property
   def n_detections(self):

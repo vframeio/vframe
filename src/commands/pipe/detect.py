@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, OBJECT_COLORS, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, OBJECT_COLORS, SKIP_FILE, modelzoo
   from vframe.image.dnn_factory import DNNFactory
 
   
@@ -79,12 +79,18 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     # get pipe data
     M = yield
 
-    if ctx.opts.get(SKIP_FRAME):
-        sink.send(M)
-        continue
+    if M._skip_file or ctx.obj[SKIP_FILE]:
+      # corrupt file, abort processing and reset Q
+      Q = []
+      continue
+
 
     if opt_batch_size == 1:
 
+      if ctx.opts.get(SKIP_FRAME):
+          sink.send(M)
+          continue
+          
       # TODO: copy results from previous frame is SIM_FRAME_KEY
       # if ctx.opts[SIM_FRAME_KEY]:
       #   # copy last frame detections if exist

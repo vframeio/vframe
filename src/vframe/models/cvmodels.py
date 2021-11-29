@@ -335,6 +335,7 @@ class ProcessedFile:
   detections: dict=field(default_factory=lambda: {})
 
   def __post_init__(self):
+    # TODO: too slow for frame meta with high number of detections
     for i, frame_meta in self.frames_meta.items():
       frame_dets = {}
       for data_key, detections in frame_meta.items():

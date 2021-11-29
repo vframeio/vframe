@@ -23,15 +23,15 @@ from vframe.utils.click_utils import generator
   help="Slice list of inputs")
 @click.option('--skip-frames', 'opt_skip_frames', is_flag=True,
   help='Skip all frames, only iterate files')
-@click.option('--skip-check-exist', 'opt_skip_check_exist', 
-  is_flag=True, default=True,
+@click.option('--check-exist', 'opt_check_exist', 
+  is_flag=True, default=False,
   help='Check files existence before processing')
 @click.option('--randomize', 'opt_randomize', is_flag=True, 
   help='Randomize file list before slicing')
 @generator
 @click.pass_context
 def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, 
-  opt_skip_frames, opt_skip_check_exist, opt_randomize):
+  opt_skip_frames, opt_check_exist, opt_randomize):
   """Open media for processing"""
 
   from tqdm import tqdm
@@ -60,7 +60,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
     'use_draw_frame': ctx.obj.get(USE_DRAW_FRAME, False),
     'media_filters': ctx.obj.get(MEDIA_FILTERS, []),
     'skip_all_frames': opt_skip_frames,
-    'skip_check_exist': opt_skip_check_exist,
+    'opt_check_exist': opt_check_exist,
     'opt_randomize': opt_randomize,
     }
 
