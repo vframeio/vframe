@@ -46,3 +46,13 @@ plugins:
     description: ModelZoo utility scripts
     scripts:
       - filepath: commands/modelzoo
+
+
+  # ---------------------------------------------------------------------------
+  # Included: Utilities
+  # ---------------------------------------------------------------------------
+
+  - name: utils
+    description: Utility scripts
+    scripts:
+      - filepath: commands/utils
