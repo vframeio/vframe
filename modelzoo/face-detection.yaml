@@ -36,13 +36,11 @@ anchors:
     # model: best.pt | best.onnx
     # processor: yolov5_onnx | yolov5_pytorch
 
-
   yoloface-base-pt: &yoloface-base-pt
     <<: *yoloface-base
     model: best.pt
     batch_enabled: True
     processor: yolov5_pytorch
-
 
   yoloface-base-onnx: &yoloface-base-onnx
     <<: *yoloface-base

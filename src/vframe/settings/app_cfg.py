@@ -35,7 +35,7 @@ VERSION = '0.2.0'
 # Logging
 # -----------------------------------------------------------------------------
 
-LOG = logging.getLogger('vframe')
+LOG = logging.getLogger('VFRAME')
 
 
 # -----------------------------------------------------------------------------
@@ -218,7 +218,7 @@ DEFAULT_STROKE_WEIGHT = 2
 DEFAULT_SIZE_LABEL = 14
 DEFAULT_PADDING_PER = 0.25
 DEFAULT_FONT_NAME = 'roboto'
-DEFAULT_FONT_FP = FP_ROBOTO_400
+DEFAULT_FONT_FP = FP_ROBOTO_500
 
 
 # -----------------------------------------------------------------------------
@@ -283,6 +283,7 @@ if CUDA_ENABLED:
   backends.update({'CUDA': cv.dnn.DNN_BACKEND_CUDA})
 
 GPU_ARCHS = {
+  '8.6': ['rtx 3080 ti', 'rtx 3090', 'rtx 3080'],
   '7.0': ['v100'],
   '7.5': ['rtx 2080 ti', 'rtx 2080', 'rtx 2070', 'quadro rtx 8000', 'quadro rtx 6000', 'quadro rtx 5000', 'gtx 1650', 'tesla t4'],
   '7.2': ['xavier'],

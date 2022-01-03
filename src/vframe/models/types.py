@@ -157,3 +157,13 @@ def find_type(name, enum_type):
     if name == enum_opt.name.lower():
       return enum_opt
   return None
+
+
+# ---------------------------------------------------------------------
+# Custom data types
+# --------------------------------------------------------------------
+
+class HexInt(int):
+  """Represent HexInt for use in writing YAML
+  """
+  pass

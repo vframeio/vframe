@@ -1,10 +1,8 @@
 import numpy as np
 import cv2 as cv
 
-from vframe.settings import app_cfg
+from vframe.settings.app_cfg import LOG
 from vframe.models.geometry import BBox
-
-log = app_cfg.LOG
 
 N_POINTS = 18
 

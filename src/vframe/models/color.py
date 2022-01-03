@@ -105,13 +105,20 @@ class Color:
     return hsva_norm
 
   
-  def to_rgb_hex(self, separator="0x"):
+  def to_rgb_hex_str(self, separator="0x"):
+    """Color to RGB HEX string
+    :param separator: the prefix string separator
+    """
+    r, g, b = self.to_rgb_int()
+    return f"{separator}{r:02x}{g:02x}{b:02x}"
+
+  def to_rgb_hex_int(self, separator="0x"):
     """Color to RGB HEX string
     :param separator: the prefix string separator
     """
     r, g, b = self.to_rgb_int()
     rgb_hex_str = f"{separator}{r:02x}{g:02x}{b:02x}"
-    return rgb_hex_str
+    return int(rgb_hex_str, 16)
   
   
   def to_rgba_hex(self, separator="0x"):

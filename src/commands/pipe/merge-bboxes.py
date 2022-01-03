@@ -28,7 +28,6 @@ from vframe.utils.click_utils import processor
 @click.pass_context
 def cli(ctx, sink, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_remove_old):
   """Merge bboxes using NMS (single class)"""
-  """Modify BBoxes"""
   
   import cv2 as cv
 
@@ -60,6 +59,7 @@ def cli(ctx, sink, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_
 
         if item_data.detections:
           for face_idx, detect_result in enumerate(item_data.detections):
+            bbox = detect_result.bbox.redim((M.width, M.height))
             bboxes.append(detect_result.bbox.xywh_int)
             confidences.append(float(detect_result.conf))
             labels.append(detect_result.label)
@@ -70,7 +70,8 @@ def cli(ctx, sink, opt_data_keys, opt_nms_thresh, opt_dnn_thresh, opt_name, opt_
     
     # run nms
     idxs = cv.dnn.NMSBoxes(bboxes, confidences, opt_dnn_thresh, opt_nms_thresh)
-    detect_results_nms = [detect_results[i[0]] for i in idxs]
+    # detect_results_nms = [detect_results[i[0]] for i in idxs]
+    detect_results_nms = [detect_results[i] for i in idxs]
 
     # reassign label
     # for d in detect_results_nms:

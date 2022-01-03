@@ -16,7 +16,7 @@ import numpy as np
 
 from vframe.models.color import Color
 
-log = logging.getLogger('vframe')
+log = logging.getLogger('VFRAME')
 
 # ---------------------------------------------------------------------------
 #
@@ -257,6 +257,11 @@ class BBox:
     y2 = max([b.y2 for b in bboxes])
     return self.__class__(x1, y1, x2, y2, *self.dim)
     
+
+  def as_int(self):
+    """Forces coords to int
+    """
+    return self.__class__(int(self.x1) , int(self.y1), int(self.x2), int(self.y2), *self.dim) 
 
   def to_dim(self, dim):
     """Sets xyxy into new dimension plane

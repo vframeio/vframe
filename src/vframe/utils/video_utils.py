@@ -84,6 +84,7 @@ class FileVideoStream:
           self.frame_count = int(self.vcap.get(cv.CAP_PROP_FRAME_COUNT))
         self.vcap_cc = self.vcap.get(cv.CAP_PROP_FOURCC)  
         self.fps = self.vcap.get(cv.CAP_PROP_FPS)  # default 25.0 for still image
+        LOG.debug(f'fps: {self.fps}')
         self.stopped = False
         self.index = -1
         # initialize queue used to store frames
@@ -97,7 +98,7 @@ class FileVideoStream:
         self.mspf = self.spf * 1000  # milliseconds per frame
       except Exception as e:
         # TODO: add error loggin
-        LOG.error(f'Skipping corrupt file: {fp}. Error: {e}')
+        LOG.error(f'Skipping corrupt file: {fp}. Error: {e}. FPS: {self.fps}')
 
     self.dim = (self.width, self.height)
 

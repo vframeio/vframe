@@ -47,13 +47,21 @@ class Label:
   display: str
   color_hex: int=0x000000
 
-
   @property
   def color(self):
     return Color.from_rgb_hex_int(self.color_hex)
   
   def to_cvat_label(self):
     return CVATLabel(self.enum)
+
+  def as_dict(self):
+    return {
+      'index': self.index,
+      'enum': self.enum,
+      'display': self.display,
+      'color_hex': self.color.to_rgb_hex_str(),
+    }
+
 
 @dataclass
 class LabelMaps:
@@ -80,7 +88,10 @@ class Annotation:
   bbox: BBox
   color: Color=BLACK
 
-  def to_dict(self):
+  def __repr__(self):
+    return self.as_dict()
+
+  def as_dict(self):
     d = self.bbox.to_dict()
     r,g,b = self.color.to_rgb_int()
     d.update(
@@ -88,7 +99,7 @@ class Annotation:
       'label_display': self.label_display,
       'label_enum': self.label_enum,
       'label_index': self.label_index,
-      'color_hex': self.color.to_rgb_hex(),
+      'color_hex': self.color.to_rgb_hex_int(),
       'r': r,
       'g': g,
       'b': b,

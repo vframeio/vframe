@@ -15,6 +15,9 @@ from vframe.models.types import ModelZooClickVar, ModelZoo, FrameImage
 from vframe.models.types import HaarcascadeVar, Haarcascade
 from vframe.settings import app_cfg
 
+default_scale_factor = 1.1
+default_overlaps = 5
+
 @click.command('')
 @click.option('-m', '--model', 'opt_model_enum', 
   default=app_cfg.DEFAULT_HAARCASCADE,
@@ -26,9 +29,9 @@ from vframe.settings import app_cfg
   help='Min detect size')
 @click.option('--max-size', 'opt_max_size', default=None, type=int,
   help='Max detect size')
-@click.option( '--overlaps', 'opt_overlaps', default=5, type=int,
-  help='Minimum neighbor overlaps')
-@click.option( '--scale-factor', 'opt_scale_factor', default=1.1,
+@click.option( '--overlaps', 'opt_overlaps', default=default_overlaps, 
+  type=int, help='Minimum neighbor overlaps')
+@click.option( '--scale-factor', 'opt_scale_factor', default=default_scale_factor,
   help='Scale factor')
 @click.option('--name', '-n', 'opt_data_key', default=None,
   help='Name of data key')
@@ -58,13 +61,14 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
   
   # ---------------------------------------------------------------------------
   # initialize
+
   model_name = opt_model_enum.name.lower()
   opt_data_key = opt_data_key if opt_data_key else model_name
 
   # hardcoded class meta
   class_idx = 0
   label = 'Face'
-  confidence = 1.0
+  conf_overlaps = (opt_overlaps / default_overlaps)
     
   # rotate cv, np vals
   cv_rot_val = app_cfg.ROTATE_VALS[opt_rotate]
@@ -91,6 +95,14 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
     im = M.images.get(FrameImage.ORIGINAL)
     dim = im.shape[:2][::-1]
     im_gray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+
+    # create a simulated confidence based on default overlaps and scale factor
+    targ_scale = (default_scale_factor / 640) * dim[0]
+    conf_scale = (opt_scale_factor / targ_scale)
+    confidence = min(1.0, conf_scale * conf_overlaps)
+    LOG.debug(conf_scale)
+    LOG.debug(conf_overlaps)
+    LOG.debug(confidence)
     
     # rotate if optioned  
     if cv_rot_val is not None:

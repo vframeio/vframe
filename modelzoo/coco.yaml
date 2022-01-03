@@ -32,7 +32,7 @@ anchors:
     iou: 0.45
     nms_threshold: 0.4
     threshold: 0.7
-    allow_resize: True
+    resize_enabled: True
     # local: path/to/local/model.ext
     # remote: https://example.com
     # model: best.pt | best.onnx

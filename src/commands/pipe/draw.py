@@ -11,6 +11,9 @@
 import click
 
 from vframe.utils.click_utils import processor
+from vframe.settings.app_cfg import DEFAULT_DETECT_MODEL
+from vframe.models.types import ModelZooClickVar, ModelZoo
+from vframe.utils.click_utils import show_help
 
 # TODO: enumerate
 color_styles = ['preset', 'fixed']
@@ -50,30 +53,42 @@ color_styles = ['preset', 'fixed']
   type=(int, int, int), default=(None, None, None),
   help='Color in RGB int (eg 0 255 0)')
 @click.option('--label-padding', 'opt_padding_label', 
-  type=int, default=None,
+  type=int, default=0,
   help='Label padding')
 @click.option('--label-index', 'opt_label_index', 
   is_flag=True,
   help='Label padding')
+@click.option('-m', '--model', 'opt_model_enum', 
+  default=None,
+  type=ModelZooClickVar,
+  help=f'Use class colors from: {show_help(ModelZoo)}')
 @click.option('--exclude-label', 'opt_exclude_labels', multiple=True, default=[''])
 @processor
 @click.pass_context
 def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, opt_conf, 
   opt_mask, opt_rbbox, opt_stroke, opt_size_font, opt_expand, 
   opt_color_source, opt_color_label, opt_color, opt_padding_label,
-  opt_label_index, opt_exclude_labels):
+  opt_label_index, opt_exclude_labels, opt_model_enum):
   """Draw bboxes and labels"""
   
   from os.path import join
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.settings.app_cfg import USE_DRAW_FRAME, OBJECT_COLORS
+  from vframe.settings.app_cfg import modelzoo
   from vframe.models.types import FrameImage
   from vframe.models.color import Color
   from vframe.utils import draw_utils
 
 
   ctx.obj[USE_DRAW_FRAME] = True
+
+  # load model colors if using detection priors
+  if opt_model_enum:
+    model_name = opt_model_enum.name.lower()
+    dnn_cfg = modelzoo.get(model_name)
+    ctx.opts.setdefault(OBJECT_COLORS, {})
+    ctx.opts[OBJECT_COLORS][model_name] = dnn_cfg.colorlist
 
 
   while True:
@@ -134,7 +149,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
             # draw bbox and optional labeling
             im = draw_utils.draw_bbox(im, bbox, color=color,
               stroke=opt_stroke, expand=opt_expand,
-              label=label, size_label=opt_size_font, padding_label=opt_padding_label,
+              label=label, font_size=opt_size_font, padding=opt_padding_label,
               )
 
     # update pipe with modified image

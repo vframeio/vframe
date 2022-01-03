@@ -18,13 +18,13 @@ import colorlog
 
 def get_logger():
   cur_log = logging.getLogger(Logger.LOGGER_NAME)
-  if not cur_log or cur_log is '':
+  if not cur_log or cur_log == '':
     Logger.create()
   return logging.getLogger(Logger.LOGGER_NAME)
   
 class Logger:
   
-  LOGGER_NAME = 'vframe'
+  LOGGER_NAME = 'VFRAME'
   LOGFILE_FORMAT = "%(log_color)s%(levelname)-8s%(reset)s %(cyan)s%(filename)s:%(lineno)s:%(bold_cyan)s%(funcName)s() %(reset)s%(message)s"
 
   def __init__(self):

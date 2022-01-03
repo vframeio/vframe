@@ -21,7 +21,7 @@ redact_types = ['pixellate', 'blur', 'softblur']
   help='Strength to apply redaction filter')
 @click.option('--iters', 'opt_iters', default=2, show_default=True,
   help='Blur iterations')
-@click.option('--expand', 'opt_expand', default=0.0, show_default=True,
+@click.option('--expand', 'opt_expand', default=0.05, show_default=True,
   help='Percentage to expand')
 @click.option('-t', '--type', 'opt_redact_type', type=click.Choice(redact_types),
   show_default=True, default='blur', help='Redact type')

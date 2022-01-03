@@ -37,7 +37,7 @@ from vframe.settings.app_cfg import filename_accessors as accessors
 @click.option('-q', '--quality', 'opt_quality', default=1, 
   type=click.FloatRange(0,1, clamp=True), show_default=True,
   help='JPEG write quality')
-@click.option('--subdirs', 'opt_keep_subdirs', is_flag=True,
+@click.option('--keep-subdirs', 'opt_keep_subdirs', is_flag=True,
   help='Recreate subdirectory structure relative to input directory')
 @processor
 @click.pass_context

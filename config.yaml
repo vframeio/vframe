@@ -43,7 +43,7 @@ plugins:
   # ---------------------------------------------------------------------------
 
   - name: modelzoo
-    description: ModelZoo utility scripts
+    description: ModelZoo scripts
     scripts:
       - filepath: commands/modelzoo
 

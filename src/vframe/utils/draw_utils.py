@@ -21,7 +21,7 @@ from matplotlib import cycler as mpl_cycler
 
 from vframe.models import types
 from vframe.models.geometry import BBox, Point
-from vframe.models.color import Color, BLACK, GREEN
+from vframe.models.color import Color, BLACK, GREEN, BLUE, RED
 from vframe.utils import im_utils
 from vframe.settings import app_cfg
 from vframe.settings.app_cfg import LOG
@@ -36,7 +36,6 @@ from vframe.settings.app_cfg import LOG
 class FontManager:
   
   fonts = {}
-  log = logging.getLogger('vframe')
     
   def __init__(self):
     # build/cache a dict of common font sizes
@@ -117,7 +116,6 @@ def set_matplotlib_style(plt, style_name='ggplot', figsize=(12,6)):
 # -----------------------------------------------------------------------------
 
 fonts = {}
-log = logging.getLogger('vframe')
 
 
 
@@ -219,7 +217,7 @@ def _draw_bbox_pil(canvas, bbox, color, stroke):
   :param color: Color
   :param stroke: int
   :returns PIL.ImageDraw
-"""
+  """
   xyxy = bbox.xyxy_int
   if stroke == -1:
     canvas.rectangle(xyxy, fill=color.rgb_int)
@@ -229,7 +227,7 @@ def _draw_bbox_pil(canvas, bbox, color, stroke):
   
 
 def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
-  label=None, color_label=None, size_label=None, padding_label=None, font_name=None):
+  label=None, color_label=None, font_size=None, padding=None, font_name=None):
   """Draws bboxes on image
   :param im: PIL.Image or numpy.ndarray
   :param bboxes: list(BBox) or (BBox)
@@ -237,8 +235,8 @@ def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
   :param stroke: int
   :param expand: float percentage
   :param label: String
-  :param size_label: int
-  :param padding_label: int
+  :param font_size: int
+  :param padding: int
   """
 
   if not bboxes:
@@ -259,31 +257,47 @@ def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
   font_name = font_name if font_name else app_cfg.DEFAULT_FONT_NAME
   canvas = ImageDraw.ImageDraw(im)
   W,H = im.size
+  
+  pxd = 1  # pixel offset to adjust text to account for aliasing?
 
   for bbox in bboxes:
-    # draw bbox
+
+    # redimension to current image size
     bbox = bbox.redim((W,H))
+
+    # draw bbox
     _draw_bbox_pil(canvas, bbox, color, stroke)
 
-    # draw label-background if optioned
+    # draw label-background
     if label:
       label = label.upper()
+      
       # init font styles
       color_label = color_label if color_label else color.get_fg_color()
-      size_label = size_label if size_label else app_cfg.DEFAULT_SIZE_LABEL
-      padding_label = padding_label if padding_label else int(app_cfg.DEFAULT_PADDING_PER * size_label)
-      font = font_mngr.get_font(font_name, size_label)
+      font_size = font_size if font_size else app_cfg.DEFAULT_font_size
+      padding = padding if padding is not None else int(app_cfg.DEFAULT_PADDING_PER * font_size)
+      padding += stroke
+      font = font_mngr.get_font(font_name, font_size)
+      
       # bbox of label background
-      bbox_bg = _bbox_from_text(bbox, label, font, padding_label)
-      x1,y1,x2,y2 = bbox_bg.xyxy_int
-      bbox_bg = BBox(x1, y1, x2 + 2*stroke, y2, *bbox_bg.dim)
+      bbox_bg = _bbox_from_text(bbox, label, font, padding)
+      
+      # adjust box size if font height is not font size
+      th = font.getsize('0')[1]
+      if th != font_size:
+        label_adj = font_size - th
+      else:
+        label_adj = 0
+
       # check if space permits outer label
       if bbox_bg.h < bbox.y1:
         # move outside
-        bbox_bg = bbox_bg.translate(0, 0 - bbox_bg.h)
+        bbox_bg = bbox_bg.translate(0, 0 - bbox_bg.h + stroke - pxd)
+      
       _draw_bbox_pil(canvas, bbox_bg,  color, -1)
+      
       # point of label origin
-      bbox_label = bbox_bg.shift(padding_label + stroke, padding_label, -padding_label, -padding_label)
+      bbox_label = bbox_bg.shift(padding, padding-label_adj-pxd, 0, 0)
       _draw_text_pil(canvas, label, Point.from_bbox(bbox_label), color_label, font)
 
   # cleanup
@@ -292,6 +306,7 @@ def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
   # ensure original format
   if was_np:
     im = im_utils.pil2np(im)
+
   return im
 
 

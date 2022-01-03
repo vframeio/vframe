@@ -169,27 +169,52 @@ def scale_destructive(im, fac):
 
 
 def _enhance(im, enhancement, amt):
-  im_pil = enhancement(ensure_pil(im)).enhance(amt)
-  return ensure_np(im_pil)
+  """Transform image using Pillow enhancements
+  :param im: numpy.ndarray
+  :param enhancement: PIL.ImageEnhance
+  :param amt: float
+  :returns numpy.ndarray
+  """
+  return ensure_np(enhancement(ensure_pil(im)).enhance(amt))
 
 
 def sharpness(im, fac):
+  """Adjust sharpness
+  :param im: numpy.ndarray
+  :param fac: normalized float
+  :returns numpy.ndarray
+  """
   amt = np.interp(fac, [0.0, 1.0], (0, 20))
   return _enhance(im, ImageEnhance.Sharpness, amt)
 
 
 def brightness(im, fac):
-  amt = np.interp(fac, [0.0, 1.0], (0.0, 2.0))
+  """Increase brightness
+  :param im: numpy.ndarray
+  :param fac: normalized float
+  :returns numpy.ndarray
+  """
+  amt = np.interp(fac, [0.0, 1.0], (1.0, 2.0))
   return _enhance(im, ImageEnhance.Brightness, amt)
 
 
 def darkness(im, fac):
+  """Darken image
+  :param im: numpy.ndarray
+  :param fac: normalized float
+  :returns numpy.ndarray
+  """
   amt = np.interp(fac, [0.0, 1.0], (0.0, -2.0))
   return _enhance(im, ImageEnhance.Brightness, amt)
 
 
 def contrast(im, fac):
-  amt = np.interp(fac, [0.0, 1.0], (-3, 3))
+  """Increase contrast
+  :param im: numpy.ndarray
+  :param fac: normalized float
+  :returns numpy.ndarray
+  """
+  amt = np.interp(fac, [0.0, 1.0], (0, 3))
   return _enhance(im, ImageEnhance.Contrast, amt)
 
 
@@ -239,38 +264,10 @@ def chromatic_aberration(im, fac, channel=0):
   im_dst[:,:,channel] = im_c[:,:,channel]
   return im_dst
 
-# pixel-level transforms
-IMAGE_TRANSFORMS = {
-  'compress-jpg': compress_jpg,
-  'compress-webp': compress_webp,
-  'equalize': equalize,
-  'blur-v': blur_motion_v,
-  'blur-h': blur_motion_h,
-  'blur-bilateral': blur_bilateral,
-  'blur': blur_gaussian,
-  'scale-destructive': scale_destructive,
-  'brighten': brightness,
-  'darken': darkness,
-  'sharpness': sharpness,
-  'contrast': contrast,
-  'shift': shift,
-  'chromatic-aberration': chromatic_aberration,
-  # tint
-  # canny-edges
-  # solarize
-  # posterize
-  # desaturate
-  # pixellate
-  # noise-mono
-  # noise-color
-  # color-jitter
-  # glitch
-  # blockout
-  # gamma
-  # blur motion
-  # blur motion h
-  # blur motion v
-}
+
+def trans_bgr2gray(im, fac):
+  return blend(im, gray2bgr(bgr2gray(im)), fac)
+
 
 # -----------------------------------------------------------------------------
 #
@@ -570,10 +567,8 @@ def create_blank_im(w, h, c=3, dtype=np.uint8):
   """
   if c == 1:
     im = np.zeros([h, w], dtype=np.uint8)
-  elif c == 3:
-    im = np.zeros([h, w, c], dtype=np.uint8)
   else:
-    im = None  # TODO handle error
+    im = np.zeros([h, w, c], dtype=np.uint8)
   return im
 
 
@@ -745,6 +740,39 @@ def load_heif(fp):
 
 
 
+# pixel-level transforms
+IMAGE_TRANSFORMS = {
+  'compress-jpg': compress_jpg,
+  'compress-webp': compress_webp,
+  'equalize': equalize,
+  'blur-v': blur_motion_v,
+  'blur-h': blur_motion_h,
+  'blur-bilateral': blur_bilateral,
+  'blur': blur_gaussian,
+  'scale-destructive': scale_destructive,
+  'brighten': brightness,
+  'darken': darkness,
+  'sharpness': sharpness,
+  'contrast': contrast,
+  'shift': shift,
+  'chromatic-aberration': chromatic_aberration,
+  'grayscale': trans_bgr2gray,
+  # tint
+  # canny-edges
+  # solarize
+  # posterize
+  # desaturate
+  # pixellate
+  # noise-mono
+  # noise-color
+  # color-jitter
+  # glitch
+  # blockout
+  # gamma
+  # blur motion
+  # blur motion h
+  # blur motion v
+}
 # -----------------------------------------------------------------------------
 #
 # Deprecated. For reference.

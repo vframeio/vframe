@@ -35,12 +35,13 @@ from collections import OrderedDict
 from dacite import from_dict
 import xmltodict
 import click
-import yaml
+import ruamel.yaml as yaml
 import pandas as pd
 import numpy as np
 
 from vframe.settings import app_cfg
 from vframe.settings.app_cfg import LOG
+from vframe.models.types import HexInt
 
 
 # ----------------------------------------------------------------------
@@ -330,16 +331,28 @@ def write_csv(fp_out, data, header=None):
         writer.writerow(row)
 
 
+
+
 def setup_yaml():
-  """ https://stackoverflow.com/a/8661021
+  """Format non-standard YAML data types
+  https://stackoverflow.com/a/8661021
+  https://dustinoprea.com/2018/04/15/python-writing-hex-values-into-yaml/
   """
+
+  # format hex 0xFFFFFF for YAML output
+  def representer(dumper, data):
+    return yaml.ScalarNode('tag:yaml.org,2002:int', '0x{:06x}'.format(data))
+ 
+  yaml.add_representer(HexInt, representer)
+  
   represent_dict_order = lambda self, data:  self.represent_mapping('tag:yaml.org,2002:map', data.items())
   yaml.add_representer(OrderedDict, represent_dict_order)
 
 setup_yaml()
 
 
-def write_yaml(fp_out, data, indent=2, comment=None, verbose=False, sort_keys=False, default_flow_style=None):
+
+def write_yaml(fp_out, data, indent=2, comment=None, verbose=False, default_flow_style=None):
   """Writes YAML file. Use OrderedDict to maintain order.
   :param fp_out_out: filepath (str)
   :param data: (dict) of serialized data
@@ -350,7 +363,9 @@ def write_yaml(fp_out, data, indent=2, comment=None, verbose=False, sort_keys=Fa
   with open(fp_out, 'w') as f:
     if comment:
       f.write(f'{comment}\n')
-    yaml.safe_dump(data, f, indent=indent, default_flow_style=default_flow_style, sort_keys=sort_keys)
+    # yaml.safe_dump(data, f, indent=indent, default_flow_style=default_flow_style, sort_keys=sort_keys)
+    # yaml.safe_dump(data, f, indent=indent, default_flow_style=default_flow_style)
+    yaml.dump(data, f, indent=indent, default_flow_style=default_flow_style)
   if verbose:
     LOG.info(f'Wrote {fp_out}')
 

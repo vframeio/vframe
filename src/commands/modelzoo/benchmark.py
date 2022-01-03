@@ -110,7 +110,8 @@ def cli(sink, opt_model_enums, opt_device, opt_dnn_sizes,
     cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
     
     w,h = opt['im_size']
-
+    opt['batch_size'] = int(opt['batch_size'])
+    
     if opt['batch_size'] > 1 and not getattr(cvmodel, 'fps_batch', None):
       LOG.warn("Batch inference not available. Using single image.")
 
