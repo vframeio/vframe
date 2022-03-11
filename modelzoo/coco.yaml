@@ -68,31 +68,31 @@ models:
   coco-sm-pt:
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_sm/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_sm/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_sm/
     model: yolov5s6.pt
 
   coco-md-pt: 
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_md/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_md/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_md/
     model: yolov5m6.pt
 
   coco-md-pt: 
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_md/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_md/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_md/
     model: yolov5m6.pt
 
   coco-lg-pt: 
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_lg/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_lg/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_lg/
     model: yolov5l6.pt
 
   coco-xl-pt: 
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_xl/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_xl/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_xl/
     model: yolov5x6.pt
 
   # -----------------------------------------------------------------------------
@@ -101,25 +101,25 @@ models:
   coco-sm6-pt: &coco-sm6-pt
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_sm/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_sm/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_sm/
     model: yolov5s6.pt
 
   coco-md6-pt: &coco-md6-pt
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_md/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_md/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_md/
     model: yolov5m6.pt
 
   coco-lg6-pt: &coco-lg6-pt
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_lg/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_lg/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_lg/
     model: yolov5l6.pt
 
   coco-xl6-pt: &coco-xl6-pt 
     <<: *coco-base-p6-pt
     local: pytorch/detection/coco_xl/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/coco_xl/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco_xl/
     model: yolov5x6.pt
 
 
@@ -134,7 +134,7 @@ models:
   coco-xl-onnx:
     <<: *coco-base-onnx
     local: onnx/detection/coco_xl/
-    remote: https://download.vframe.io/v2/models/onnx/detection/coco_xl/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/coco_xl/
     model: yolov5x6.onnx
     width: 1280
     height: 1280
@@ -142,7 +142,7 @@ models:
   coco-lg-onnx:
     <<: *coco-base-onnx
     local: onnx/detection/coco_lg/
-    remote: https://download.vframe.io/v2/models/onnx/detection/coco_lg/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/coco_lg/
     model: yolov5l6.onnx
     width: 960
     height: 960
@@ -150,7 +150,7 @@ models:
   coco-md-onnx:
     <<: *coco-base-onnx
     local: onnx/detection/coco_md/
-    remote: https://download.vframe.io/v2/models/onnx/detection/coco_md/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/coco_md/
     model: yolov5m6.onnx
     width: 720
     height: 720
@@ -158,7 +158,7 @@ models:
   coco-sm-onnx:
     <<: *coco-base-onnx
     local: onnx/detection/coco_sm/
-    remote: https://download.vframe.io/v2/models/onnx/detection/coco_sm/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/coco_sm/
     model: yolov5s6.onnx
     width: 640
     height: 640

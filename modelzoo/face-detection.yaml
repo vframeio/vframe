@@ -54,7 +54,7 @@ models:
     <<: *yoloface-base-onnx
     notes: Trained at 960-lg
     local: onnx/detection/yoloface_07/
-    remote: https://download.vframe.io/v2/models/onnx/detection/yoloface_07/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/yoloface_07/
     width: 1280
     height: 1280
 
@@ -62,7 +62,7 @@ models:
     <<: *yoloface-base-pt
     notes: yolov5l6 trained at 960
     local: pytorch/detection/yoloface_07/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_07/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/yoloface_07/
     width: 1280
     height: 1280
 
@@ -70,13 +70,13 @@ models:
     <<: *yoloface-base-pt
     notes: yolov5n6 trained at 640
     local: pytorch/detection/yoloface_18_nn/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_18_nn/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/yoloface_18_nn/
 
   yoloface-18-sm: &yoloface-18-sm
     <<: *yoloface-base-pt
     notes: yolov5n6 trained at 640
     local: pytorch/detection/yoloface_18_sm/
-    remote: https://download.vframe.io/v2/models/pytorch/detection/yoloface_18_sm/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/yoloface_18_sm/
 
   yoloface:
     <<: *yoloface-18-sm
@@ -101,7 +101,7 @@ models:
     notes: Poor performnace on smaller faces, ok performance on large frontal faces
     # model
     local: modelzoo/models/caffe/detection/mobilenet_ssd_face/
-    remote: https://download.vframe.io/v2/models/caffe/detection/mobilenet_ssd_face/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/caffe/detection/mobilenet_ssd_face/
     model: opencv_face_detector.caffemodel
     config: opencv_face_detector.prototxt
     mean: [104, 177, 123]
