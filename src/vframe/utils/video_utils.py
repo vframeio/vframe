@@ -84,7 +84,7 @@ class FileVideoStream:
           self.frame_count = int(self.vcap.get(cv.CAP_PROP_FRAME_COUNT))
         self.vcap_cc = self.vcap.get(cv.CAP_PROP_FOURCC)  
         self.fps = self.vcap.get(cv.CAP_PROP_FPS)  # default 25.0 for still image
-        LOG.debug(f'fps: {self.fps}')
+        # LOG.debug(f'fps: {self.fps}')
         self.stopped = False
         self.index = -1
         # initialize queue used to store frames

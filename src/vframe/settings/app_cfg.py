@@ -162,7 +162,10 @@ with open(FP_VFRAME_YAML, 'r') as fp:
 # ModelZoo
 # -----------------------------------------------------------------------------
 
-HTTPS_MODELS_URL = 'https://download.vframe.io/v2/models/'
+# HTTPS_MODELS_URL = 'https://download.vframe.io/v2/models/'
+HTTPS_S3_ROOT = 'https://vframe.ams3.digitaloceanspaces.com/'
+HTTPS_MODELS_URL = join(HTTPS_S3_ROOT, 'v2/models/')
+
 
 modelzoo_yaml = {}
 

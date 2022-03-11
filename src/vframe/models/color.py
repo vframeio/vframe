@@ -22,7 +22,7 @@ class Color:
 
   
   def __post_init__(self):
-    self.log = logging.getLogger('vframe')
+    # self.log = logging.getLogger('VFRAME')
     self.r = max(0.0, min(self.r, 1.0))
     self.g = max(0.0, min(self.g, 1.0))
     self.b = max(0.0, min(self.b, 1.0))
@@ -105,12 +105,14 @@ class Color:
     return hsva_norm
 
   
-  def to_rgb_hex_str(self, separator="0x"):
+  def to_rgb_hex_str(self, separator="0x", upper=True):
     """Color to RGB HEX string
     :param separator: the prefix string separator
     """
     r, g, b = self.to_rgb_int()
-    return f"{separator}{r:02x}{g:02x}{b:02x}"
+    h = f'{r:02x}{g:02x}{b:02x}'
+    h = h if not upper else h.upper()
+    return f"{separator}{h}"
 
   def to_rgb_hex_int(self, separator="0x"):
     """Color to RGB HEX string
@@ -163,13 +165,31 @@ class Color:
 
 
   @classmethod
-  def random(cls, r_range=None, g_range=None, b_range=None):
-    """Color from random RGB values
+  def random(cls, r: float=None, g: float=None, b: float=None):
+    """Color from random RGB range
+    :param r: Red, normalized float
+    :param g: Green, normalized float
+    :param b: Blue, normalized float
+    :returns Color
     """
-    r = random.uniform(*r_range) if r_range else random.uniform(0.0, 1.0)
-    g = random.uniform(*g_range) if g_range else random.uniform(0.0, 1.0)
-    b = random.uniform(*b_range) if b_range else random.uniform(0.0, 1.0)
-    return cls(r, g, b)
+    rnd_r = random.uniform(*r) if r else random.uniform(0.0, 1.0)
+    rnd_g = random.uniform(*g) if g else random.uniform(0.0, 1.0)
+    rnd_b = random.uniform(*b) if b else random.uniform(0.0, 1.0)
+    return cls(rnd_r, rnd_g, rnd_b)
+
+
+  @classmethod
+  def random_hsv(cls, h: float=None, s: float=None, v: float=None):
+    """Color from random HSV range
+    :param h: Hue, normalized float
+    :param s: Saturation, normalized float
+    :param v: Value, normalized float
+    :returns Color
+    """
+    rh = random.uniform(*h) if h else random.uniform(0.0, 1.0)
+    rs = random.uniform(*s) if s else random.uniform(0.0, 1.0)
+    rv = random.uniform(*v) if v else random.uniform(0.0, 1.0)
+    return cls.from_hsv_norm((rh,rs,rv))
 
   
   # def jitter(self, fac=0.1):

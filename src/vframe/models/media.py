@@ -15,6 +15,7 @@ from functools import lru_cache
 import time
 import traceback
 from random import shuffle
+from os.path import join
 
 import cv2 as cv
 from PIL import Image
@@ -56,6 +57,7 @@ class MediaFileReader:
   skip_all_frames: bool=False
   opt_check_exist: bool=False
   opt_randomize: bool=False
+  opt_new_filepath: str=''  # override item filepath in priors
 
   def __post_init__(self):
     fp = self.filepath
@@ -69,10 +71,16 @@ class MediaFileReader:
       # load 
       items = load_json(fp)
 
+
       # init MediaFiles
       # TODO: make multithreaded
       for item in tqdm(items, desc='Initializing files'):
-        
+
+        if self.opt_new_filepath:
+          # replace filepath
+          fp = item['file_meta']['filepath']
+          item['file_meta']['filepath'] = join(self.opt_new_filepath, Path(fp).name)
+
         pf = dacite.from_dict(data=item, data_class=ProcessedFile)
 
         if self.opt_check_exist and not Path(pf.file_meta.filepath).is_file():
@@ -298,7 +306,7 @@ class MediaFile:
     """
     frames_meta = {}
     for frame_idx, frame_meta in self.metadata.items():
-      meta = {k:v.to_dict() for k,v in frame_meta.items() if v}
+      meta = {k:v.to_dict() for k,v in frame_meta.items() if v.detections}
       if meta:
         frames_meta[frame_idx] = meta
 
@@ -371,7 +379,7 @@ class MediaFile:
     labels = []
     for i in range(self.n_frames):
       for k, dr in self.metadata.get(i).items():
-        labels.extend([d.label for d in dr.detections in d.label not in labels])
+        labels.extend([d.label for d in dr.detections])
     return labels
 
 
@@ -391,6 +399,15 @@ class MediaFile:
       return not all([label in self.detected_labels for label in labels])
     else:
       return not any([label in self.detected_labels for label in labels])
+
+  # def remove_detections(self, labels=None, threshold=None):
+  #   if self.metadata:
+  #     for k, dr in self.metadata.get(self.index).items():
+  #       dets = dr.detections
+  #       if threshold:
+  #         dets = [x for x in dets if x.conf >= threshold]
+  #       if labels:
+  #         dets = [x for x in dets if x.label in labels]
 
 
   def frame_detections_exist(self, labels=None, threshold=None):

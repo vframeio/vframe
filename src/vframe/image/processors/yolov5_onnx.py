@@ -16,13 +16,13 @@ import cv2 as cv
 from vframe.image.processors.utils.yolov5_utils import letterbox, non_max_suppression
 from vframe.settings.app_cfg import LOG
 from vframe.models.geometry import BBox
-from vframe.image.processors.base import DetectionProc
+from vframe.image.processors.base import Detection
 from vframe.models.cvmodels import DetectResult, DetectResults
 from vframe.utils.file_utils import load_txt
 from vframe.utils.im_utils import resize
 
 
-class YOLOV5ONNXProc(DetectionProc):
+class YOLOV5ONNX(Detection):
 
   def __init__(self, dnn_cfg):
     """Instantiate an ONNX DNN network model

@@ -9,10 +9,10 @@
 
 from vframe.settings import app_cfg
 from vframe.models.geometry import BBox, Point
-from vframe.image.processors.base import DetectionProc
+from vframe.image.processors.base import Detection
 from vframe.models.cvmodels import DetectResult, DetectResults
 
-class SSDProc(DetectionProc):
+class SSD(Detection):
 
   def _post_process(self, outs):
     """Post process net output for object detection

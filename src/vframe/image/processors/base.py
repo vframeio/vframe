@@ -21,7 +21,7 @@ from vframe.utils import file_utils, im_utils
 from vframe.settings import app_cfg
 
 
-class NetProc:
+class Processor:
   """Basic Net Processor for OpenCV DNN models
   """
 
@@ -133,7 +133,7 @@ class NetProc:
 # -----------------------------------------------------------------------------
 
 
-class ClassificationProc(NetProc):
+class Classification(Processor):
   """Classification inference processor
   """
   limit = 1
@@ -168,7 +168,7 @@ class ClassificationProc(NetProc):
 # -----------------------------------------------------------------------------
 
 
-class DetectionProc(NetProc):
+class Detection(Processor):
 
 
   def _nms(self, detect_results):
@@ -176,8 +176,8 @@ class DetectionProc(NetProc):
     :param detect_results: List[DetectResult]
     :returns List[DetectResult]
     """
-    confidences = [float(d.confidence) for d in detect_results]
+    confidences = [float(d.conf) for d in detect_results]
     boxes = [d.bbox.xywh_int for d in detect_results]
     idxs = cv.dnn.NMSBoxes(boxes, confidences, self.dnn_cfg.threshold, self.dnn_cfg.nms_threshold)
-    detect_results_nms = [detect_results[i[0]] for i in idxs]
+    detect_results_nms = [detect_results[i] for i in idxs]
     return detect_results_nms

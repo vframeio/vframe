@@ -21,12 +21,12 @@ import torch
 from vframe.settings.app_cfg import LOG, DIR_3RDPARTY
 from vframe.models.geometry import BBox
 from vframe.utils.im_utils import np2pil, create_random_im
-from vframe.image.processors.base import DetectionProc
+from vframe.image.processors.base import Detection
 from vframe.models.cvmodels import DetectResult, DetectResults
 from vframe.utils.file_utils import load_txt
 
 
-class YOLOV5PyTorchProc(DetectionProc):
+class YOLOV5PyTorch(Detection):
 
   def __init__(self, cfg):
     """Instantiate an DNN network model

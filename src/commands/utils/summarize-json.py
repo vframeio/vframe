@@ -38,6 +38,9 @@ def cli(ctx, opt_input, opt_output, opt_slice, opt_labels, opt_threshold, opt_mi
 
 
   results = []
+  if not opt_labels:
+    LOG.error('"--label" is required')
+    return
 
   # load
   items = load_json(opt_input)

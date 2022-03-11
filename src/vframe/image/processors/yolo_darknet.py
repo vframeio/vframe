@@ -10,13 +10,14 @@
 import numpy as np
 import cv2 as cv
 
+from vframe.settings.app_cfg import LOG
 from vframe.models.geometry import BBox
-from vframe.image.processors.base import DetectionProc
+from vframe.image.processors.base import Detection
 from vframe.models.cvmodels import DetectResult, DetectResults
 from vframe.utils import im_utils
 
 
-class YOLOProc(DetectionProc):
+class YOLODarknet(Detection):
 
   def _pre_process(self, im):
     """Pre-process image
@@ -57,10 +58,12 @@ class YOLOProc(DetectionProc):
         scores = detection[5:]
         class_idx = np.argmax(scores)
         confidence = scores[class_idx]
+        LOG.debug(confidence)
         if confidence > self.dnn_cfg.threshold:
           cx, cy, w, h = detection[0:4]
           bbox = BBox.from_cxcywh_norm(cx, cy, w, h, *self.frame_dim_orig)
           label = self.labels[class_idx] if self.labels else ''
+          LOG.debug(label)
           detect_result = DetectResult(class_idx, confidence, bbox, label)
           detect_results.append(detect_result)
 

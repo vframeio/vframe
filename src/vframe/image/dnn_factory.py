@@ -12,9 +12,10 @@ from dacite import from_dict
 from vframe.settings.app_cfg import modelzoo
 from vframe.models.dnn import DNN
 from vframe.utils.model_utils import download_model
-from vframe.image.processors.ssd import SSDProc
-from vframe.image.processors.yolov5_onnx import YOLOV5ONNXProc
-from vframe.image.processors.yolov5_pytorch import YOLOV5PyTorchProc
+from vframe.image.processors.ssd import SSD
+from vframe.image.processors.yolo_darknet import YOLODarknet
+from vframe.image.processors.yolov5_onnx import YOLOV5ONNX
+from vframe.image.processors.yolov5_pytorch import YOLOV5PyTorch
 
 # ---------------------------------------------------------------------------
 # DNN CV Model factory
@@ -23,9 +24,10 @@ from vframe.image.processors.yolov5_pytorch import YOLOV5PyTorchProc
 class DNNFactory:
 
   processors = {
-    'ssd': SSDProc,
-    'yolov5_onnx': YOLOV5ONNXProc,
-    'yolov5_pytorch': YOLOV5PyTorchProc,
+    'ssd': SSD,
+    'yolo_darknet': YOLODarknet,
+    'yolov5_onnx': YOLOV5ONNX,
+    'yolov5_pytorch': YOLOV5PyTorch,
   }
 
 

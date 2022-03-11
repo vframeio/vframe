@@ -14,14 +14,19 @@ from vframe.utils.click_utils import processor, show_help
 
 @click.command('')
 @click.option('-t', '--threshold', 'opt_thresh', 
-  default=0.05, type=click.FloatRange(0,1),
-  help='Skip frames if similarity below threshold. Higher skips more frames.')
+  default=0.95, type=click.FloatRange(0,1),
+  help='Skip frames above this perceptual similar. Higher number means skip fewer frames. Lower number skip more frames. 0.0: completely different, 1.0: exactly same')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @click.option('--prehash', 'opt_prehash', is_flag=True,)
 @click.option('--override', 'opt_override', is_flag=True)
+@click.option('--roi', 'opt_use_roi', is_flag=True,
+  help='Use BBox ROI as phash source')
+@click.option('--roi-label', 'opt_roi_labels', multiple=True, default=[],
+  help='Labels to use for ROI phash')
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override):
+def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
+  opt_use_roi, opt_roi_labels):
   """Skip similar frames using perceptual hash"""
   
   from pathlib import Path
@@ -32,14 +37,17 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override):
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PREHASH, SKIP_FILE
   from vframe.settings.app_cfg import USE_DRAW_FRAME
-  from vframe.utils.im_utils import resize, np2pil, phash, create_blank_im
+  from vframe.utils.im_utils import resize, np2pil, phash, create_blank_im, crop_roi
+  from vframe.utils.file_utils import ensure_dir
   from vframe.models.types import FrameImage, MediaType
+  from vframe.models.geometry import BBox
 
   cur_file = None
   cur_subdir = None
 
   # init perceptual hash
-  hash_thresh_int = opt_thresh * 64  # length of imagehash
+  opt_thresh = 1.0 - opt_thresh  # invert
+  hash_thresh_int = opt_thresh * 32  # length of imagehash
 
   # blank image to init
   hash_wh = 32  # check im_utils
@@ -48,6 +56,35 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override):
   hashes = [hash_pre]
 
   ctx.obj[USE_PREHASH] = opt_prehash
+
+
+  def isolate_roi(im, meta, dim):
+    bboxes = []
+    data_keys = list(meta.keys())
+    for data_key in data_keys:
+      # get detection metadata
+      item_data = meta.get(data_key)
+      if item_data:
+        for detection in item_data.detections:
+          bboxes.append(detection.bbox.redim(dim))
+    if not bboxes:
+      return im
+    
+    # create blank im
+    im_roi = create_blank_im(*dim)
+    
+    # paste regions
+    for bbox in bboxes:
+      x1,y1,x2,y2 = bbox.xyxy_int
+      im_roi[y1:y2, x1:x2] = im[y1:y2, x1:x2]
+
+    # merge bboxes and crop
+    x1 = min([bbox.x1_int for bbox in bboxes])
+    y1 = min([bbox.y1_int for bbox in bboxes])
+    x2 = max([bbox.x2_int for bbox in bboxes])
+    y2 = max([bbox.y2_int for bbox in bboxes])
+    roi = BBox(x1,y1,x2,y2, *dim)
+    return crop_roi(im_roi, roi)
 
 
   while True:
@@ -81,7 +118,12 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override):
       hash_cur = M.phash
     else:
       im = M.images.get(FrameImage.ORIGINAL)
-      hash_cur = phash(im)
+      dim = im.shape[:2][::-1]
+      if opt_use_roi:
+        im_roi = isolate_roi(im, M.metadata[M.index],dim)
+        hash_cur = phash(im_roi)
+      else:
+        hash_cur = phash(im)
 
     hash_changed = (hash_cur - hash_pre) > hash_thresh_int
     

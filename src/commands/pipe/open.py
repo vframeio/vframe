@@ -28,10 +28,13 @@ from vframe.utils.click_utils import generator
   help='Check files existence before processing')
 @click.option('--randomize', 'opt_randomize', is_flag=True, 
   help='Randomize file list before slicing')
+@click.option('--media-path', 'opt_new_filepath', type=str,
+  default='',
+  help='Override JSON filepath')
 @generator
 @click.pass_context
 def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, 
-  opt_skip_frames, opt_check_exist, opt_randomize):
+  opt_skip_frames, opt_check_exist, opt_randomize, opt_new_filepath):
   """Open media for processing"""
 
   from tqdm import tqdm
@@ -62,6 +65,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
     'skip_all_frames': opt_skip_frames,
     'opt_check_exist': opt_check_exist,
     'opt_randomize': opt_randomize,
+    'opt_new_filepath': opt_new_filepath,
     }
 
   # init media file reader

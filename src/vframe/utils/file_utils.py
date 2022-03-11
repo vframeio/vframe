@@ -48,7 +48,7 @@ from vframe.models.types import HexInt
 # Encode/Decode
 # ----------------------------------------------------------------------
 
-def get_sha256(fp, block_size=65536):
+def get_sha256(fp: str, block_size: int=65536):
   """Generates SHA256 hash for a file
   :param fp: (str) filepath
   :param block_size: (int) byte size of block
@@ -65,7 +65,7 @@ def get_sha256(fp, block_size=65536):
 # Path
 # ----------------------------------------------------------------------
 
-def mkdirs(fp):
+def mkdirs(fp: str):
   """Ensure parent directories exist for a filepath
   :param fp: string, Path, or click.File
   """
@@ -82,7 +82,7 @@ def ensure_dir(fp):
 # Creation and modified date
 # ----------------------------------------------------------------------
 
-def date_modified(fp, milliseconds=False):
+def date_modified(fp: str, milliseconds: bool=False):
   """Returns file modified time falling back to modified time on Linux
   """
   t = Path(fp).stat().st_mtime
@@ -91,7 +91,7 @@ def date_modified(fp, milliseconds=False):
   return datetime.fromtimestamp(t)
     
     
-def date_created(fp, milliseconds=False):
+def date_created(fp: str, milliseconds: bool=False):
   """Returns file creation time falling back to modified time on Linux
   """
   stat = Path(fp).stat()
@@ -112,25 +112,25 @@ def date_created(fp, milliseconds=False):
 # Loaders
 # ----------------------------------------------------------------------
 
-def load_yaml(fp_in, data_class=None, loader=yaml.SafeLoader):
+def load_yaml(fp: str, data_class: object=None, loader=yaml.SafeLoader):
   """Loads YAML file (Use .yaml, not .yml)
   """
-  with open(fp_in, 'r') as fp:
-    cfg = yaml.load(fp, Loader=loader)
+  with open(fp, 'r') as f:
+    cfg = yaml.load(f, Loader=loader)
   if data_class:
     cfg = from_dict(data_class=data_class, data=cfg)
   return cfg
 
 
-def load_csv(fp_in, data_class=None, as_list=True):
+def load_csv(fp: str, data_class: object=None, as_list: bool=True):
   """Loads CSV and retuns list of items
-  :param fp_in: string filepath to CSV
+  :param fp: string filepath to CSV
   :returns: list of all CSV data
   """
-  if not Path(fp_in).exists():
-    LOG.info('not found: {}'.format(fp_in))
-  LOG.info('loading: {}'.format(fp_in))
-  with open(fp_in, 'r') as fp:
+  if not Path(fp).exists():
+    LOG.info('not found: {}'.format(fp))
+  LOG.info('loading: {}'.format(fp))
+  with open(fp, 'r') as f:
     items = csv.DictReader(fp)
     if as_list:
       items = [x for x in items]

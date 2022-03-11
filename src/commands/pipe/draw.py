@@ -16,7 +16,7 @@ from vframe.models.types import ModelZooClickVar, ModelZoo
 from vframe.utils.click_utils import show_help
 
 # TODO: enumerate
-color_styles = ['preset', 'fixed']
+color_styles = ['preset', 'custom']
 
 @click.command('')
 @click.option( '-n', '--name', 'opt_data_keys', 
@@ -58,7 +58,7 @@ color_styles = ['preset', 'fixed']
 @click.option('--label-index', 'opt_label_index', 
   is_flag=True,
   help='Label padding')
-@click.option('-m', '--model', 'opt_model_enum', 
+@click.option('-m', '--model-colors', 'opt_model_enum', 
   default=None,
   type=ModelZooClickVar,
   help=f'Use class colors from: {show_help(ModelZoo)}')
