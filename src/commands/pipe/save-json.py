@@ -27,7 +27,7 @@ def cli(ctx, sink, opt_fp_out, opt_minify, opt_append_slice, opt_verbose):
   
   from pathlib import Path
 
-  from vframe.settings.app_cfg import LOG, READER, SKIP_FILE
+  from vframe.settings.app_cfg import LOG, READER, SKIP_FILE, SKIP_FRAME
   from vframe.utils.file_utils import get_ext, write_json, add_suffix
 
   
@@ -50,12 +50,11 @@ def cli(ctx, sink, opt_fp_out, opt_minify, opt_append_slice, opt_verbose):
     M = yield
     R = ctx.obj[READER]
 
-    if (M.is_last_item or ctx.obj.get(SKIP_FILE, False)) and not ctx.obj[SKIP_FILE]:
+    if M.is_last_item and not ctx.obj[SKIP_FILE]:
       # append after processing each file
       metadata.append(M.to_dict())
 
-    if R.is_last_item and (M.is_last_item or ctx.obj.get(SKIP_FILE, False)):
-      
+    if R.is_last_item and (M.is_last_item or ctx.obj[SKIP_FILE]):
       if opt_append_slice and all([x > -1 for x in R.slice_idxs]):
         suffix = f'_{R.slice_idxs[0]}_{R.slice_idxs[1]}'
         fp_out = add_suffix(opt_fp_out, suffix)

@@ -29,7 +29,7 @@ def cli(ctx, sink, opt_includes, opt_excludes):
 
     M = yield
 
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       M.metadata[M.index] = {}  # clear
     
     sink.send(M)

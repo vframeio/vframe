@@ -28,7 +28,6 @@ import pathlib
 from pathlib import Path
 import dataclasses
 import hashlib
-import logging
 from operator import itemgetter
 from collections import OrderedDict
 

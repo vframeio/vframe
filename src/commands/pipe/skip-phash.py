@@ -1,3 +1,4 @@
+
 ############################################################################# 
 #
 # VFRAME
@@ -14,7 +15,7 @@ from vframe.utils.click_utils import processor, show_help
 
 @click.command('')
 @click.option('-t', '--threshold', 'opt_thresh', 
-  default=0.95, type=click.FloatRange(0,1),
+  default=0.75, type=click.FloatRange(0,1),
   help='Skip frames above this perceptual similar. Higher number means skip fewer frames. Lower number skip more frames. 0.0: completely different, 1.0: exactly same')
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
 @click.option('--prehash', 'opt_prehash', is_flag=True,)
@@ -92,7 +93,7 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
     M = yield
 
     # skip frame if flagged
-    if ctx.opts.get(SKIP_FRAME) or ctx.opts.get(SKIP_FILE):
+    if ctx.obj.get(SKIP_FRAME) or ctx.obj.get(SKIP_FILE):
       sink.send(M)
       continue
 
@@ -140,8 +141,8 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
 
     skip = not hash_changed
     if opt_override:
-      ctx.opts[SKIP_FRAME] = skip
+      ctx.obj[SKIP_FRAME] = skip
     else:
-      ctx.opts[SKIP_FRAME] = (ctx.opts[SKIP_FRAME] or skip)
+      ctx.obj[SKIP_FRAME] = (ctx.obj[SKIP_FRAME] or skip)
     
     sink.send(M)

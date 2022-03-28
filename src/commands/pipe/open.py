@@ -90,7 +90,7 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
     
     for ok in tqdm(m.iter_frames(), total=m.n_frames, desc=m.fn, disable=m.n_frames <= 1, leave=False):
       
-      ctx.opts[SKIP_FRAME] = (opt_skip_frames or m.skip_all_frames)
+      ctx.obj[SKIP_FRAME] = (opt_skip_frames or m.skip_all_frames)
 
       # TODO: cleanup
       if ctx.obj.get(SKIP_FILE, False) or m._skip_file:

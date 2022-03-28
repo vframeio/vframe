@@ -17,7 +17,7 @@ import numpy as np
 from vframe.models.color import Color, BLACK
 from vframe.models.geometry import BBox
 
-log = logging.getLogger('vframe')
+log = logging.getLogger('VFRAME')
 
 
 # ---------------------------------------------------------------------------

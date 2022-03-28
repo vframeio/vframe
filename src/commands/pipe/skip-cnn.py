@@ -55,7 +55,7 @@ def cli(ctx, sink, opt_model_enum, opt_threshold, opt_all_frames):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -93,5 +93,5 @@ def cli(ctx, sink, opt_model_enum, opt_threshold, opt_all_frames):
     # -------------------------------------------------------------------------
     # set flag
 
-    ctx.opts[SKIP_FRAME] = not feat_changed    
+    ctx.obj[SKIP_FRAME] = not feat_changed    
     sink.send(M)

@@ -87,8 +87,8 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
   if opt_model_enum:
     model_name = opt_model_enum.name.lower()
     dnn_cfg = modelzoo.get(model_name)
-    ctx.opts.setdefault(OBJECT_COLORS, {})
-    ctx.opts[OBJECT_COLORS][model_name] = dnn_cfg.colorlist
+    ctx.obj.setdefault(OBJECT_COLORS, {})
+    ctx.obj[OBJECT_COLORS][model_name] = dnn_cfg.colorlist
 
 
   while True:
@@ -96,7 +96,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -111,7 +111,7 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
 
     for data_key in data_keys:
 
-      color_presets = ctx.opts.get(OBJECT_COLORS, {}).get(data_key, None)
+      color_presets = ctx.obj.get(OBJECT_COLORS, {}).get(data_key, None)
 
       item_data = M.metadata[M.index].get(data_key)
 
@@ -127,7 +127,11 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
           if opt_bbox:
 
             if opt_color_source == 'preset' and color_presets:
-              color = color_presets[detection.index]
+              try:
+                color = color_presets[detection.index]
+              except Exception as e:
+                LOG.warn(f'No color for index: {detection.index} in {color_presets}')
+                color = Color.from_rgb_int(opt_color)  # default
             else:
               color = Color.from_rgb_int(opt_color)
             
@@ -147,10 +151,14 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
               label = ''
 
             # draw bbox and optional labeling
-            im = draw_utils.draw_bbox(im, bbox, color=color,
-              stroke=opt_stroke, expand=opt_expand,
-              label=label, font_size=opt_size_font, padding=opt_padding_label,
-              )
+            try:
+              im = draw_utils.draw_bbox(im, bbox, color=color,
+                stroke=opt_stroke, expand=opt_expand,
+                label=label, font_size=opt_size_font, padding=opt_padding_label)
+            except Exception as e:
+              LOG.error(e)
+              LOG.debug(bbox)
+              LOG.debug(M.filename)
 
     # update pipe with modified image
     M.images[FrameImage.DRAW] = im

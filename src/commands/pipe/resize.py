@@ -47,7 +47,7 @@ def cli(ctx, sink, opt_width, opt_height, opt_frame_type, opt_all_frames, opt_in
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
   

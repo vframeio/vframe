@@ -9,7 +9,7 @@
 
 
 import logging
-LOG = logging.getLogger('vframe')
+LOG = logging.getLogger('VFRAME')
 from pathlib import Path
 import random
 import math

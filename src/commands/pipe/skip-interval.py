@@ -31,7 +31,7 @@ def cli(ctx, sink, opt_frame_interval, opt_override):
     R = ctx.obj[READER]
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -39,8 +39,8 @@ def cli(ctx, sink, opt_frame_interval, opt_override):
     skip = idx % opt_frame_interval  # valid frame = 0
 
     if opt_override:
-      ctx.opts[SKIP_FRAME] = skip
+      ctx.obj[SKIP_FRAME] = skip
     else:
-      ctx.opts[SKIP_FRAME] = (ctx.opts[SKIP_FRAME] or skip)
+      ctx.obj[SKIP_FRAME] = (ctx.obj[SKIP_FRAME] or skip)
     
     sink.send(M)

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from vframe.models.color import Color
 
-LOG = logging.getLogger('vframe')
+LOG = logging.getLogger('VFRAME')
 
 @dataclass
 class DNN:

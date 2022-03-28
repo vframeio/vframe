@@ -40,7 +40,7 @@ def cli(ctx, sink, opt_attrs):
     opt_attrs_frame = [a for a in opt_attrs if a in caption_accessors]
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
     

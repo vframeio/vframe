@@ -54,7 +54,7 @@ def cli(ctx, sink, opt_model_enum, opt_device, opt_dnn_size, opt_dnn_threshold, 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
       

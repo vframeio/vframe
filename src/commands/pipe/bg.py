@@ -40,7 +40,7 @@ def cli(ctx, sink, opt_color, opt_alpha):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 

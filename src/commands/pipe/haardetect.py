@@ -87,7 +87,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_gpu,
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 

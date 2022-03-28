@@ -38,7 +38,7 @@ def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_type):
     M = yield # media
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
     

@@ -44,7 +44,7 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
 
   display_utils = DisplayUtils()
   target_mspf = 1000 / opt_fps
-  ctx.opts[PAUSED] = opt_pause
+  ctx.obj[PAUSED] = opt_pause
   st = time.time()
 
   # ---------------------------------------------------------------------------
@@ -55,13 +55,13 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
     
     # override pause if single image
     if ctx.obj[READER].n_files == 1 and M.type == MediaType.IMAGE:
-      ctx.opts[PAUSED] = True
+      ctx.obj[PAUSED] = True
     
     # dynamically adjust framerate
     actual_mspf = (time.time() - st) / 1000

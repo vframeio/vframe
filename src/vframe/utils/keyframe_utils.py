@@ -14,7 +14,7 @@ import numpy as np
 
 from vframe.utils import im_utils
 
-log = logging.getLogger('vframe')
+log = logging.getLogger('VFRAME')
 
 
 

@@ -30,7 +30,7 @@ def cli(ctx, sink, opt_includes, opt_excludes):
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 
@@ -39,6 +39,6 @@ def cli(ctx, sink, opt_includes, opt_excludes):
     valid_exc = M.excludes_labels(opt_excludes) if opt_excludes else True
 
     skip = not (valid_inc or valid_exc)
-    ctx.opts[SKIP_FRAME] = skip
+    ctx.obj[SKIP_FRAME] = skip
     
     sink.send(M)

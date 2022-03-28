@@ -71,7 +71,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
     if M.type == MediaType.VIDEO:
       
       # start new video
-      if not ctx.opts[app_cfg.SKIP_FRAME] and video_out is None and M.filepath != filepath:
+      if not ctx.obj[app_cfg.SKIP_FRAME] and video_out is None and M.filepath != filepath:
         # configure file io
         # add relative subdir to output destination
         if opt_keep_subdirs and Path(M.filepath).parent != Path(R.filepath):
@@ -94,7 +94,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_codec, opt_fps, opt
         filepath = M.filepath
 
       # add frame
-      if not ctx.opts[app_cfg.SKIP_FRAME] and video_out is not None:
+      if not ctx.obj[app_cfg.SKIP_FRAME] and video_out is not None:
         im = M.images.get(opt_frame_type)
         video_out.write(im)
 

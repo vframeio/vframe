@@ -96,7 +96,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
       fp_parent = None
 
     # check if new file in new subdir and start new gif
-    if not ctx.opts[SKIP_FRAME] and \
+    if not ctx.obj[SKIP_FRAME] and \
       frames is None and \
       M.parent != fp_parent:
 
@@ -127,7 +127,7 @@ def cli(ctx, sink, opt_dir_out, opt_frame_type, opt_fps, opt_keep_subdirs,
 
 
     # check if frame is usable and add to stack
-    if not ctx.opts[SKIP_FRAME] and frames is not None:
+    if not ctx.obj[SKIP_FRAME] and frames is not None:
       im = M.images.get(opt_frame_type)
       im_pil = np2pil(im).convert(**convert_kwargs)
       frames.append(im_pil)

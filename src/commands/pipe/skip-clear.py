@@ -25,7 +25,7 @@ def cli(ctx, sink, ):
 
     M = yield
 
-    if ctx.opts.get(SKIP_FRAME):
+    if ctx.obj.get(SKIP_FRAME):
       M.metadata[M.index] = {}
     
     sink.send(M)

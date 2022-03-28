@@ -15,6 +15,7 @@ from queue import Queue
 
 from pymediainfo import MediaInfo
 from PIL import Image
+from PIL import ImageFile
 import cv2 as cv
 import dacite
 
@@ -42,6 +43,9 @@ TODO
 class FileVideoStream:
 
   frame_count = 0
+  frame_read_index = 0
+  height = 0
+  width = 0
 
   def __init__(self, fp, queue_size=512, use_prehash=False):
     """Threaded video reader
@@ -49,9 +53,12 @@ class FileVideoStream:
     # TODO: cv.CAP_FFMPEG, cv.CAP_GSTREAMER
     # self.vcap = cv.VideoCapture(str(fp), cv.CAP_FFMPEG)
 
+    # override PIL error if images are slightly corrupted
+    # TODO: verify integrity of images
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
+
     self.is_image = Path(fp).suffix[1:].lower() in ['jpg', 'png']
     self.use_prehash = use_prehash
-    
     # TODO: explore further. currently not working
     # self.vcap.set(cv.CAP_PROP_HW_ACCELERATION, 0.0)
     # self.vcap.set(cv.CAP_PROP_HW_DEVICE, 0.0)
@@ -66,7 +73,6 @@ class FileVideoStream:
       self.width, self.height = im.size
       self.dim = (self.width, self.height)
       self.index = -1
-      self.frame_read_index = 0
       self.stopped = True
       self.frame_count = 1
       self.queue = Queue(maxsize=1)
@@ -82,9 +88,26 @@ class FileVideoStream:
           self.frame_count = 1  # force set image to 1 frame
         else:  
           self.frame_count = int(self.vcap.get(cv.CAP_PROP_FRAME_COUNT))
+          # Bug: the frame count is not always correct
+          # TODO: set a variable to perform this check
+          #   calculate overhead
+          check_idx = self.frame_count
+          while check_idx > 0:
+            # seek to frame and check if valid
+            self.vcap.set(cv.CAP_PROP_POS_FRAMES, check_idx - 1)
+            frame_ok, vframe = self.vcap.read()
+            if not frame_ok:
+              check_idx -= 1  # rewind
+            else:
+              break
+          if check_idx != self.frame_count:
+            LOG.warn(f'Partial video: rewinding from {self.frame_count} to: {check_idx}')
+          self.frame_count = check_idx
+
+        # rewind
+        self.vcap.set(cv.CAP_PROP_POS_FRAMES, 0)
         self.vcap_cc = self.vcap.get(cv.CAP_PROP_FOURCC)  
         self.fps = self.vcap.get(cv.CAP_PROP_FPS)  # default 25.0 for still image
-        # LOG.debug(f'fps: {self.fps}')
         self.stopped = False
         self.index = -1
         # initialize queue used to store frames
@@ -93,19 +116,20 @@ class FileVideoStream:
         # initialize thread
         self.thread = Thread(target=self.update, args=())
         self.thread.daemon = True
-        self.frame_read_index = 0
-        self.spf = 1 / self.fps  # seconds per frame
+        self.spf = 1 / self.fps if self.fps else 0  # seconds per frame
         self.mspf = self.spf * 1000  # milliseconds per frame
       except Exception as e:
-        # TODO: add error loggin
-        LOG.error(f'Skipping corrupt file: {fp}. Error: {e}. FPS: {self.fps}')
+        # TODO: add error logging
+        LOG.error(f'Skipping file: {fp}. Error: {e}. FPS: {self.fps}')
 
     self.dim = (self.width, self.height)
 
 
   def start(self):
     # start a thread to read frames from the file video stream
-    if self.frame_count > 0:
+    if self.width > 0 and self.height > 0 \
+      and self.frame_count > 0 \
+      and self.fps > 0:
       if not self.is_image:
         self.thread.start()
       return self
@@ -120,12 +144,12 @@ class FileVideoStream:
         break
       if not self.queue.full():
         (frame_ok, frame) = self.vcap.read()
-        self.frame_read_index += 1
         if not frame_ok:
           self.stopped = True
           break
         else:
           # frame
+          self.frame_read_index += 1
           self.queue.put(frame)
           # add phash
           if self.use_prehash:

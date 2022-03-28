@@ -13,9 +13,12 @@ import click
 from vframe.utils.click_utils import processor
 
 @click.command('')
-@click.option('-t', '--threshold', 'opt_threshold', 
-  type=click.FloatRange(0,1), default=0.5,
-  help='Threshold below which frames are skipped (1.0 = all skipped, 0.0 = none skipped)')
+@click.option('--min', 'opt_threshold_lt', 
+  type=click.FloatRange(0,1), default=0.0,
+  help='Skip detections less than this threshold')
+@click.option('--max', 'opt_threshold_gt', 
+  type=click.FloatRange(0,1), default=1.0,
+  help='Skip detections greater than this threshold')
 @click.option('--label', 'opt_labels', multiple=True,
   help='Detection label')
 @click.option('--keep', 'opt_keep', is_flag=True,
@@ -24,27 +27,28 @@ from vframe.utils.click_utils import processor
 @click.option('--pop', 'opt_pop', is_flag=True, help='Remove detection if skipped')
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_threshold, opt_labels, opt_keep, opt_override, opt_pop):
+def cli(ctx, sink, opt_threshold_lt, opt_threshold_gt, 
+  opt_labels, opt_keep, opt_override, opt_pop):
   """Skip frames based on presence/absence of detections"""
   
   from vframe.settings.app_cfg import LOG, SKIP_FRAME
     
-
   while True:
 
     M = yield
 
     # skip frame if flagged
-    if ctx.opts.get(SKIP_FRAME):
+    if ctx.obj.get(SKIP_FRAME):
       sink.send(M)
       continue
 
     # skip if no detections exist above the threshold
-    skip = M.frame_detections_exist(threshold=opt_threshold, labels=opt_labels)
-    skip = not skip if opt_keep else skip
+    t = (opt_threshold_lt, opt_threshold_gt)
+    exist = M.frame_detections_exist(thresholds=t, labels=opt_labels)
+    skip = not exist if opt_keep else exist
     if opt_override:
-      ctx.opts[SKIP_FRAME] = skip
+      ctx.obj[SKIP_FRAME] = skip
     else:
-      ctx.opts[SKIP_FRAME] = (ctx.opts.get(SKIP_FRAME) or skip)
+      ctx.obj[SKIP_FRAME] = (ctx.obj.get(SKIP_FRAME) or skip)
     
     sink.send(M)

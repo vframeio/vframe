@@ -38,7 +38,7 @@ def cli(ctx, sink, opt_rotate):
 
     M = yield
 
-    if not ctx.opts[SKIP_FRAME]:
+    if not ctx.obj[SKIP_FRAME]:
       
       # resize
       for frame_type in frame_types:

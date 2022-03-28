@@ -273,9 +273,8 @@ class MediaFile:
       
       self.frame_idx_end = self.n_frames - 1
       self.images = {}
-      video_ok = self.vstream.start()  # starts threaded media reader
-      
-      if not video_ok:
+
+      if not self.vstream.start():
         self._skip_file = True
         return False
       else:
@@ -283,7 +282,11 @@ class MediaFile:
 
     except Exception as e:
       LOG.error(f'Could not load file: {self.filepath}. Error: {e}')
-      LOG.error(traceback.format_exc())
+      # LOG.error(traceback.format_exc())
+      self.vstream = None
+      self._skip_file = True
+      self.skip_all_frames = True
+      return False
 
 
   def unload(self):
@@ -331,24 +334,22 @@ class MediaFile:
     # init
     self._start_time = time.perf_counter()
 
-
     # skip frames for dummy processing
     if self.skip_all_frames or self._skip_file:
+      LOG.debug(f'skip file break iter: {self.filename}, {self.n_frames}')
       self.metadata = {}
-      yield 
+      yield
       return
 
     # iter
     for index in range(self.n_frames):
-
       # check if video stopped running before iterating all frames
       if not self.vstream.running():
         LOG.warn(f'Corrupt video: {self.filepath}. Exited at frame: {index}/{self.n_frames}. No data saved.')
         self._skip_file = True
         self.metadata = {}
-        yield 
+        yield
         return
-        # return
       
       if self.use_prehash:
         im, self.phash = self.vstream.read_frame_phash()
@@ -400,7 +401,7 @@ class MediaFile:
     else:
       return not any([label in self.detected_labels for label in labels])
 
-  # def remove_detections(self, labels=None, threshold=None):
+  # def remove_detections(self, labels=None, thresholds=None):
   #   if self.metadata:
   #     for k, dr in self.metadata.get(self.index).items():
   #       dets = dr.detections
@@ -410,34 +411,34 @@ class MediaFile:
   #         dets = [x for x in dets if x.label in labels]
 
 
-  def frame_detections_exist(self, labels=None, threshold=None):
+  def frame_detections_exist(self, labels=None, thresholds=None):
     """Returns True if any frame contains any detection
     """
-    n = self.n_detections_filtered(labels=labels, threshold=threshold)
+    n = self.n_detections_filtered(labels=labels, thresholds=thresholds)
     return n > 0
 
 
-  def n_detections_filtered(self, labels=None, threshold=None, index=None):
+  def n_detections_filtered(self, labels=None, thresholds=None, index=None):
     """Returns True if any frame contains any detection at current index
     """
     index = index if index else self.index
-    dets = []
+    d = []
     if self.metadata:
       for k, dr in self.metadata.get(index).items():
-        dets = dr.detections
-        if threshold:
-          dets = [x for x in dets if x.conf >= threshold]
+        d = dr.detections
+        if thresholds:
+          d = [x for x in d if x.conf >= thresholds[0] and x.conf <= thresholds[1]]
         if labels:
-          dets = [x for x in dets if x.label in labels]
+          d = [x for x in d if x.label in labels]
 
-    return len(dets)
+    return len(d)
 
-  def n_detections_filtered_total(self, labels=None, threshold=None):
+  def n_detections_filtered_total(self, labels=None, thresholds=None):
 
     n = 0
     for i in range(self.n_frames):
       if i in self.metadata.keys():
-        n += self.n_detections_filtered(labels=labels, threshold=threshold, index=i)
+        n += self.n_detections_filtered(labels=labels, thresholds=threshold, index=i)
     return n
 
   @property

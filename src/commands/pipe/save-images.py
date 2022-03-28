@@ -82,7 +82,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
     R = ctx.obj[READER]
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 

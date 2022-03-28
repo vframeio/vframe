@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_data_keys, opt_factor, opt_iters, opt_expand, opt_redact_
     M = yield
 
     # skip frame if flagged
-    if ctx.opts[SKIP_FRAME]:
+    if ctx.obj[SKIP_FRAME]:
       sink.send(M)
       continue
 

@@ -43,7 +43,8 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
   import cv2 as cv
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, OBJECT_COLORS, SKIP_FILE, modelzoo
+  from vframe.settings.app_cfg import LOG, SKIP_FRAME, OBJECT_COLORS, SKIP_FILE, USE_DRAW_FRAME
+  from vframe.settings.app_cfg import modelzoo
   from vframe.image.dnn_factory import DNNFactory
 
   
@@ -53,6 +54,10 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
   if opt_batch_size > 1 and not dnn_cfg.batch_enabled:
     opt_batch_size = 1
     LOG.warn(f'Batch processing not enabled for this model. Batch size reset to 1')
+
+  if opt_batch_size > 1 and ctx.obj.get(USE_DRAW_FRAME):
+    LOG.warn('Using "draw" with "--batch-size" > 1 will result in missed frames')
+    LOG.warn('  Use "--batch-size 1" to draw on all frames. Or post-processing JSON.')
 
   # override dnn_cfg vars with cli vars
   dnn_cfg.override(device=opt_device, dnn_size=opt_dnn_size, threshold=opt_dnn_threshold)
@@ -68,8 +73,8 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
   cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
 
   # add globally accessible colors
-  ctx.opts.setdefault(OBJECT_COLORS, {})
-  ctx.opts[OBJECT_COLORS][opt_data_key] = dnn_cfg.colorlist
+  ctx.obj.setdefault(OBJECT_COLORS, {})
+  ctx.obj[OBJECT_COLORS][opt_data_key] = dnn_cfg.colorlist
 
   Q = []
 
@@ -82,17 +87,18 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
     if M._skip_file or ctx.obj[SKIP_FILE]:
       # corrupt file, abort processing and reset Q
       Q = []
+      sink.send(M)
       continue
 
 
     if opt_batch_size == 1:
 
-      if ctx.opts.get(SKIP_FRAME):
+      if ctx.obj.get(SKIP_FRAME):
           sink.send(M)
           continue
           
       # TODO: copy results from previous frame is SIM_FRAME_KEY
-      # if ctx.opts[SIM_FRAME_KEY]:
+      # if ctx.obj[SIM_FRAME_KEY]:
       #   # copy last frame detections if exist
       #   # results = M.inherit_from_last_frame(opt_data_key)
         
@@ -128,17 +134,14 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
 
     else:
 
-      # create batch
-      n = len([skip for idx, im, skip in Q if not skip])
-      
-      Q.append([M.index, M.images.get(FrameImage.ORIGINAL), ctx.opts.get(SKIP_FRAME)])
-      
-      if n < opt_batch_size and not (M.is_last_item):
-        sink.send(M)
-      else:
-        # setup batch
-        ims = [im for idx, im, skip in Q if not skip]
-        idxs = [idx for idx, im, skip in Q if not skip]
+      if not ctx.obj.get(SKIP_FRAME):
+        # add new frame to queue
+        Q.append([M.index, M.images.get(FrameImage.ORIGINAL)])
+
+      # batch inference if Q has items or last frame
+      if len(Q) >= opt_batch_size or M.is_last_item:
+        ims = [im for idx, im in Q ]
+        idxs = [idx for idx, im in Q]
 
         # rotate if optioned  
         if cv_rot_val is not None:
@@ -159,6 +162,7 @@ def cli(ctx, sink, opt_model_enum, opt_data_key, opt_device, opt_dnn_threshold,
           if len(results.detections) > 0:
             M.metadata[idx].update({opt_data_key: results})
 
+        # reset
         Q = []
 
     sink.send(M)
