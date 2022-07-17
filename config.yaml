@@ -21,9 +21,7 @@ logger:
 # ---------------------------------------------------------------------------
 
 modelzoo:
-  - filepath: 'modelzoo/coco.yaml'            # detection: generic
-  - filepath: 'modelzoo/face-detection.yaml'  # detection: faces
-
+  - filepath: 'modelzoo/vframe.yaml'
 
 plugins:
 
