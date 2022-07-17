@@ -9,7 +9,7 @@
 
 from pathlib import Path
 from dataclasses import dataclass, field, asdict
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from enum import Enum
 from functools import lru_cache
 import time
@@ -71,6 +71,10 @@ class MediaFileReader:
       # load 
       items = load_json(fp)
 
+      # slice
+      idx_from = max(0, self.slice_idxs[0])
+      idx_to = len(items) if self.slice_idxs[1] == -1 else self.slice_idxs[1]
+      items = items[idx_from:idx_to]
 
       # init MediaFiles
       # TODO: make multithreaded
@@ -99,11 +103,11 @@ class MediaFileReader:
       if self.opt_randomize:
         shuffle(self._files)
 
-      # slice
-      if len(self._files) > 0:
-        idx_from = max(0, self.slice_idxs[0])
-        idx_to = len(self._files) if self.slice_idxs[1] == -1 else self.slice_idxs[1]
-        self._files = self._files[idx_from:idx_to]
+      # # slice
+      # if len(self._files) > 0:
+      #   idx_from = max(0, self.slice_idxs[0])
+      #   idx_to = len(self._files) if self.slice_idxs[1] == -1 else self.slice_idxs[1]
+      #   self._files = self._files[idx_from:idx_to]
 
     # TXT: filelist
     elif get_ext(fp).lower() == 'txt':
@@ -235,14 +239,15 @@ class MediaFile:
   """Image or video file processed by an ImagePipe
   """
   filepath: str
-  metadata_priors: List[DetectResults]=field(default_factory=lambda: [])
+  # metadata_priors: Dict[DetectResults]=field(default_factory=lambda: {})
+  metadata_priors: Dict=field(default_factory=lambda: {})
   file_meta: FileMeta=None
   skip_all_frames: bool=False
   use_sha256: bool=False
 
 
   def __post_init__(self):
-    self.metadata = self.metadata_priors if self.metadata_priors else {}
+    self.metadata = self.metadata_priors or {}
     self.images = {}  # stores image data
     self._datetime = None  # TODO: move to file_meta
     if self.ext in app_cfg.VALID_PIPE_IMAGE_EXTS:
@@ -421,7 +426,7 @@ class MediaFile:
   def n_detections_filtered(self, labels=None, thresholds=None, index=None):
     """Returns True if any frame contains any detection at current index
     """
-    index = index if index else self.index
+    index = index or self.index
     d = []
     if self.metadata:
       for k, dr in self.metadata.get(index).items():
@@ -438,7 +443,7 @@ class MediaFile:
     n = 0
     for i in range(self.n_frames):
       if i in self.metadata.keys():
-        n += self.n_detections_filtered(labels=labels, thresholds=threshold, index=i)
+        n += self.n_detections_filtered(labels=labels, thresholds=thresholds, index=i)
     return n
 
   @property

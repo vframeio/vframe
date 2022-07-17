@@ -40,7 +40,8 @@ def phash(im, hash_size=8, highfreq_factor=4):
   """
   wh = hash_size * highfreq_factor
   im = cv.resize(im, (wh, wh), interpolation=cv.INTER_NEAREST)
-  im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+  if len(im.shape) > 2 and im.shape[2] > 1:
+    im = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
   dct = scipy.fftpack.dct(scipy.fftpack.dct(im, axis=0), axis=1)
   dctlowfreq = dct[:hash_size, :hash_size]
   med = np.median(dctlowfreq)

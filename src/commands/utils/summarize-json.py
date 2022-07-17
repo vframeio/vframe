@@ -18,11 +18,16 @@ import click
   help="Slice list of inputs")
 @click.option('--label', 'opt_labels', multiple=True,
   help='Labels to include in detection summary count')
-@click.option('-t', '--threshold', 'opt_threshold', default=0.5,
-  help='Minimum detection threshold')
+@click.option('--min', 'opt_threshold_lt', 
+  type=click.FloatRange(0,1), default=0.0,
+  help='Skip detections less than this threshold')
+@click.option('--max', 'opt_threshold_gt', 
+  type=click.FloatRange(0,1), default=1.0,
+  help='Skip detections greater than this threshold')
 @click.option('--min-detections', 'opt_min_detections', default=None, type=int)
 @click.pass_context
-def cli(ctx, opt_input, opt_output, opt_slice, opt_labels, opt_threshold, opt_min_detections):
+def cli(ctx, opt_input, opt_output, opt_slice, opt_labels, opt_threshold_gt,
+  opt_threshold_lt, opt_min_detections):
   """Summarize detection JSON"""
 
   from tqdm import tqdm
@@ -38,6 +43,7 @@ def cli(ctx, opt_input, opt_output, opt_slice, opt_labels, opt_threshold, opt_mi
 
 
   results = []
+  thresholds = [opt_threshold_lt, opt_threshold_gt]
   if not opt_labels:
     LOG.error('"--label" is required')
     return
@@ -55,7 +61,7 @@ def cli(ctx, opt_input, opt_output, opt_slice, opt_labels, opt_threshold, opt_mi
     d.pop('sha256')
     d['frame_count'] = int(d['frame_count'])
     for opt_label in opt_labels:
-      d[opt_label] = mf.n_detections_filtered_total(labels=[opt_label], threshold=opt_threshold)
+      d[opt_label] = mf.n_detections_filtered_total(labels=[opt_label], thresholds=thresholds)
     results.append(d)
           
   # to data frame

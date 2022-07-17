@@ -17,7 +17,8 @@ from vframe.utils.click_utils import processor, show_help
 @click.option('-t', '--threshold', 'opt_thresh', 
   default=0.75, type=click.FloatRange(0,1),
   help='Skip frames above this perceptual similar. Higher number means skip fewer frames. Lower number skip more frames. 0.0: completely different, 1.0: exactly same')
-@click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True)
+@click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True,
+  help='Compare with all previous frames or only last/previous frame.')
 @click.option('--prehash', 'opt_prehash', is_flag=True,)
 @click.option('--override', 'opt_override', is_flag=True)
 @click.option('--roi', 'opt_use_roi', is_flag=True,
@@ -100,8 +101,8 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
     # -------------------------------------------------------------------------
     # check for new media
 
-    if (M.type == MediaType.VIDEO and cur_file != M.filepath) or \
-      (M.type == MediaType.IMAGE and cur_subdir != Path(M.filepath).parent):
+    if (M.type == MediaType.VIDEO and cur_file != M.filepath) \
+    or (M.type == MediaType.IMAGE and cur_subdir != Path(M.filepath).parent):
       # new file, reset hashes
       im_blank = create_blank_im(hash_wh, hash_wh)
       hash_pre = phash(im_blank)
@@ -127,6 +128,7 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
         hash_cur = phash(im)
 
     hash_changed = (hash_cur - hash_pre) > hash_thresh_int
+    # LOG.debug(f'hash diff: {hash_cur - hash_pre}, thresh: {hash_thresh_int}')
     
     if hash_changed and opt_all_frames:
       hash_changed = all([abs(hash_cur - x) > hash_thresh_int for x in hashes])
@@ -144,5 +146,8 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
       ctx.obj[SKIP_FRAME] = skip
     else:
       ctx.obj[SKIP_FRAME] = (ctx.obj[SKIP_FRAME] or skip)
+
+    if skip and M.type == MediaType.IMAGE:
+      ctx.obj[SKIP_FILE] = True
     
     sink.send(M)

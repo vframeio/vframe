@@ -356,7 +356,7 @@ class ProcessedFile:
     data_key = 'annotation'
     frame_dets = {}
 
-    dets = DetectResults([DetectResult.from_annos(Annotation.from_anno_series_row(row)) \
+    dets = DetectResults([DetectResult.from_annos(Annotation.from_row(row)) \
         for i, row in df.iterrows()])
   
     frames_meta[data_key] = dets

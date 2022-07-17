@@ -12,7 +12,6 @@ import sys
 from math import sqrt
 from os.path import join
 
-import logging
 import numpy as np
 import cv2 as cv
 import PIL
@@ -226,7 +225,7 @@ def _draw_bbox_pil(canvas, bbox, color, stroke):
   return canvas
   
 
-def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
+def draw_bbox(im, bboxes, color=GREEN, stroke=4, expand=None,
   label=None, color_label=None, font_size=None, padding=None, font_name=None):
   """Draws bboxes on image
   :param im: PIL.Image or numpy.ndarray
@@ -237,6 +236,7 @@ def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
   :param label: String
   :param font_size: int
   :param padding: int
+  :returns numpy.ndarray image
   """
 
   if not bboxes:
@@ -310,6 +310,31 @@ def draw_bbox(im, bboxes, color=None, stroke=None, expand=None,
   return im
 
 
+
+def draw_polygon(im, polygon, color=GREEN, stroke=1, radius=1):
+  
+  # ensure numpy format
+  was_pil = False
+  if im_utils.is_pil(im):
+    im = im_utils.pil2np(im)
+    was_pil = True
+
+  h,w = im.shape[:2]
+  rgb = color.rgb_int[::-1]
+  polygon = polygon.redim((w,h))
+  pt_pre = None
+  for pt in polygon.points:
+    if pt_pre:
+      im = cv.line(im, pt_pre.xy, pt.xy, rgb, stroke)
+    pt_pre = pt
+    im = cv.circle(im, pt.xy, radius*2, rgb, -1)
+  # connect last to first
+  im = cv.line(im, pt_pre.xy, polygon.points[0].xy, rgb, stroke)
+
+  if was_pil:
+    im = im_utils.np2pil(im)
+
+  return im
 
 
 # -----------------------------------------------------------------------------

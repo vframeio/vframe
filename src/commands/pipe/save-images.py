@@ -37,7 +37,7 @@ from vframe.settings.app_cfg import filename_accessors as accessors
 @click.option('-q', '--quality', 'opt_quality', default=1, 
   type=click.FloatRange(0,1, clamp=True), show_default=True,
   help='JPEG write quality')
-@click.option('--keep-subdirs', 'opt_keep_subdirs', is_flag=True,
+@click.option('--subdirs', 'opt_keep_subdirs', is_flag=True,
   help='Recreate subdirectory structure relative to input directory')
 @processor
 @click.pass_context
@@ -101,7 +101,8 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
 
     # add relative subdir to output destination
     if opt_keep_subdirs and Path(M.filepath).parent != Path(R.filepath):
-      fp_subdir_rel = Path(M.filepath).relative_to(Path(R.filepath)).parent
+      # fp_subdir_rel = Path(M.filepath).relative_to(Path(R.filepath)).parent
+      fp_subdir_rel = Path(M.filepath).parent.name
     else:
       fp_subdir_rel = ''
     
@@ -124,7 +125,8 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
 
     # write image
     if ext == 'jpg':
-      cv.imwrite(fp_out, im, [int(cv.IMWRITE_JPEG_QUALITY), int(opt_quality*100)])
+      # cv.imwrite(fp_out, im, [int(cv.IMWRITE_JPEG_QUALITY), int(opt_quality*100)])
+      cv.imwrite(fp_out, im)
     else:
       cv.imwrite(fp_out, im)
 

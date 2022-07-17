@@ -10,13 +10,13 @@
 import logging
 import random
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict, Tuple, List
 
 import numpy as np
 
 from vframe.models.color import Color
-
-log = logging.getLogger('VFRAME')
+from vframe.settings.app_cfg import LOG
 
 # ---------------------------------------------------------------------------
 #
@@ -27,11 +27,12 @@ log = logging.getLogger('VFRAME')
 @dataclass
 class Point:
   """XY point in coordinate plane
+  TODO: change to normalized
   """
-  x: float
-  y: float
-  dw: int=None  # dimension width
-  dh: int=None  # dimension height
+  x: float  # int (not normalized)
+  y: float  # int (not normalized)
+  dw: int=None  # image dimension width
+  dh: int=None  # image dimension height
 
   def __post_init__(self):
     # if no bounds, use x,y as bounding plane
@@ -66,7 +67,7 @@ class Point:
   def distance(self, p2):
     """Calculate distance between this point and another
     :param p2: Point
-    :returns float of distance
+    :returns float, distance in pixels
     """
     dx = self.x - p2.x
     dy = self.y - p2.y
@@ -78,22 +79,31 @@ class Point:
 
   @classmethod
   def from_xy_int(cls, x, y, dim):
-    return cls(x / dw, y / dim[1], dim)
-
-  @classmethod
-  def from_xy_norm(cls, x, y, dim):
     return cls(x, y, dim)
 
   @classmethod
+  def from_xy_norm(cls, x, y, dim):
+    return cls(int(x*dim[0]), int(y*dim[1]), *dim)
+
+  @classmethod
   def from_bbox_tl(cls, bbox):
-    return cls(bbox.x1, bbox.y1, *bbox.dim)
+    return cls(bbox.x1_int, bbox.y1_int, *bbox.dim)
 
   @classmethod
   def from_bbox(cls, bbox):
     return cls.from_bbox_tl(bbox)
 
+
   # ---------------------------------------------------------------------------
   # properties
+
+  @property
+  def xy(self):
+    return self.xy_int
+
+  @property
+  def y_int(self):
+    return int(self.y)
 
   @property
   def x_int(self):
@@ -118,6 +128,45 @@ class Point:
   @property
   def xy_norm(self):
     return (self.x_norm, self.y_norm)
+
+
+
+# ---------------------------------------------------------------------------
+#
+# Vertices: list of points
+#
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Polygon:
+  """A list of Points with dimension
+  """
+  points: List[Point] = field(default_factory=List)
+  dw: int=None  # dimension width
+  dh: int=None  # dimension height
+
+  def redim(self, dim):
+    return self.__class__([p.redim(dim) for p in self.points], *dim)
+
+  def to_str(self, normalize=False):
+    """Returns polygon as string of x y coords"""
+    if normalize:
+      pts = [f'{p.x_norm} {(p.y_norm)}' for p in self.points]
+    else:
+      pts = [f'{p.x} {(p.y)}' for p in self.points]
+    return ' '.join(pts)
+
+  @classmethod
+  def from_str(cls, s, dw, dh):
+    # split the string of x,y points (x1 y1 x2 y2 ...) to list of Points
+    xy_arr = np.array(s.split(' '), dtype=np.uint16).reshape(-1, 2)
+    points = [Point(*xy, dw, dh) for xy in xy_arr]
+    return cls(points, dw, dh)
+
+  @classmethod
+  def from_points_norm(cls, points, dim):
+    points = [Point.from_xy_norm(*p, dim) for p in points]
+    return cls(points, *dim)
 
 
 
@@ -484,7 +533,7 @@ class BBox:
 
 
   # ---------------------------------------------------------------------------
-  # Represent
+  # Custom dict conversion
   # ---------------------------------------------------------------------------
 
   def to_dict(self, omit_dim=False):
@@ -556,7 +605,7 @@ class BBox:
 
   @property
   def w_norm(self):
-    n = 0 if self.dw == 0 else self.w / self.dw
+    # n = 0 if self.dw == 0 else self.w / self.dw
     return self.w / self.dw
 
   @property
@@ -601,7 +650,7 @@ class BBox:
 
   @property
   def cx_norm(self):
-    return (self.x1 + (self.width / 2)) / self.dw
+    return (self.x1 + (self.width / 2)) / float(self.dw)
 
   @property
   def cy(self):
@@ -609,11 +658,7 @@ class BBox:
 
   @property
   def cy_norm(self):
-    return (self.y1 + (self.height / 2)) / self.dh
-  
-  # @property
-  # def cxcy(self):
-  #   return (*self.cx, *self.cy)
+    return (self.y1 + (self.height / 2)) / float(self.dh)
 
   @property
   def cxcy_int(self):
@@ -621,20 +666,24 @@ class BBox:
 
   @property
   def cx_int(self):
-    return self.cx
+    return int(self.cx)
 
   @property
   def cy_int(self):
-    return self.cy
+    return int(self.cy)
 
   @property
   def cxcy_norm(self):
-    return (*self.cx_norm, *self.cy_norm)
+    return (self.cx_norm, self.cy_norm)
+
+  @property
+  def cxcywh_norm(self):
+    return (self.cx_norm, self.cy_norm, self.w_norm, self.h_norm)
 
 
   # --------------------------------------------------------------------------- 
   # x
-  
+
   @property
   def x1_int(self):
     return int(self.x1)
@@ -653,7 +702,7 @@ class BBox:
 
   # --------------------------------------------------------------------------- 
   # y
-  
+
   @property
   def y1_int(self):
     return int(self.y1)
@@ -708,7 +757,7 @@ class BBox:
 
   @property
   def wh(self):
-    return (self.w, self.h)
+    return self.wh_int
 
   @property
   def wh_int(self):
@@ -724,11 +773,11 @@ class BBox:
 
   @property
   def xywh(self):
-    return (self.x1, self.y1, self.w, self.h)
+    return tuple(map(int, self.xywh))
 
   @property
   def xywh_int(self):
-    return tuple(map(int, self.xywh))
+    return self.xyxy
 
   @property
   def xywh_norm(self):

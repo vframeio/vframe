@@ -114,6 +114,9 @@ DIR_MODELS = join(DIR_MODELZOO, 'models')
 DIR_PLUGINS = join(DIR_SRC, 'plugins')
 DIR_FONTS = join(DIR_DATA_STORE, 'fonts')
 
+# filepaths
+FP_CLI = join(DIR_SRC, 'cli.py')
+
 # display, fonts
 FP_ROBOTO_300 = join(DIR_FONTS, 'roboto/Roboto_300.ttf')
 FP_ROBOTO_400 = join(DIR_FONTS, 'roboto/Roboto_400.ttf')
@@ -130,10 +133,12 @@ FN_CHECKSUM = 'sha256.txt'
 # synthetic files
 FN_METADATA = 'metadata.csv'  # filename
 FN_ANNOTATIONS = 'annotations.csv'  # filename
+FN_DETECTIONS = 'detections.json'  # filename
 FN_ANNOTATIONS_SUMMARY = 'annotations_summary.csv'  # filename
 FN_LABELMAP = 'labelmap.yaml'
 DN_REAL = 'images'  # directory name
 DN_MASK = 'mask'  # directory name
+DN_MASK_INDEXED = 'masks_indexed'
 DN_COMP = 'comp'  # directory name
 DN_BBOX = 'bbox'  # directory name
 DN_IMAGES = 'images'  # directory name for images in concat output
@@ -182,7 +187,7 @@ for m in vframe_cfg.get('modelzoo'):
         v.update({'dp_models': DIR_MODELS})
       modelzoo_yaml.update(d)
   else:
-    LOG.warn(f'{fp} does not exist. Skipping.')
+    LOG.warn(f'{fp_cfg} does not exist. Skipping.')
 
 # create dict with modelzoo name-keys and DNN values
 modelzoo = {k: from_dict(data=v, data_class=DNN) for k,v in modelzoo_yaml.items()}
@@ -205,7 +210,7 @@ with open(FP_VFRAME_YAML, 'r') as fp:
 # Input types
 # -----------------------------------------------------------------------------
 
-VALID_PIPE_IMAGE_EXTS = ['jpg', 'jpeg', 'png']
+VALID_PIPE_IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'heic']
 VALID_PIPE_VIDEO_EXTS = ['mp4', 'avi', 'mov', 'mkv']  # webm, mkv frame count error
 VALID_PIPE_MEDIA_EXTS =  VALID_PIPE_IMAGE_EXTS + VALID_PIPE_VIDEO_EXTS
 VALID_PIPE_DATA_EXTS = ['json']

@@ -29,3 +29,7 @@ def random_range(value, variance=0.0):
   """
   value_range = [value * (1.0 - variance), value]
   return random.uniform(*value_range)
+
+
+def rand_bool():
+  return random.random() < 0.5

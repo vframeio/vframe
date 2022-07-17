@@ -16,7 +16,7 @@ from vframe.utils.click_utils import processor, show_help
 @processor
 @click.pass_context
 def cli(ctx, sink, ):
-  """Reset metadata if frame skipped"""
+  """Force skip frame variable to false"""
   
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME
@@ -25,7 +25,6 @@ def cli(ctx, sink, ):
 
     M = yield
 
-    if ctx.obj.get(SKIP_FRAME):
-      M.metadata[M.index] = {}
+    ctx.obj[SKIP_FRAME] = False
     
     sink.send(M)

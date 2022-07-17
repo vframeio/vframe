@@ -164,18 +164,27 @@ class Color:
     return self.__class__((r, g, b, self.a))
 
 
+  def clamp_rand_norm(val: float=None):
+    if isinstance(val, float):
+      return val
+    elif isinstance(val, list) or isinstance(val, tuple):
+      return random.uniform(*val)
+    else:
+      return random.random()
+
+
   @classmethod
-  def random(cls, r: float=None, g: float=None, b: float=None):
+  def random(cls, r: float=None, g: float=None, b: float=None, a: float=1.0):
     """Color from random RGB range
     :param r: Red, normalized float
     :param g: Green, normalized float
     :param b: Blue, normalized float
     :returns Color
     """
-    rnd_r = random.uniform(*r) if r else random.uniform(0.0, 1.0)
-    rnd_g = random.uniform(*g) if g else random.uniform(0.0, 1.0)
-    rnd_b = random.uniform(*b) if b else random.uniform(0.0, 1.0)
-    return cls(rnd_r, rnd_g, rnd_b)
+    rgba = [cls.clamp_rand_norm(x) for x in [r,g,b,a]]
+    return cls(*rgba)
+
+  
 
 
   @classmethod
@@ -186,10 +195,23 @@ class Color:
     :param v: Value, normalized float
     :returns Color
     """
-    rh = random.uniform(*h) if h else random.uniform(0.0, 1.0)
-    rs = random.uniform(*s) if s else random.uniform(0.0, 1.0)
-    rv = random.uniform(*v) if v else random.uniform(0.0, 1.0)
-    return cls.from_hsv_norm((rh,rs,rv))
+    return cls.random_hsva(*(h, s, v, 1.0))
+
+
+  @classmethod
+  def random_hsva(cls, h: float=None, s: float=None, v: float=None, a: float=None):
+    """Color from random HSV range
+    :param h: Hue, normalized float
+    :param s: Saturation, normalized float
+    :param v: Value, normalized float
+    :param a: Alpha, normalized float
+    :returns Color
+    """
+    s = cls.clamp_rand_norm(s)
+    h = cls.clamp_rand_norm(h)
+    v = cls.clamp_rand_norm(v)
+    a = cls.clamp_rand_norm(a)
+    return cls.from_hsva_norm((h, s, v, a))
 
   
   # def jitter(self, fac=0.1):
@@ -255,9 +277,8 @@ class Color:
     :param hsv_int:  tuple using (360, 100, 100, 100) scale
     """
     h, s, v, a = hsva_int
-    hsv_norm = (h / 360, s / 100, v / 100, a / 100)
-    rgb_norm = colorsys.hsv_to_rgb(*hsv_norm)
-    return cls(*rgb_norm)
+    hsva = (h / 360, s / 100, v / 100, a / 100)
+    return cls.from_hsva_norm(hsva)
 
   
   @classmethod
@@ -265,8 +286,8 @@ class Color:
     """Color from normalized HSVA
     :param hsva_norm: tuple using (1.0, 1.0, 1.0, 1.0) scale
     """
-    rgb_norm = colorsys.hsv_to_rgb(*hsva_norm)
-    return cls(*rgb_norm)
+    rgba = colorsys.hsv_to_rgb(*hsva_norm[:3]) + (hsva_norm[3],)
+    return cls(*rgba)
 
   
   @classmethod
