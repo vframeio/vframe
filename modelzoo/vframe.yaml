@@ -1,0 +1,170 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+################################################################################
+#
+# Conflict zone models
+#
+################################################################################
+
+anchors:
+  
+  yolo-base: &yolo-base
+    # meta
+    name: YOLOV5
+    width: 960
+    height: 960
+    output: bbox
+    iou: 0.45
+    nms_threshold: 0.4
+    threshold: 0.7
+    resize_enabled: True
+    batch_enabled: True
+    processor: yolov5_pytorch
+    # processor: yolov5_onnx | yolov5_pytorch
+    # local: path/to/local/model.ext
+    # remote: https://example.com
+    # model: best.pt | best.onnx
+
+  vframe-base: &vframe-base
+    <<: *yolo-base
+    notes: Created by VFRAME https://vframe.io
+
+  ultralytics-base: &ultralytics-base
+    # meta
+    <<: *yolo-base
+    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
+
+
+  # --------------------------------------------------------------------
+  # COCO: general object detection
+
+  coco-base: &coco-base
+    <<: *ultralytics-base
+    local: pytorch/detection/coco/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco/
+  coco-n6: &coco-n6
+    <<: *coco-base
+    width: 640
+    height: 640
+    model: coco_n6.pt
+  coco-s6: &coco-s6
+    <<: *coco-base
+    width: 640
+    height: 640
+    model: coco_s6.pt
+  coco-m6: &coco-m6
+    <<: *coco-base
+    width: 720
+    height: 720
+    model: coco_m6.pt
+  coco-l6: &coco-l6
+    <<: *coco-base
+    width: 960
+    height: 960
+    model: coco_l6.pt
+  coco-x6: &coco-x6
+    <<: *coco-base
+    width: 1280
+    height: 1280
+    model: coco_x6.pt
+
+
+  # --------------------------------------------------------------------
+  # Face redaction
+
+  face-base: &face-base
+    <<: *vframe-base
+    name: YOLOV5 Face
+    local: pytorch/detection/face/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/face/
+  face-18-n6: &face-18-n6
+    <<: *face-base
+    width: 960
+    height: 960
+    model: yoloface_18_n6.pt
+  face-18-s6: &face-18-s6
+    <<: *face-base
+    width: 960
+    height: 960
+    model: yoloface_18_s6.pt
+  face-18-l6: &face-18-l6
+    <<: *face-base
+    width: 1280
+    height: 1280
+    model: yoloface_18_l6.pt
+
+
+  # --------------------------------------------------------------------
+  # Conflict zone
+
+  # RBK250
+  rbk250-base: &rbk250-base
+    <<: *vframe-base
+    name: YOLOV5 RBK250
+    local: pytorch/detection/rbk250/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/rbk250/
+  rbk250-48: &rbk250-48
+    <<: *rbk250-base
+    width: 960
+    height: 960
+    notes: Trained at 960x960 with all images, large model arch, 0.99 F1
+    model: rbk250_48_l6_960.pt
+
+  # 9N235/210
+  9n235-base: &9n235-base
+    <<: *vframe-base
+    name: YOLOV5 9N235
+    local: pytorch/detection/9n235/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/9n235/
+  9n235-07: &9n235-07
+    <<: *9n235-base
+    width: 960
+    height: 960
+    notes: Trained at 960x960, large model arch, 0.97 F1
+    model: 9n235_07_l6_960.pt
+
+
+models:
+
+  # --------------------------------------------------------------------
+  # CLI shortcuts for models with variations
+
+  # COCO
+  coco:
+    <<: *coco-l6
+  coco-nn:
+    <<: *coco-n6
+  coco-sm:
+    <<: *coco-s6
+  coco-md:
+    <<: *coco-m6
+  coco-lg:
+    <<: *coco-l6
+  coco-xl:
+    <<: *coco-x6
+
+  # Face
+  face:
+    <<: *face-18-l6
+  face-nn:
+    <<: *face-18-n6
+  face-sm:
+    <<: *face-18-s6
+  face-lg:
+    <<: *face-18-l6
+
+  # 9n235
+  9n235:
+    <<: *9n235-07
+
+  # RBK250
+  rbk250:
+    <<: *rbk250-48
