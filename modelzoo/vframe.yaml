@@ -122,12 +122,13 @@ anchors:
   9n235-base: &9n235-base
     <<: *vframe-base
     name: YOLOV5 9N235
+    width: 1280
+    height: 1280
+    threshold: 0.65
     local: pytorch/detection/9n235/
     remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/9n235/
   9n235-07: &9n235-07
     <<: *9n235-base
-    width: 960
-    height: 960
     notes: Trained at 960x960, large model arch, 0.97 F1
     model: 9n235_07_l6_960.pt
 
