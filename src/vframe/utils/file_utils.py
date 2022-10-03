@@ -47,7 +47,7 @@ from vframe.models.types import HexInt
 # Encode/Decode
 # ----------------------------------------------------------------------
 
-def get_sha256(fp: str, block_size: int=65536):
+def mk_sha256(fp: str, block_size: int=65536):
   """Generates SHA256 hash for a file
   :param fp: (str) filepath
   :param block_size: (int) byte size of block
@@ -59,6 +59,11 @@ def get_sha256(fp: str, block_size: int=65536):
       sha256.update(block)
   return sha256.hexdigest()
 
+def check_md5(fp, checksum):
+  with open(fp, 'rb') as f:
+    data = f.read()    
+    return hashlib.md5(data).hexdigest() == checksum
+  return False
 
 # ----------------------------------------------------------------------
 # Path
