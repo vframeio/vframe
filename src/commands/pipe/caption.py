@@ -30,15 +30,17 @@ from vframe.settings.app_cfg import caption_accessors as accessors
   help='Add text background')
 @click.option('--bg-color', 'opt_color_bg', default=(0,0,0))
 @click.option('--bg-padding', 'opt_padding_text', default=None, type=int)
+@click.option('--knockout', 'opt_knockout', is_flag=True,
+  help='Add knockout shadow')
 @processor
 @click.pass_context
 def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
-  opt_bg, opt_color_bg, opt_padding_text):
+  opt_bg, opt_color_bg, opt_padding_text, opt_knockout):
   """Add text caption"""
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.models.types import FrameImage
-  from vframe.models.color import Color
+  from vframe.models.color import Color, BLACK
   from vframe.models.geometry import Point
   from vframe.utils import im_utils, draw_utils
   
@@ -95,9 +97,15 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
     dim = im.shape[:2][::-1]
     pt = Point(*xy, *dim)
     
+    if opt_knockout:  
+      im = draw_utils.draw_text(im, text, pt.move(1,1), font_color=BLACK, font_size=opt_font_size, 
+        bg=False, padding_text=opt_padding_text, color_bg=color_bg, upper=False)
+
     # draw text
     im = draw_utils.draw_text(im, text, pt, font_color=color_text, font_size=opt_font_size, 
       bg=opt_bg, padding_text=opt_padding_text, color_bg=color_bg, upper=False)
+
+
     
     M.images[FrameImage.DRAW] = im
     sink.send(M)

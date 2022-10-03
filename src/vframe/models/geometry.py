@@ -55,7 +55,7 @@ class Point:
   def move(self, x, y):
     """Moves point by x,y
     """
-    return self.__class__(self.x1 + x, self.y1 + y, self.x2, self.y2, *self.dim)
+    return self.__class__(self.x + x, self.y + y, *self.dim)
 
 
   def scale(self, scale):

@@ -224,7 +224,7 @@ VALID_PIPE_EXTS = VALID_PIPE_MEDIA_EXTS + VALID_PIPE_DATA_EXTS
 DEFAULT_TEXT_SIZE = 14
 DEFAULT_STROKE_WEIGHT = 2
 DEFAULT_SIZE_LABEL = 14
-DEFAULT_PADDING_PER = 0.25
+DEFAULT_PADDING_PER = 0.2
 DEFAULT_FONT_NAME = 'roboto'
 DEFAULT_FONT_FP = FP_ROBOTO_500
 
@@ -365,6 +365,8 @@ LICENSE_HEADER = """############################################################
 
 """
 
+COMMENT_LINE = f'# {68*"-"}'
+
 
 # -----------------------------------------------------------------------------
 # CVAT
@@ -417,3 +419,6 @@ anon_obj_cfg = {
   'trainable': False,
 }
 anon_obj_mappings = { 'mappings': [anon_obj_cfg] }
+
+
+BLENDER_ASSET_TYPES = {'hdri': 0, 'texture': 1, 'object': 2 }

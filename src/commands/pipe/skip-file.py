@@ -19,13 +19,15 @@ from vframe.models.types import MediaType
 
 
 @click.command('')
-@click.option('--if', 'opt_if_evals', required=True, multiple=True,
+@click.option('--if', 'opt_if_evals', multiple=True,
   type=str, callback=operator_validator_multi)
 @click.option('--skip/--keep', 'opt_skip', is_flag=True, default=True)
 @click.option('--verbose', 'opt_verbose', is_flag=True)
+@click.option('--skip-frame', 'opt_skip_frame', is_flag=True, 
+  help='Skip file if current skip frame is True')
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_if_evals, opt_skip, opt_verbose):
+def cli(ctx, sink, opt_if_evals, opt_skip, opt_skip_frame, opt_verbose):
   """Skip file by filtering attributes"""
   
   from vframe.settings.app_cfg import LOG, SKIP_FILE
@@ -33,6 +35,9 @@ def cli(ctx, sink, opt_if_evals, opt_skip, opt_verbose):
   
   
   # init media filter
+  if not (opt_if_evals or opt_skip_frame):
+    return
+    
   for opt_if_eval in opt_if_evals:
     opt_if_eval.is_skip = opt_skip
 
@@ -59,7 +64,7 @@ def cli(ctx, sink, opt_if_evals, opt_skip, opt_verbose):
         skip = opt_if_eval.evaulate(val)
         skip_results.append(skip)
 
-      ctx.obj[SKIP_FILE] = any(skip_results)
+      ctx.obj[SKIP_FILE] = any(skip_results) or opt_skip_frame
 
       if opt_verbose:
         LOG.info(f'\nSkipping: {skip_results}. because: {opt_if_eval.attribute}: {val}\n')

@@ -30,7 +30,7 @@ from vframe.settings.app_cfg import LOG
 from vframe.models.types import MediaType, FrameImage
 from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile, FileMeta
 from vframe.utils.file_utils import glob_multi, load_json, load_txt, get_ext, date_modified
-from vframe.utils.file_utils import get_sha256
+from vframe.utils.file_utils import mk_sha256
 from vframe.utils.video_utils import FileVideoStream
 from vframe.models.geometry import BBox, Point
 
@@ -544,7 +544,7 @@ class MediaFile:
     if self.use_sha256 and self.file_meta and self.file_meta.sha256:
       return self.file_meta.sha256
     elif self.use_sha256:
-      return get_sha256(self.filepath)
+      return mk_sha256(self.filepath)
     else:
       return ''
 

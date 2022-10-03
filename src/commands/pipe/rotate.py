@@ -11,8 +11,8 @@
 import click
 
 from vframe.settings.app_cfg import ROTATE_VALS, SKIP_FRAME
-from vframe.models.types import FrameImage, FrameImageVar
-from vframe.utils.click_utils import processor, show_help
+from vframe.models.types import FrameImage
+from vframe.utils.click_utils import processor
 
 
 @click.command('')
@@ -31,20 +31,18 @@ def cli(ctx, sink, opt_rotate):
   frame_types = [FrameImage.ORIGINAL]
   if ctx.obj[USE_DRAW_FRAME]:
     frame_types.append(FrameImage.DRAW)
-    
+  
+  # convert user input to cv rotation value
   cv_rot_val = ROTATE_VALS[opt_rotate]
 
   while True:
 
     M = yield
 
-    if not ctx.obj[SKIP_FRAME]:
-      
-      # resize
-      for frame_type in frame_types:
-        im = M.images[frame_type]
-        im = cv.rotate(im, cv_rot_val)
-        M.images[frame_type] = im
+    if not ctx.obj[SKIP_FRAME] and not cv_rot_val == 0:
+      # resize source and drawing frames
+      for t in frame_types:
+        M.images[t] = cv.rotate(M.images[t], cv_rot_val)
 
     # continue
     sink.send(M)
