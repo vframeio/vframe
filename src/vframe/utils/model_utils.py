@@ -1,6 +1,5 @@
-from os.path import join
+from typing import List
 from pathlib import Path
-import logging
 from collections import defaultdict
 from dataclasses import asdict
 
@@ -10,53 +9,58 @@ from vframe.utils.url_utils import download_url
 
 
 
-def download_model(dnn_cfg, opt_force=False, opt_verbose=False):
+def download_model(dnn_cfg, opt_force=False, opt_verbose=False) -> bool:
   """Auto-download model files
   :param dnn_cfg: DNN configuration object
   :param opt_force: Force download and overwrite existing files
   :param opt_verbose: Print verbose statements
+  :returns bool status
   """
 
   dl_files = []
 
   # Model
   if dnn_cfg.model:
-    dl_files.append({'url': dnn_cfg.url_model, 'fp_out':dnn_cfg.fp_model})
+    dl_files.append({'url': dnn_cfg.url_model, 'fp':dnn_cfg.fp_model})
 
   # Config
   if dnn_cfg.labels:
-    dl_files.append({'url': dnn_cfg.url_labels, 'fp_out':dnn_cfg.fp_labels})
+    dl_files.append({'url': dnn_cfg.url_labels, 'fp':dnn_cfg.fp_labels})
 
   # Classes
   if dnn_cfg.config:
-    dl_files.append({'url': dnn_cfg.url_config, 'fp_out':dnn_cfg.fp_config})
+    dl_files.append({'url': dnn_cfg.url_config, 'fp':dnn_cfg.fp_config})
 
   # license
   if dnn_cfg.license:
-    dl_files.append({'url': dnn_cfg.url_license, 'fp_out':dnn_cfg.fp_license})
+    dl_files.append({'url': dnn_cfg.url_license, 'fp':dnn_cfg.fp_license})
+
+  results = []
 
   for dl_file in dl_files:
     
-    fp_out = dl_file['fp_out']
-    url = dl_file['url']
+    fp, url = dl_file['fp'], dl_file['url']
 
-    if Path(fp_out).is_file() and not opt_force:
+    if Path(fp).is_file() and not opt_force:
       if opt_verbose:
-        LOG.warn(f'{fp_out} already exists. Use "-f/--force" to overwrite')
+        LOG.warn(f'{fp} already exists. Use "-f/--force" to overwrite')
     else:
       if opt_verbose:
-        LOG.info(f'Downloading: {url} to {fp_out}')
-      ensure_dir(fp_out)
+        LOG.info(f'Downloading: {url} to {fp}')
+      ensure_dir(fp)
       try:
-        download_url(url, fp_out)
+        result = download_url(url, fp)
+        results.append(result)
       except Exception as e:
+        results.append(False)
         if opt_verbose:
           LOG.error(f'Could not download {url}. Error {e}')
 
+    return all(results)
 
 
 
-def list_models(group_by='output'):
+def list_models(group_by:str='output') -> str:
   """List classification models
   :param group_by: DNN key to group configurations
   """

@@ -17,7 +17,7 @@ from vframe.utils.click_utils import show_help
 
 @click.command('')
 @click.option('--fps', 'opt_fps', default=25, show_default=True,
-  type=click.IntRange(1,1000),
+  type=click.IntRange(0,1000),
  help='Frames per second. Use 0 to pause.')
 @click.option('--pause/--play', 'opt_pause', is_flag=True,
   help='Autoplay video')
@@ -43,7 +43,7 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
   ctx.obj[USE_DRAW_FRAME] = True
 
   display_utils = DisplayUtils()
-  target_mspf = 1000 / opt_fps
+  target_mspf = 1000 / opt_fps if opt_fps > 0 else 0
   ctx.obj[PAUSED] = opt_pause
   st = time.time()
 
@@ -65,7 +65,10 @@ def cli(ctx, sink, opt_fps, opt_pause, opt_frame_type, opt_filter):
     
     # dynamically adjust framerate
     actual_mspf = (time.time() - st) / 1000
-    frame_delay_ms = int(max(1, target_mspf - actual_mspf))
+    if ctx.obj[PAUSED] or opt_fps == 0:
+      frame_delay_ms = -1
+    else:
+      frame_delay_ms = int(max(1, target_mspf - actual_mspf))
     
     # get and display image
     fde = M.frame_detections_exist

@@ -514,21 +514,6 @@ def blur_bbox_soft(im, bbox, iters=1, expand_per=-0.1, multiscale=True,
   return (im_dst).astype(np.uint8)
 
 
-
-def swap_color(im, color_src, color_dst):
-  """Swaps colors in image
-  :param im: (numpy.ndarray) in BGR
-  :param color_src: (Color) source color
-  :param color_dst: (Color) destination color
-  :returns im: (numpy.ndarray) in BGR
-  """
-  bgr = list(color_src.to_bgr_int())
-  idxs = np.all(im == bgr, axis=2)
-  im[idxs] = list(color_dst.to_bgr_int())
-  return im
-
-
-
 # -----------------------------------------------------------------------------
 #
 # Image writers
@@ -774,6 +759,8 @@ IMAGE_TRANSFORMS = {
   # blur motion h
   # blur motion v
 }
+
+
 # -----------------------------------------------------------------------------
 #
 # Deprecated. For reference.

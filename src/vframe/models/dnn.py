@@ -65,6 +65,7 @@ class DNN:
   def __post_init__(self):
     if not self.local[0] == '/':
       self.local = join(self.dp_models, self.local)
+    LOG.debug(self.local)
 
     # Check if files exist locally
     self.model_exists = Path(join(self.local, self.model)).is_file()

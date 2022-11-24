@@ -21,7 +21,7 @@ import numpy as np
 from vframe.models.dnn import DNN
 from vframe.models.types import Processor
 from vframe.models.geometry import BBox, Point, RotatedBBox
-from vframe.settings.app_cfg import LOG, DN_REAL
+from vframe.settings.app_cfg import LOG, DN_IMAGE
 from vframe.utils.file_utils import date_modified
 
 
@@ -349,7 +349,7 @@ class ProcessedFile:
     Images only. Not compatible with videos.
     """
     LOG.debug('TODO')
-    fp_im = join(Path(fp_csv).parent, DN_REAL, fn)
+    fp_im = join(Path(fp_csv).parent, DN_IMAGE, fn)
     date = date_modified(fp_im)  # using modified to get created
     file_meta = FileMeta(fp_im, df[0].dw, df[0].dh, 1, date)
     

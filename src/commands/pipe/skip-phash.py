@@ -16,7 +16,8 @@ from vframe.utils.click_utils import processor, show_help
 @click.command('')
 @click.option('-t', '--threshold', 'opt_thresh', 
   default=0.75, type=click.FloatRange(0,1),
-  help='Skip frames above this perceptual similar. Higher number means skip fewer frames. Lower number skip more frames. 0.0: completely different, 1.0: exactly same')
+  help="""Skip frames above this perceptual similarity threshold. 
+  0.0: no similarity, 1.0: maximum similarity (perceptually identical)""")
 @click.option('--all-frames/--last-frame', 'opt_all_frames', is_flag=True,
   help='Compare with all previous frames or only last/previous frame.')
 @click.option('--prehash', 'opt_prehash', is_flag=True,)

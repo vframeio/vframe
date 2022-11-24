@@ -11,12 +11,16 @@ from urllib import request
 from tqdm import tqdm
 
 class DownloadProgressBar(tqdm):
-  def update_to(self, b=1, bsize=1, tsize=None):
+  def update_to(self, b: int=1, bsize: int=1, tsize: int=None) -> None:
     if tsize is not None:
         self.total = tsize
     self.update(b * bsize - self.n)
 
-def download_url(url, output_path):
+def download_url(url: str, fp: str) -> None:
+  """Downloads URL to filepath
+  :param url: url to remote file
+  :param fp: filepath to save as local file
+  """
   with DownloadProgressBar(unit='B', unit_scale=True,
                            miniters=1, desc=url.split('/')[-1]) as t:
-    request.urlretrieve(url, filename=output_path, reporthook=t.update_to)
+    request.urlretrieve(url, filename=fp, reporthook=t.update_to)

@@ -25,7 +25,7 @@ from tqdm import tqdm
 import numpy as np
 
 from vframe.settings import app_cfg
-from vframe.settings.app_cfg import DN_REAL
+from vframe.settings.app_cfg import DN_IMAGE
 from vframe.settings.app_cfg import LOG
 from vframe.models.types import MediaType, FrameImage
 from vframe.models.cvmodels import ClassifyResults, DetectResults, ProcessedFile, FileMeta

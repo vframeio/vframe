@@ -92,7 +92,7 @@ def cli(ctx, opt_pipe=True):
 
 
 # def process_commands(processors, opt_pipe):
-@cli.resultcallback()
+@cli.result_callback()
 def process_commands(processors):
   """This result callback is invoked with an iterable of all the chained
   subcommands. As in this example each subcommand returns a function
@@ -150,7 +150,7 @@ for plugin_script in plugin_group.scripts:
     # skip files starting with "_"
     if plugin_script.include_hidden is False and fn.startswith('_'):
       continue
-
+      
     fp_module = str(Path(fp_py).relative_to(Path(app_cfg.DIR_SRC)))
     fp_import = fp_module.replace('/', '.').replace('.py', '')
     try:

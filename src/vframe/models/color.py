@@ -13,6 +13,8 @@ import random
 import logging
 
 
+LOG = logging.getLogger('VFRAME')
+
 @dataclass
 class Color:
   r: float
@@ -22,7 +24,6 @@ class Color:
 
   
   def __post_init__(self):
-    # self.log = logging.getLogger('VFRAME')
     self.r = max(0.0, min(self.r, 1.0))
     self.g = max(0.0, min(self.g, 1.0))
     self.b = max(0.0, min(self.b, 1.0))
@@ -114,6 +115,7 @@ class Color:
     h = h if not upper else h.upper()
     return f"{separator}{h}"
 
+
   def to_rgb_hex_int(self, separator="0x"):
     """Color to RGB HEX string
     :param separator: the prefix string separator
@@ -185,8 +187,6 @@ class Color:
     return cls(*rgba)
 
   
-
-
   @classmethod
   def random_hsv(cls, h: float=None, s: float=None, v: float=None):
     """Color from random HSV range
@@ -298,6 +298,7 @@ class Color:
     r,g,b = tuple(int(rgb_hex[i:i+2], 16) for i in (0, 2, 4))
     return cls.from_rgb_int((r, g, b))
 
+
   @classmethod
   def from_rgb_hex_int(cls, rgb_hex):
     """Color from hexidecimal RGB int using (eg 0xFFFFFF)
@@ -313,6 +314,15 @@ class Color:
   @property
   def bgr_int(self):
     return self.to_rgb_int()[::-1]
+
+  @property
+  def rgba_int(self):
+    return self.to_rgba_int()
+
+  @property
+  def bgra_int(self):
+    rgba = list(self.to_rgba_int())
+    return rgba[-2::-1] + [rgba[3]]
 
   @property
   def rgba_int(self):
@@ -340,17 +350,21 @@ class Color:
 
   @property
   def rgb_hex(self):
-    return self.to_rgb_hex()
+    return self.to_rgb_hex_str()
 
   @property
   def rgba_hex(self):
-    return self.rgba_hex()
+    return self.to_rgba_hex()
+
+  @property
+  def rgb_hex_str(self):
+    return self.to_rgb_hex_str()
 
 
 
 # ---------------------------------------------------------------------------
 #
-# Colors
+# Predefined Colors
 #
 # ---------------------------------------------------------------------------
 
@@ -360,6 +374,14 @@ GREEN = Color.from_rgb_int((0, 255, 0))
 BLUE = Color.from_rgb_int((0, 0, 255))
 YELLOW = Color.from_rgb_int((255, 255, 0))
 
+# grayscale
+BLACK = Color.from_rgb_int((0, 0, 0))
+WHITE = Color.from_rgb_int((255, 255, 255))
+GRAY = Color.from_rgb_int((127, 127, 127))
+LIGHT_GRAY = Color.from_rgb_int((170, 170, 170))
+DARK_GRAY = Color.from_rgb_int((85, 85, 85))
+
+# misc
 ORANGE = Color.from_rgb_int((255, 255, 127))
 FUSCHIA = Color.from_rgb_int((255, 0, 127))
 PINK = Color.from_rgb_int((255, 0, 255))
@@ -367,9 +389,4 @@ PURPLE = Color.from_rgb_int((127, 0, 255))
 LAVENDER = Color.from_rgb_int((127, 127, 255))
 CYAN = Color.from_rgb_int((0, 255, 255))
 
-# grayscale
-BLACK = Color.from_rgb_int((0, 0, 0))
-WHITE = Color.from_rgb_int((255, 255, 255))
-GRAY = Color.from_rgb_int((127, 127, 127))
-LIGHT_GRAY = Color.from_rgb_int((170, 170, 170))
-DARK_GRAY = Color.from_rgb_int((85, 85, 85))
+# TODO: add color palettes

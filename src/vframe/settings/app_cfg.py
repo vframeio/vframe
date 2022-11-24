@@ -136,21 +136,29 @@ FN_ANNOTATIONS = 'annotations.csv'  # filename
 FN_DETECTIONS = 'detections.json'  # filename
 FN_ANNOTATIONS_SUMMARY = 'annotations_summary.csv'  # filename
 FN_LABELMAP = 'labelmap.yaml'
-DN_REAL = 'images'  # directory name
-DN_MASK = 'mask'  # directory name
-DN_MASK_INDEXED = 'masks_indexed'
-DN_COMP = 'comp'  # directory name
-DN_BBOX = 'bbox'  # directory name
+DN_IMAGE = 'image'  # real images
+DN_MASK = 'mask'  # mask images
+DN_CRYPTOMATTE = 'cryptomatte'  # cryptomatte images
+DN_COMP = 'comp'  # composite images
+DN_BBOX = 'bbox'  # bounding box
+DN_MASK_INDEXED = 'masks_indexed'  # deprecated
+# TODO: change to mask_indexed
+LABEL_ENUM_NEG = 'negative'
+LABEL_DISPLAY_NEG = 'negative'
+LABEL_INDEX_NEG = -1
+
+# YOLO training project files
 DN_IMAGES = 'images'  # directory name for images in concat output
+DN_YOLO_IMAGES = 'images'
 
 # CVAT
-FN_ANNOTATIONS_CVAT = 'annotations.xml'
+FN_ANNOTATIONS_CVAT = 'annotations.xml'  # deprecated
 
 # VFRAME config file
 FP_VFRAME_YAML = join(DIR_PROJECT_ROOT, os.getenv("FP_VFRAME_YAML", "config.yaml"))
 
 # Cmake config files
-FP_CMAKE_OPENCV = join(DIR_DATA_STORE, 'configs/cmake/opencv.yaml')
+FP_CMAKE_OPENCV = join(DIR_DATA_STORE, 'configs/cmake/opencv.yaml')  # deprecated
 
 
 
@@ -422,3 +430,4 @@ anon_obj_mappings = { 'mappings': [anon_obj_cfg] }
 
 
 BLENDER_ASSET_TYPES = {'hdri': 0, 'texture': 1, 'object': 2 }
+CRYPTO_ASSET_TYPES = ['CryptoObject', 'CryptoAsset', 'CryptoMaterial']

@@ -31,11 +31,11 @@ import hashlib
 from operator import itemgetter
 from collections import OrderedDict
 
+from typing import (Dict, List, Tuple, Union)
 from dacite import from_dict
 import xmltodict
 import click
 import ruamel.yaml as yaml
-import pandas as pd
 import numpy as np
 
 from vframe.settings import app_cfg
@@ -54,8 +54,8 @@ def mk_sha256(fp: str, block_size: int=65536):
   :returns: (str) hash
   """
   sha256 = hashlib.sha256()
-  with open(fp, 'rb') as fp:
-    for block in iter(lambda: fp.read(block_size), b''):
+  with open(fp, 'rb') as f:
+    for block in iter(lambda: f.read(block_size), b''):
       sha256.update(block)
   return sha256.hexdigest()
 
@@ -77,10 +77,9 @@ def mkdirs(fp: str):
   fpp = fpp.parent if fpp.suffix else fpp
   fpp.mkdir(parents=True, exist_ok=True)
 
-def ensure_dir(fp):
-  """Alias for mkdirs"""
-  mkdirs(fp)
 
+def ensure_dir(fp: str):
+  mkdirs(fp)
 
 # ----------------------------------------------------------------------
 # Creation and modified date
@@ -116,9 +115,15 @@ def date_created(fp: str, milliseconds: bool=False):
 # Loaders
 # ----------------------------------------------------------------------
 
+def check_file_exists(fp: str):
+  if not Path(fp).exists():
+    LOG.error('file does not exist: {}'.format(fp))
+    return None
+
 def load_yaml(fp: str, data_class: object=None, loader=yaml.SafeLoader):
   """Loads YAML file (Use .yaml, not .yml)
   """
+  check_file_exists(fp)
   with open(fp, 'r') as f:
     cfg = yaml.load(f, Loader=loader)
   if data_class:
@@ -131,6 +136,7 @@ def load_csv(fp: str, data_class: object=None, as_list: bool=True):
   :param fp: string filepath to CSV
   :returns: list of all CSV data
   """
+  check_file_exists(fp)
   if not Path(fp).exists():
     LOG.info('not found: {}'.format(fp))
   LOG.info('loading: {}'.format(fp))
@@ -142,9 +148,10 @@ def load_csv(fp: str, data_class: object=None, as_list: bool=True):
     return items
 
 
-def load_txt(fp_in, data_class=None, as_list=True):
-  with open(fp_in, 'rt') as fp:
-    lines = fp.read().rstrip('\n')
+def load_txt(fp: str, data_class: object=None, as_list: bool=True):
+  check_file_exists(fp)
+  with open(fp, 'rt') as f:
+    lines = f.read().rstrip('\n')
   if as_list:
     lines = lines.split('\n')
   if data_class:
@@ -152,14 +159,15 @@ def load_txt(fp_in, data_class=None, as_list=True):
   return lines
 
 
-def load_xml(fp_in, data_class=None):
+def load_xml(fp: str, data_class: object=None):
   """Loads XML and returns dict of items
-  :param fp_in: String filepath to XML
+  :param fp: String filepath to XML
   :param data_class: DataClass data model
   returns: OrderedDict of XML values
   """
-  with open(fp_in, 'rt') as fp:
-    lines = fp.read()
+  check_file_exists(fp)
+  with open(fp, 'rt') as f:
+    lines = f.read()
   data = xmltodict.parse(lines)
   if data_class:
     data = from_dict(data_class=data_class, data=data)
@@ -188,52 +196,48 @@ class EnhancedJSONEncoder(json.JSONEncoder):
     return super().default(o)
 
 
-
-def load_json(fp_in, data_class=None):
+def load_json(fp: str, data_class: object=None):
   """Loads JSON and returns items
-  :param fp_in: (str) filepath
+  :param fp: (str) filepath
   :returns: (dict) data from JSON
   """
-  if not Path(fp_in).exists():
-    LOG.error('file does not exist: {}'.format(fp_in))
-    return {}
-  with open(str(fp_in), 'r') as fp:
-    data = json.load(fp)
+  check_file_exists(fp)
+  with open(str(fp), 'r') as f:
+    data = json.load(f)
   if data_class:
     data = from_dict(data_class=data_class, data=data)
   return data
 
 
-def load_pkl(fp_in, data_class=None):
+def load_pkl(fp: str, data_class: object=None):
   """Loads Pickle and returns items
-  :param fp_in: (str) filepath
+  :param fp: (str) filepath
   :returns: (dict) data from JSON
   """
-  if not Path(fp_in).exists():
-    LOG.error('file does not exist: {}'.format(fp_in))
-    return {}
-  with open(str(fp_in), 'rb') as fp:
-    data = pickle.load(fp)
+  check_file_exists()
+  with open(str(fp), 'rb') as f:
+    data = pickle.load(f)
   if data_class:
     data = from_dict(data_class=data_class, data=data)
   return data
 
-def load_file(fp_in, data_class=None):
-  if fp_in is None:
-    LOG.error(f'Empty filepath: {fp_in}')
-  ext = get_ext(fp_in)
+def load_file(fp: str, data_class: object=None):
+  """Load file and auto-infer type using extension
+  """
+  check_file_exists(fp)
+  ext = get_ext(fp)
   if ext == 'json':
-    return load_json(fp_in, data_class=data_class)
+    return load_json(fp, data_class=data_class)
   elif ext == 'pkl':
-    return load_pkl(fp_in, data_class=data_class)
+    return load_pkl(fp, data_class=data_class)
   elif ext == 'csv':
-    return load_csv(fp_in, data_class=data_class)
+    return load_csv(fp, data_class=data_class)
   elif ext == 'txt':
-    return load_txt(fp_in, data_class=data_class)
+    return load_txt(fp, data_class=data_class)
   elif ext == 'xml':
-    return load_xml(fp_in, data_class=data_class)
+    return load_xml(fp, data_class=data_class)
   elif ext == 'yaml' or ext == 'yml':
-    return load_yaml(fp_in, data_class=data_class)
+    return load_yaml(fp, data_class=data_class)
   else:
     LOG.error(f'Invalid extension: {ext}')
     return None
@@ -250,9 +254,10 @@ def jsonify(data):
 # Writers
 # ----------------------------------------------------------------------
 
-def write_txt(fp_out, data, ensure_path=True, split_lines=True, empty_ok=False):
+def write_txt(fp: str, data: object, ensure_path: bool=True, 
+  split_lines: bool=True,  empty_ok: bool=False):
   """Writes text file
-  :param fp_out: (str) filepath
+  :param fp: (str) filepath
   :param ensure_path: (bool) create path if not exist
   """
   if not data and not empty_ok:
@@ -260,81 +265,80 @@ def write_txt(fp_out, data, ensure_path=True, split_lines=True, empty_ok=False):
     return
 
   if ensure_path:
-    mkdirs(fp_out)
-  with open(fp_out, 'w') as fp:
+    mkdirs(fp)
+  with open(fp, 'w') as f:
     if type(data) == list:
-      fp.write('\n'.join(data))
+      f.write('\n'.join(data))
     else:
-      fp.write(data)
+      f.write(data)
 
 
-def write_xml(fp_out, data, ensure_path=True):
+def write_xml(fp: str, data: object, ensure_path: bool=True):
   """Writes text file
-  :param fp_out: (str) filepath
+  :param fp: filepath
   :param ensure_path: (bool) create path if not exist
   """
   if not data:
-    LOG.error('no data')
+    LOG.error('No data')
     return
   if ensure_path:
-    mkdirs(fp_out)
-  with open(fp_out, 'w') as fp:
-    fp.write(data)
+    mkdirs(fp)
+  with open(fp, 'w') as f:
+    f.write(data)
 
 
-def write_pkl(fp_out, data, ensure_path=True):
+def write_pkl(fp: str, data: object, ensure_path: bool=True):
   """Writes Pickle file
-  :param fp_out: (str) filepath
+  :param fp: filepath
   :param ensure_path: (bool) create path if not exist
   """
   if ensure_path:
-    mkdirs(fp_out) # mkdir
-  with open(fp_out, 'wb') as fp:
-    pickle.dump(data, fp)
+    mkdirs(fp)
+  with open(fp, 'wb') as f:
+    pickle.dump(data, f)
 
 
-def write_json(fp_out, data, minify=True, ensure_path=True, sort_keys=True, verbose=False, indent=2):
+def write_json(fp: str, data: object, minify: bool=True, ensure_path: bool=True, 
+  sort_keys: bool=True, verbose: bool=False, indent: int=2):
   """Writes JSON file
-  :param fp_out: (str)filepath
-  :param minify: (bool) minify JSON
-  :param verbose: (bool) print status
-  :param ensure_path: (bool) create path if not exist
+  :param fp: filepath
+  :param minify: minify JSON
+  :param verbose: print status
+  :param ensure_path: create path if not exist
   """
   if ensure_path:
-    mkdirs(fp_out)
-  with open(fp_out, 'w') as fp:
+    mkdirs(fp)
+  with open(fp, 'w') as f:
     if minify:
-      json.dump(data, fp, separators=(',',':'), sort_keys=sort_keys, cls=NumpyEncoder)
+      json.dump(data, f, separators=(',',':'), sort_keys=sort_keys, cls=NumpyEncoder)
     else:
-      json.dump(data, fp, indent=indent, sort_keys=sort_keys, cls=NumpyEncoder)
+      json.dump(data, f, indent=indent, sort_keys=sort_keys, cls=NumpyEncoder)
   if verbose:
-    LOG.info(f'Wrote {len(data)} items to: {fp_out}')
+    LOG.info(f'Wrote {len(data)} items to: {fp}')
 
 
-def write_csv(fp_out, data, header=None):
+def write_csv(fp: str, data: object, header: str=None):
   """Writes CSV file
-  :param data: (str) list of lists, or dict (writes list of key-value pairs)
-  :param fp_out: (str) filepath
-  :param header: (list) column headings """
-  with open(fp_out, 'w') as fp:
+  :param data: list of lists, or dict (writes list of key-value pairs)
+  :param fp: filepath
+  :param header: column headings """
+  with open(fp, 'w') as f:
     if type(data) is dict:
-      writer = csv.DictWriter(fp, fieldnames=["key","value"])
+      writer = csv.DictWriter(f, fieldnames=["key","value"])
       writer.writeheader()
       for k, v in data.items():
         writer.writerow([ k, v ])
     elif type(data[0]) is dict:
-      writer = csv.DictWriter(fp, fieldnames=header)
+      writer = csv.DictWriter(f, fieldnames=header)
       writer.writeheader()
       for row in data:
         writer.writerow(data)
     else:
-      writer = csv.writer(fp)
+      writer = csv.writer(f)
       if header is not None:
         writer.writerow(header)
       for row in data:
         writer.writerow(row)
-
-
 
 
 def setup_yaml():
@@ -356,34 +360,35 @@ setup_yaml()
 
 
 
-def write_yaml(fp_out, data, indent=2, comment=None, verbose=False, default_flow_style=None):
+def write_yaml(fp: str, data: object, indent:int=2, comment: str=None, 
+  verbose: bool=False, default_flow_style:bool=None):
   """Writes YAML file. Use OrderedDict to maintain order.
-  :param fp_out_out: filepath (str)
-  :param data: (dict) of serialized data
+  :param fp: filepath
+  :param data: of serialized data
   :param indent: indent
-  :param comment: (str) add comment header
-  :param verbose: (bool) log output
+  :param comment: add comment header
+  :param verbose: log output
   """
-  with open(fp_out, 'w') as f:
+  with open(fp, 'w') as f:
     if comment:
       f.write(f'{comment}\n')
     # yaml.safe_dump(data, f, indent=indent, default_flow_style=default_flow_style, sort_keys=sort_keys)
     # yaml.safe_dump(data, f, indent=indent, default_flow_style=default_flow_style)
     yaml.dump(data, f, indent=indent, default_flow_style=default_flow_style)
   if verbose:
-    LOG.info(f'Wrote {fp_out}')
+    LOG.info(f'Wrote {fp}')
 
 
-def write_file(fp_out, data, **kwargs):
-  ext = get_ext(fp_out)
+def write_file(fp: str, data: object, **kwargs: dict):
+  ext = get_ext(fp)
   if ext == 'json':
-    return write_json(data, fp_out, **kwargs)
+    return write_json(data, fp, **kwargs)
   elif ext == 'pkl':
-    return write_pkl(data, fp_out)
+    return write_pkl(data, fp)
   elif ext == 'csv':
-    return write_csv(data, fp_out)
+    return write_csv(data, fp)
   elif ext == 'txt':
-    return write_txt(data, fp_out)
+    return write_txt(data, fp)
   else:
     LOG.error(f'Invalid extension: {ext}')
     return None
@@ -393,10 +398,10 @@ def write_file(fp_out, data, **kwargs):
 # Helpers
 # ----------------------------------------------------------------------
 
-def sort_dict(d, reverse=True, element_idx=1):
+def sort_dict(d: dict, reverse: bool=True, element_idx: int=1):
   """Sorts dict by value or key
-  :param d: (dict) of serialized ata
-  :param reverse: (bool) reverse for ascending
+  :param d: of serialized ata
+  :param reverse: reverse for ascending
   :returns (OrderedDict)
   """
   return OrderedDict(sorted(d.items(), key=itemgetter(1)))
@@ -405,16 +410,19 @@ def timestamp_to_str():
   return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
-def zpad(n, z=app_cfg.ZERO_PADDING):
+def zpad(n: str, z: int=app_cfg.ZERO_PADDING):
+  """Zero-pad string
+  """
+  LOG.warn('Deprecated. Use "z.fill(ZERO_PADDING)')
   return str(n).zfill(z)
 
 
-def add_suffix(fp, suffix):
+def add_suffix(fp:str, suffix: str):
   fpp = Path(fp)
   return join(fpp.parent, f'{fpp.stem}{suffix}{fpp.suffix}')
 
 
-def swap_ext(fp, ext):
+def swap_ext(fp:str, ext:str):
   """Swaps file extension (eg: file.jpg to file.png)
   :param ext: extension without dot (eg "jpg")
   """
@@ -422,7 +430,7 @@ def swap_ext(fp, ext):
   return join(fpp.parent, f'{fpp.stem}.{ext}')
 
 
-def get_ext(fpp, lower=True):
+def get_ext(fpp:str, lower: bool=True):
   """Retuns the file extension w/o dot
   :param fpp: (Pathlib.path) filepath
   :param lower: (bool) force lowercase
@@ -433,14 +441,14 @@ def get_ext(fpp, lower=True):
   return ext.lower() if lower else ext
 
 
-def replace_ext(fpp, ext):
+def replace_ext(fpp:str, ext:str):
   fpp = ensure_posixpath(fpp)
   ext = ext.replace('.', '')
   fpp = f'{fpp.stem}.{ext}'
   return fpp
 
 
-def ensure_posixpath(fp):
+def ensure_posixpath(fp: str):
   """Ensures filepath is pathlib.Path
   :param fp: a (str, LazyFile, PosixPath)
   :returns: a PosixPath filepath object
@@ -456,50 +464,39 @@ def ensure_posixpath(fp):
   return fpp
 
 
-def filesize(fp):
+def filesize(fp: str):
   """Returns filesize in KB
   """
   return Path(fp).stat().st_size // 1000
 
-def is_file_empty(fp):  
+
+def is_file_empty(fp: str):  
   return Path(fp).is_file() and Path(fp).stat().st_size == 0
 
 
-def glob_multi(dir_in, exts=['jpg', 'png'], recursive=True, sort=False, sort_reverse=False, multi_case=False):
+def glob_multi(dp: str, exts: List=['jpg', 'png'], recursive: bool=True, sort: bool=False, 
+  sort_reverse: bool=False, multi_case: bool=False):
   files = []
   if multi_case:
     exts = [ext.upper() for ext in exts] + [ext.lower() for ext in exts]
   for ext in exts:
     if recursive:
-      files.extend(glob(join(dir_in, f'**/*.{ext}'), recursive=True))
+      files.extend(glob(join(dp, f'**/*.{ext}'), recursive=True))
     else:
-      files.extend(glob(join(dir_in, f'*.{ext}')))
+      files.extend(glob(join(dp, f'*.{ext}')))
   if sort:
     files = sorted(files, reverse=sort_reverse)
   return files
 
 
-# def glob_subdirs_limit(fp_dir_in, ext='jpg', limit=3, random=False):
-#   """Globs one level subdirectories and limits files returned
-#   """
-#   files = []
-#   for subdir in iglob(join(fp_dir_in, '*')):
-#     glob_files = glob(join(subdir, f'*.{ext}'))
-#     if glob_files:
-#       files.extend(glob_files[:limit])
-#   return files
 
-
-# def order_items(records):
-#   """Orders records by ASC SHA256"""
-#   return collections.OrderedDict(sorted(records.items(), key=lambda t: t[0]))
-
-
-# ------------------------------------------
+# ----------------------------------------------------------------------
 # chmod utils
-# ------------------------------------------
+# ----------------------------------------------------------------------
 
-def chmod_exec(fp_script):
-  """Runs chmod +x on file"""
-  st = os.stat(fp_script)
-  os.chmod(fp_script, st.st_mode | stat.S_IEXEC)
+def chmod_exec(fp: str):
+  """Runs chmod +x on file
+  :param fp: script filepath
+  """
+  st = os.stat(fp)
+  os.chmod(fp, st.st_mode | stat.S_IEXEC)

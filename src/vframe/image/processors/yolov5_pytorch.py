@@ -59,6 +59,7 @@ class YOLOV5PyTorch(Detection):
     self.model.half = False  # to FP16
     self.model.conf = cfg.threshold
     self.model.iou = cfg.iou
+    self.model.agnostic = False
 
     # load labels
     self.labels = load_txt(cfg.fp_labels) if cfg.labels_exist else []
@@ -92,6 +93,25 @@ class YOLOV5PyTorch(Detection):
     
     ims_batch = [np2pil(im) for im in ims]
     dims = [im.size for im in ims_batch]
+    # LOG.debug(help(self.model))
+    """
+     ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |  
+ |  agnostic = False
+ |  
+ |  amp = False
+ |  
+ |  classes = None
+ |  
+ |  conf = 0.25
+ |  
+ |  iou = 0.45
+ |  
+ |  max_det = 1000
+ |  
+ |  multi_label = False
+""" 
     batch_outputs = self.model(ims_batch, size=self.cfg.width)
     return self._post_process(batch_outputs, dims)
 
