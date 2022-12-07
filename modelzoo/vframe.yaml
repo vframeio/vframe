@@ -78,6 +78,24 @@ anchors:
 
 
   # --------------------------------------------------------------------
+  # Objects365
+
+  objects365-base: &objects365-base
+    <<: *ultralytics-base
+    name: Objects365
+    notes: >
+      Trained by Glenn Jocher Ultralytics https://github.com/ultralytics/yolov5/pull/5194#issuecomment-948073928
+      python train.py --data Objects365.yaml --batch 224 --weights --cfg yolov5m.yaml --epochs 30 --img 640 --hyp hyp.scratch-low.yaml --device 0,1,2,3,4,5,6
+    local: pytorch/detection/objects365/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/objects365/
+  objects365-m: &objects365-m
+    <<: *objects365-base
+    width: 640
+    height: 640
+    model: yolov5m_objects365.pt
+    
+
+  # --------------------------------------------------------------------
   # Face redaction
 
   face-base: &face-base
@@ -164,6 +182,10 @@ models:
     <<: *coco-l6
   coco-xl:
     <<: *coco-x6
+
+  # Objects365
+  objects365:
+    <<: *objects365-m
 
   # Face
   face:
