@@ -68,8 +68,8 @@ caption_accessors = {
   '@ext': 'ext',
   '@width': 'width',
   '@height': 'height',
-  '@frames': 'frame_count',
-  '@detections': 'n_detections'
+  '@n_frames': 'frame_count',
+  '@n_detections': 'n_detections'
 }
 
 compare_accessors = {

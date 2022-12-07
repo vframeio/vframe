@@ -261,7 +261,7 @@ def write_txt(fp: str, data: object, ensure_path: bool=True,
   :param ensure_path: (bool) create path if not exist
   """
   if not data and not empty_ok:
-    LOG.error('no data')
+    LOG.error('No data. Use "empty_ok=True" to write empty file')
     return
 
   if ensure_path:
@@ -413,7 +413,6 @@ def timestamp_to_str():
 def zpad(n: str, z: int=app_cfg.ZERO_PADDING):
   """Zero-pad string
   """
-  LOG.warn('Deprecated. Use "z.fill(ZERO_PADDING)')
   return str(n).zfill(z)
 
 
