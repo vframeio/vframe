@@ -15,7 +15,7 @@ from vframe.models import types
 from vframe.utils import click_utils
 from vframe.utils.click_utils import processor
 from vframe.settings.app_cfg import filename_accessors as accessors
-
+from vframe.settings.app_cfg import ZERO_PADDING
 
 @click.command('')
 @click.option('-o', '--output', 'opt_dir_out', required=True,
@@ -33,7 +33,7 @@ from vframe.settings.app_cfg import filename_accessors as accessors
   help=f'Filename suffix, accessors: {", ".join(accessors.keys())}')
 @click.option('--numbered', 'opt_numbered', is_flag=True,
   help='Number files sequentially')
-@click.option('-z', '--zeros', 'opt_n_zeros', default=app_cfg.ZERO_PADDING)
+@click.option('-z', '--zeros', 'opt_n_zeros', default=ZERO_PADDING)
 @click.option('-q', '--quality', 'opt_quality', default=1, 
   type=click.FloatRange(0,1, clamp=True), show_default=True,
   help='JPEG write quality')
@@ -52,7 +52,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
   
   from vframe.models.types import MediaType
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME, READER
-  from vframe.utils.file_utils import zpad, get_ext, ensure_dir
+  from vframe.utils.file_utils import get_ext, ensure_dir
 
 
   # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
 
     # filename options
     if opt_numbered:
-      stem = zpad(frame_count, z=opt_n_zeros)
+      stem = str(frame_count).zfill(opt_n_zeros)
       frame_count += 1
     else:
       stem = Path(M.filename).stem
@@ -118,7 +118,7 @@ def cli(ctx, sink, opt_dir_out, opt_ext, opt_frame_type, opt_prefix, opt_suffix,
       
     elif M.type == types.MediaType.VIDEO:
       ext = opt_ext.name.lower() if opt_ext is not None else 'jpg'
-      fn = f'{prefix}{zpad(M.index, z=opt_n_zeros)}{suffix}.{ext}'
+      fn = f'{prefix}{str(M.index).zfill(opt_n_zeros)}{suffix}.{ext}'
       fp_out = join(fp_dir_out, Path(M.filepath).stem, fn)
   
     ensure_dir(fp_out)

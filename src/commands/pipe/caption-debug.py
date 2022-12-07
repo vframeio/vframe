@@ -15,26 +15,15 @@ from vframe.settings.app_cfg import caption_accessors as accessors
 
 
 @click.command('')
-@click.option('-t', '--text', 'opt_text', required=True, type=str,
-  help=f'Caption text. Attributes: {", ".join(accessors.keys())}')
-@click.option('-x', '--x', 'opt_x', default=0,
-  help='X position in pixels. Use negative for distance from bottom.')
-@click.option('-y', '--y', 'opt_y', default=0,
-  help='Y position in pixels. Use negative for distance from bottom.')
-@click.option('-c', '--color', 'opt_color', type=(int, int, int), default=(0,255,0),
-  help='font color in RGB int (eg 0 255 0)')
-@click.option('--font-size', 'opt_font_size', default=16,
-  help='Font size for labels')
 @click.option('--bg/--no-bg', 'opt_bg', is_flag=True, default=True,
   help='Add text background')
 @click.option('--bg-color', 'opt_color_bg', type=(int, int, int), default=(0,0,0))
-@click.option('--bg-padding', 'opt_padding_text', default=None, type=int)
+@click.option('--bg-padding', 'opt_padding_text', default=None)
 @click.option('--knockout', 'opt_knockout', is_flag=True,
   help='Add knockout shadow')
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
-  opt_bg, opt_color_bg, opt_padding_text, opt_knockout):
+def cli(ctx, sink, opt_bg, opt_color_bg, opt_padding_text, opt_knockout):
   """Add text caption"""
 
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
@@ -42,7 +31,28 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
   from vframe.models.color import Color, BLACK
   from vframe.models.geometry import Point
   from vframe.utils import draw_utils
-  
+  opt_text = "@n_detections detections"
+  opt_x = 0
+  opt_y = 0
+  opt_color = (0,255,0)
+  opt_font_size = 16
+  opt_bg = True
+  opt_color_bg = (0,0,0)
+  opt_padding_text = None
+  opt_knockout = False
+
+  """
+  @click.option('--text', 'opt_text', required=True, type=str,
+  help=f'Caption text. Attributes: {", ".join(accessors.keys())}')
+@click.option('-x', '--x', 'opt_x', default=0,
+  help='X position in pixels. Use negative for distance from bottom.')
+@click.option('-y', '--y', 'opt_y', default=0,
+  help='Y position in pixels. Use negative for distance from bottom.')
+@click.option('-c', '--color', 'opt_color', default=(0,255,0),
+  help='font color in RGB int (eg 0 255 0)')
+@click.option('--font-size', 'opt_font_size', default=16,
+  help='Font size for labels')
+  """
 
   """
   - Replace $text with attribute if exists, else warn
@@ -105,5 +115,7 @@ def cli(ctx, sink, opt_text, opt_x, opt_y, opt_color, opt_font_size,
       bg=opt_bg, padding_text=opt_padding_text, color_bg=color_bg, upper=False)
 
 
+    
     M.images[FrameImage.DRAW] = im
     sink.send(M)
+
