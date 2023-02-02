@@ -12,6 +12,7 @@ from dacite import from_dict
 from vframe.settings.app_cfg import modelzoo
 from vframe.models.dnn import DNN
 from vframe.utils.model_utils import download_model
+from vframe.image.processors.base import Classification
 from vframe.image.processors.ssd import SSD
 from vframe.image.processors.yolo_darknet import YOLODarknet
 from vframe.image.processors.yolov5_onnx import YOLOV5ONNX
@@ -24,6 +25,7 @@ from vframe.image.processors.yolov5_pytorch import YOLOV5PyTorch
 class DNNFactory:
 
   processors = {
+    'classification': Classification,
     'ssd': SSD,
     'yolo_darknet': YOLODarknet,
     'yolov5_onnx': YOLOV5ONNX,

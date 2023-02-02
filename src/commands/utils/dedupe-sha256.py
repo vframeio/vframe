@@ -33,7 +33,7 @@ OPTS_KEEP = ['first', 'last']
   type=click.Choice(OPTS_KEEP),
   default='first',
   help='Keep first or last item')
-@click.option('-t', '--threads', 'opt_threads', show_default=True,
+@click.option('-t', '--threads', 'opt_threads', type=int, show_default=True,
   help='Number threads')
 @click.pass_context
 def cli(ctx, opt_inputs, opt_output, opt_action, opt_cache, 
@@ -55,8 +55,8 @@ def cli(ctx, opt_inputs, opt_output, opt_action, opt_cache,
   from tqdm import tqdm
   import pandas as pd
 
-  from vframe.utils.file_utils import date_created, glob_multi, mk_sha256
-  from vframe.utils.file_utils import ensure_dir
+  from vframe.utils.file_utils import (date_created, glob_multi, mk_sha256)
+  from vframe.utils.file_utils import (ensure_dir, load_txt)
   from vframe.settings.app_cfg import LOG
 
   # inits
@@ -67,7 +67,10 @@ def cli(ctx, opt_inputs, opt_output, opt_action, opt_cache,
   # mk list of all file inputs and update cache
   ls_filepaths = []
   for opt_input in opt_inputs:
-    ls_filepaths.extend(glob_multi(opt_input, exts=opt_exts, recursive=False))
+    if Path(opt_input).suffix.lower() == '.txt':
+      ls_filepaths.extend(load_txt(opt_input))
+    else:
+      ls_filepaths.extend(glob_multi(opt_input, exts=opt_exts, recursive=False))
 
   LOG.debug(f'{len(ls_filepaths)} files')
   # init list of dict of filepaths

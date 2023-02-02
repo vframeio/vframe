@@ -66,7 +66,10 @@ def cli(ctx, sink, opt_if_evals, opt_skip, opt_skip_frame, opt_verbose):
 
       ctx.obj[SKIP_FILE] = any(skip_results) or opt_skip_frame
 
-      if opt_verbose:
-        LOG.info(f'\nSkipping: {skip_results}. because: {opt_if_eval.attribute}: {val}\n')
+      if opt_verbose and opt_if_evals:
+        LOG.info(f'\nSkipping: {skip_results}. because: {opt_if_eval.attribute}: {val} or opt_skip_frame: {opt_skip_frame}\n')
+      elif opt_verbose:
+        LOG.info(f'\nSkipping: {skip_results}. because: opt_skip_frame: {opt_skip_frame}\n')
+
     
     sink.send(M)

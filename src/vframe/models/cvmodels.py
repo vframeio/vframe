@@ -20,10 +20,24 @@ import numpy as np
 
 from vframe.models.dnn import DNN
 from vframe.models.types import Processor
-from vframe.models.geometry import BBox, Point, RotatedBBox
+from vframe.models.geometry import BBox, Point, RotatedBBox, Dimension
 from vframe.settings.app_cfg import LOG, DN_IMAGE
 from vframe.utils.file_utils import date_modified
 
+
+
+# -----------------------------------------------------------------------------
+#
+# PreProcess Image params
+#
+# -----------------------------------------------------------------------------
+
+@dataclass
+class PreProcImDim:
+  im: np.ndarray
+  dim_orig: Dimension
+  dim_model: Dimension
+  dim_letterbox: Dimension
 
 # -----------------------------------------------------------------------------
 #

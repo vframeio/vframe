@@ -48,6 +48,8 @@ def cli(ctx, sink, opt_model_enum, opt_device, opt_dnn_size, opt_dnn_threshold, 
   # override dnn_cfg vars with cli vars
   dnn_cfg.override(device=opt_device, size=opt_dnn_size, threshold=opt_dnn_threshold)
   cvmodel = DNNFactory.from_dnn_cfg(dnn_cfg)
+
+  LOG.warn('Not yet implemented')
   
   while True:
 

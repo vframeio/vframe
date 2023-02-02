@@ -274,7 +274,7 @@ def draw_bbox(im, bboxes, color=GREEN, stroke=4, expand=None,
       
       # init font styles
       color_label = color_label if color_label else color.get_fg_color()
-      font_size = font_size if font_size else app_cfg.DEFAULT_font_size
+      font_size = font_size if font_size else app_cfg.DEFAULT_FONT_SIZE
       padding = padding if padding is not None else int(app_cfg.DEFAULT_PADDING_PER * font_size)
       padding += stroke
       font = font_mngr.get_font(font_name, font_size)

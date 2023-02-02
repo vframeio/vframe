@@ -18,11 +18,11 @@ from vframe.utils.click_utils import show_help
   help='Path to output directory')
 @click.option('--keep-subdirs', 'opt_keep_subdirs', is_flag=True,
   help='Keep subdirectory structure in output directory')
-@click.option('-t', '--type', 'opt_type', default='copy',
+@click.option('--action', 'opt_action', default='copy',
   type=click.Choice(['move', 'copy', 'symlink']))
 @processor
 @click.pass_context
-def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_type):
+def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_action):
   """Move, copy, or symlink media files"""
 
   from os.path import join
@@ -54,13 +54,13 @@ def cli(ctx, sink, opt_dir_out, opt_keep_subdirs, opt_type):
       fp_out = join(fp_dir_out, M.filename)
       ensure_dir(fp_out)
       
-      if opt_type == 'symlink':
+      if opt_action == 'symlink':
         if Path(fp_out).is_symlink():
           Path(fp_out).unlink()
         Path(fp_out).symlink_to(M.filepath)
-      elif opt_type == 'copy':
+      elif opt_action == 'copy':
         shutil.copy(M.filepath, fp_out)
-      elif opt_type == 'move':
+      elif opt_action == 'move':
         shutil.move(M.filepath, fp_out)
 
     # continue

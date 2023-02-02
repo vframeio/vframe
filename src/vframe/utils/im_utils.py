@@ -13,15 +13,18 @@ LOG = logging.getLogger('VFRAME')
 from pathlib import Path
 import random
 import math
+from typing import Optional, Sequence, Union
 
 import cv2 as cv
 from PIL import Image, ImageDraw, ImageEnhance
+
 import numpy as np
 import imageio
 from imagehash import ImageHash
 import scipy.fftpack # imagehash
 
 try:
+  # TODO: move into standalone script
   imageio.plugins.freeimage.download()
 except Exception as e:
   LOG.warning('Could not download freeimage')
@@ -29,13 +32,14 @@ except Exception as e:
 from vframe.utils.misc_utils import oddify, evenify
 from vframe.models.geometry import BBox
 
+
 # -----------------------------------------------------------------------------
 #
 # Hashing and similarity
 #
 # -----------------------------------------------------------------------------
 
-def phash(im, hash_size=8, highfreq_factor=4):
+def phash(im: np.ndarray, hash_size: int=8, highfreq_factor: int=4):
   """Perceptual hash rewritten from https://github.com/JohannesBuchner/imagehash/blob/master/imagehash.py#L197
   """
   wh = hash_size * highfreq_factor
@@ -48,13 +52,43 @@ def phash(im, hash_size=8, highfreq_factor=4):
   diff = dctlowfreq > med
   return ImageHash(diff)
 
+
+
+# -----------------------------------------------------------------------------
+#
+# Affine functions
+#
+# -----------------------------------------------------------------------------
+
+def rotate_bound(im, angle):
+    """Function from PyImageSearch
+    from https://github.com/PyImageSearch/imutils/blob/c12f15391fcc945d0d644b85194b8c044a392e0a/imutils/convenience.py#L41
+    """
+    # grab dimensions of the image and then determine center
+    (h, w) = im.shape[:2]
+    (cX, cY) = (w / 2, h / 2)
+    M = cv.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+
+    # compute the new bounding dimensions of the image
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+
+    # adjust the rotation matrix to take into account translation
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+
+    # perform the actual rotation and return the image
+    return cv.warpAffine(im, M, (nW, nH))
+
 # -----------------------------------------------------------------------------
 #
 # Enhance, degrade, filter
 #
 # -----------------------------------------------------------------------------
 
-def blend(im_bottom, im_top, alpha):
+def blend(im_bottom: np.ndarray, im_top: np.ndarray, alpha: float) -> np.ndarray:
   """Blend the top image over the bottom image
   :param im_bottom: numpy.ndarray original image
   :param im_top: numpy.ndarray new image
@@ -64,54 +98,68 @@ def blend(im_bottom, im_top, alpha):
   return cv.addWeighted(im_bottom, 1.0 - alpha, im_top, alpha, 1.0)    
 
 
-def equalize(im, fac):
-  """Equalize histograms using CLAHE
+def equalize(im: np.ndarray, fac: float, clip_limit: float=2.0, grid_size: tuple=(8,8)) -> np.ndarray:
+  """Equalize histograms using CLAHE. 
+  Applying in RGB space yields cleaner white balance and less contrast
+  Applying in YUV/LAB space yields higher/improved contrast
   :param im: numpy.ndarray BGR image
   :param alpha_range: alpha range for blending
   :returns numpy.ndarray BGR image
   """
-  im = ensure_np(im)
-  yuv = cv.cvtColor(im, cv.COLOR_BGR2YUV)
-  clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-  yuv[:, :, 0] = clahe.apply(yuv[:, :, 0])
-  # yuv[:, :, 0] = cv.equalizeHist(yuv[:, :, 0])  # equalize Y channel histogram
-  im_eq = cv.cvtColor(yuv, cv.COLOR_YUV2BGR)
-  im_dst =  blend(im, im_eq, fac)
+  # BGR to YUV to BGR
+  im_dst = cv.cvtColor(im, cv.COLOR_BGR2YUV)
+  # with CLAHE
+  # clahe = cv.createCLAHE(clipLimit=clip_limit, tileGridSize=grid_size)
+  clahe = cv.createCLAHE(clip_limit, grid_size)
+  im_dst[:, :, 0] = clahe.apply(im_dst[:, :, 0])
+  im_dst = cv.cvtColor(im_dst, cv.COLOR_YUV2BGR)
+  # with histograms
+  # im_dst[:, :, 0] = cv.equalizeHist(im_yuv[:, :, 0])  # equalize Y channel histogram
+  # im_dst = cv.cvtColor(im, cv.COLOR_BGR2LAB)
+  # im_dst[:, :, 0] = clahe.apply(im_dst[:, :, 0])
+  # im_dst[:, :, 1] = clahe.apply(im_dst[:, :, 1])
+  # im_dst[:, :, 2] = clahe.apply(im_dst[:, :, 2])
+  # im_dst = cv.cvtColor(im_dst, cv.COLOR_LAB2BGR)
+  im_dst =  blend(im, im_dst, fac)
   return im_dst
 
 
-def compress(im, fac, im_type='jpg'):
+def compress(im: np.ndarray, fac, compression_type='JPEG'):
   """Degrade image using JPEG or WEBP compression
   :param im: (numpy.ndarray) BGR image
-  :param im_type: (str) image extension (jpg, wep)
+  :param compression_type: (str) image extension (jpg, wep)
   :param fac: image compression where 1.0 maps to quality=0 and 0.0 maps to quality=100
   """
-  q_flag = cv.IMWRITE_WEBP_QUALITY if im_type == 'webp' else cv.IMWRITE_JPEG_QUALITY
-  quality = int(np.interp(fac, [0.0, 1.0], (100, 0)))
+  q_flag = cv.IMWRITE_WEBP_QUALITY if compression_type == 'WEBP' else cv.IMWRITE_JPEG_QUALITY
+  im_type = 'jpg'  if compression_type == 'JPEG' else 'webp'
+  quality = int(np.interp(fac, [0.0, 1.0], (0, 100)))
   _, im_enc = cv.imencode(f'.{im_type}', im, (int(q_flag), quality))
   im_dst =  cv.imdecode(im_enc, cv.IMREAD_UNCHANGED)
   return im_dst
 
-def compress_jpg(im, fac):
+
+def compress_jpg(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrade image using JPEG or WEBP compression
   :param im: (numpy.ndarray) BGR image
   :param fac: image compression where 1.0 maps to quality=0 and 0.0 maps to quality=100
   """
-  return compress(im, fac, 'jpg')
+  return compress(im, fac, 'JPEG')
 
-def compress_webp(im, fac):
+
+def compress_webp(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrade image using WEBP compression
   :param im: (numpy.ndarray) BGR image
   :param fac: image compression where 1.0 maps to quality=0 and 0.0 maps to quality=100
   """
-  return compress(im, fac, 'webp')
+  return compress(im, fac, 'WEBP')
 
 
-def blur_motion_v(im, fac):
+def blur_motion_v(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrade image using vertical motion blur
   """
   w,h = im.shape[:2][::-1]
   k = max(1, int((fac * 0.01125) * max(w,h)))  # 0.01, 0.016
+  # k = max(1, int((fac * 0.05) * max(w,h)))  # 0.01, 0.016
   k = k + 1 if k % 2 else k
   kernel_v = np.zeros((k, k))
   kernel_v[:, int((k - 1)/2)] = np.ones(k)  # Fill middle row with ones
@@ -120,11 +168,12 @@ def blur_motion_v(im, fac):
   return im_dst
 
 
-def blur_motion_h(im, fac):
+def blur_motion_h(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrade image using horizontal motion blur
   """
   w,h = im.shape[:2][::-1]
   k = max(1, int((fac * 0.01125) * max(w,h)))  # 0.01, 0.016
+  # k = max(1, int((fac * 0.05) * max(w,h)))  # 0.01, 0.016
   k = k + 1 if k % 2 else k
   kernel_h = np.zeros((k, k)) 
   kernel_h[int((k - 1)/2), :] = np.ones(k)  # Fill middle row with ones
@@ -133,7 +182,7 @@ def blur_motion_h(im, fac):
   return im_dst
 
 
-def blur_bilateral(im, fac):
+def blur_bilateral(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrade image using bilateral blurring. This reduces texture and noise.
   """
   fac = np.interp(fac, [0.0, 1.0], [0.0, 0.1])
@@ -146,8 +195,8 @@ def blur_bilateral(im, fac):
   return im_dst
 
 
-def blur_gaussian(im, fac):
-  """Degrade image using bilateral blurring. This reduces texture and noise.
+def blur_gaussian(im: np.ndarray, fac: float) -> np.ndarray:
+  """Degrade image using Gaussian blur. This reduces texture and noise.
   """
   fac = np.interp(fac, [0.0, 1.0], [0.0, 0.1])
   dim_max = max(im.shape[:2])
@@ -158,28 +207,27 @@ def blur_gaussian(im, fac):
   return im_dst
 
 
-def scale_destructive(im, fac):
+def rescale(im: np.ndarray, fac: float, interp_down: int=cv.INTER_CUBIC, interp_up: int=cv.INTER_CUBIC) -> np.ndarray:
   """Degrades image by reducing scale then rescaling to original size
   """
-  amt = np.interp(fac, [0.0, 1.0], (1.0, 0.25))
   w,h = im.shape[:2][::-1]
-  nw,nh = (int(amt * w), int(amt * h))
-  im_dst = resize(im, width=nw, height=nh, interp=cv.INTER_CUBIC)
-  im_dst = resize(im_dst, width=w, height=h, force_fit=True, interp=cv.INTER_CUBIC)
+  nw,nh = (max(1, int(fac * w)), max(1, int(fac * h)))
+  im_dst = resize(im, width=nw, height=nh, interp=interp_down)
+  im_dst = resize(im_dst, width=w, height=h, force_fit=True, interp=interp_up)
   return im_dst
 
 
-def _enhance(im, enhancement, amt):
+def _enhance(im: np.ndarray, enhancement:ImageEnhance._Enhance, fac: float) -> np.ndarray:
   """Transform image using Pillow enhancements
   :param im: numpy.ndarray
-  :param enhancement: PIL.ImageEnhance
+  :param enhancement:Enhance
   :param amt: float
   :returns numpy.ndarray
   """
-  return ensure_np(enhancement(ensure_pil(im)).enhance(amt))
+  return ensure_np(enhancement(ensure_pil(im)).enhance(fac))
 
 
-def sharpness(im, fac):
+def sharpness(im: np.ndarray, fac: float) -> np.ndarray:
   """Adjust sharpness
   :param im: numpy.ndarray
   :param fac: normalized float
@@ -189,7 +237,7 @@ def sharpness(im, fac):
   return _enhance(im, ImageEnhance.Sharpness, amt)
 
 
-def brightness(im, fac):
+def brightness(im: np.ndarray, fac: float) -> np.ndarray:
   """Increase brightness
   :param im: numpy.ndarray
   :param fac: normalized float
@@ -199,7 +247,7 @@ def brightness(im, fac):
   return _enhance(im, ImageEnhance.Brightness, amt)
 
 
-def darkness(im, fac):
+def darkness(im: np.ndarray, fac: float) -> np.ndarray:
   """Darken image
   :param im: numpy.ndarray
   :param fac: normalized float
@@ -209,7 +257,7 @@ def darkness(im, fac):
   return _enhance(im, ImageEnhance.Brightness, amt)
 
 
-def contrast(im, fac):
+def contrast(im: np.ndarray, fac: float) -> np.ndarray:
   """Increase contrast
   :param im: numpy.ndarray
   :param fac: normalized float
@@ -219,7 +267,7 @@ def contrast(im, fac):
   return _enhance(im, ImageEnhance.Contrast, amt)
 
 
-def shift(im, fac):
+def shift(im: np.ndarray, fac: float) -> np.ndarray:
   """Degrades image by superimposing image with offset xy and applies random blend
   """
   w,h = im.shape[:2][::-1]
@@ -243,7 +291,7 @@ def shift(im, fac):
   return blend(im, im_dst, alpha)
 
 
-def chromatic_aberration(im, fac, channel=0):
+def chromatic_aberration(im: np.ndarray, fac: float, channel: int=0, max_distance: int=5) -> np.ndarray:
   """Scale-shift color channel and then superimposes it back into image
   :param channel: int for BGR channel 0 = B
   """
@@ -252,8 +300,8 @@ def chromatic_aberration(im, fac, channel=0):
   w,h = im.shape[:2][::-1]
   im_c = im.copy()
   # dx,dy = value_range
-  dx = np.interp(fac, [0.0, 1.0], (0, 5))
-  dy = np.interp(fac, [0.0, 1.0], (0, 5))
+  dx = np.interp(fac, [0.0, 1.0], (0, max_distance))
+  dy = np.interp(fac, [0.0, 1.0], (0, max_distance))
   # inner crop
   xyxy = list(np.array([0,0,w,h]) + np.array([dx, dy, -dx, -dy]))
   bbox = BBox(*xyxy, w, h)
@@ -266,7 +314,7 @@ def chromatic_aberration(im, fac, channel=0):
   return im_dst
 
 
-def trans_bgr2gray(im, fac):
+def grayscale(im: np.ndarray, fac: float) -> np.ndarray:
   return blend(im, gray2bgr(bgr2gray(im)), fac)
 
 
@@ -276,9 +324,9 @@ def trans_bgr2gray(im, fac):
 #
 # -----------------------------------------------------------------------------
 
-def np2pil(im, swap=True):
+def np2pil(im: Union[np.ndarray, Image.Image], swap: bool=True) -> Image:
   """Ensure image is Pillow format
-    :param im: image in numpy or PIL.Image format
+    :param im: image in numpy or format
     :returns image in Pillow RGB format
   """
   try:
@@ -301,9 +349,9 @@ def np2pil(im, swap=True):
     return Image.fromarray(im.astype('uint8'), color_mode)
 
 
-def pil2np(im, swap=True):
+def pil2np(im: Image, swap=True):
   """Ensure image is Numpy.ndarry format
-    :param im: image in numpy or PIL.Image format
+    :param im: image in numpy or format
     :returns image in Numpy uint8 format
   """
   if type(im) == np.ndarray:
@@ -321,10 +369,10 @@ def pil2np(im, swap=True):
   return im
 
 
-def is_pil(im):
+def is_pil(im: Union[Image.Image, np.ndarray]) -> bool:
   '''Ensures image is Pillow format
-  :param im: PIL.Image image
-  :returns bool if is PIL.Image
+  :param im: image
+  :returns bool if is
   '''
   try:
     im.verify()
@@ -333,32 +381,31 @@ def is_pil(im):
     return False
 
 
-def is_np(im):
+def is_np(im: Union[Image.Image, np.ndarray]) -> bool:
   '''Checks if image if numpy
   '''
   return type(im) == np.ndarray
 
-def ensure_np(im):
+
+def ensure_np(im: Union[Image.Image, np.ndarray]) -> np.ndarray:
   """Lazily force image type to numpy.ndarray
   """
   return pil2np(im) if is_pil(im) else im
 
-def ensure_pil(im):
-  """Lazily force image type to PIL.Image
+
+def ensure_pil(im: Union[Image.Image, np.ndarray]) -> Image:
+  """Lazily force image type to
   """
   return np2pil(im) if is_np(im) else im
 
 
-def num_channels(im):
+def num_channels(im: Union[Image.Image, np.ndarray]) -> int:
   '''Number of channels in numpy.ndarray image
   '''
-  if len(im.shape) > 2:
-    return im.shape[2]
-  else:
-    return 1
+  return im.shape[2] if len(im.shape) > 2 else 1
 
 
-def is_grayscale(im, threshold=5):
+def is_grayscale(im: np.ndarray, threshold: int=5) -> bool:
   """Returns True if image is grayscale
   :param im: (numpy.array) image
   :return (bool) of if image is grayscale"""
@@ -368,7 +415,7 @@ def is_grayscale(im, threshold=5):
   return mean < threshold
 
 
-def crop_roi(im, bbox):
+def crop_roi(im: np.ndarray, bbox: BBox) -> np.ndarray:
   """Crops ROI
   :param im: (np.ndarray) image BGR
   :param bbox: (BBox)
@@ -380,7 +427,7 @@ def crop_roi(im, bbox):
   return im_roi
 
 
-def blur_bboxes(im, bboxes, fac=0.33, iters=1):
+def blur_bboxes(im: np.ndarray, bboxes, fac=0.33, iters=1):
   """Blur ROI
   :param im: (np.ndarray) image BGR
   :param bbox: (BBox)
@@ -406,7 +453,7 @@ def blur_bboxes(im, bboxes, fac=0.33, iters=1):
   return im
 
 
-def pixellate_bboxes(im, bboxes, cell_size=(5,6), expand_per=0.0):
+def pixellate_bboxes(im: np.ndarray, bboxes, cell_size=(5,6), expand_per=0.0):
   """Pixellates ROI using Nearest Neighbor inerpolation
   :param im: (numpy.ndarray) image BGR
   :param bbox: (BBox)
@@ -432,9 +479,8 @@ def pixellate_bboxes(im, bboxes, cell_size=(5,6), expand_per=0.0):
   return im
 
 
-
-def mk_mask(bbox, shape='ellipse', blur_kernel_size=None, blur_iters=1):
-  bboxes = bbox if isinstance(bbox, list) else [bbox]
+def mk_mask(bboxes, shape='ellipse', blur_kernel_size=None, blur_iters=1):
+  bboxes = bboxes if isinstance(bboxes, list) else [bboxes]
   # mk empty mask
   im_mask = create_blank_im(*bboxes[0].dim, 1)
   # draw mask shapes
@@ -454,7 +500,8 @@ def mk_mask(bbox, shape='ellipse', blur_kernel_size=None, blur_iters=1):
       im_mask = cv.GaussianBlur(im_mask, (k, k), k, k)
   return im_mask
 
-def mask_composite(im, im_masked, im_mask):
+
+def mask_composite(im: np.ndarray, im_masked, im_mask):
   """Masks two images together using grayscale mask
   :param im: the base image
   :param im_masked: the image that will be masked on top of the base image
@@ -466,7 +513,7 @@ def mask_composite(im, im_masked, im_mask):
   return (im).astype(np.uint8)
 
 
-def blur_bbox_soft(im, bbox, iters=1, expand_per=-0.1, multiscale=True,
+def blur_bbox_soft(im: np.ndarray, bbox, iters=1, expand_per=-0.1, multiscale=True,
                               mask_k_fac=0.125, im_k_fac=0.33, shape='ellipse'):
   """Blurs objects using multiple blur scale per bbox
   """
@@ -509,7 +556,7 @@ def blur_bbox_soft(im, bbox, iters=1, expand_per=-0.1, multiscale=True,
     im_dst = im_alpha[:, :, None] * im_blur + (1 - im_alpha)[:, :, None] * im_dst
     im_mask = cv.GaussianBlur(im_mask, (k_im, k_im), k_im, 0)
 
-  #im_dst = mask_composite(im, im_blur, im_mask)
+  #im_dst = mask_composite(im: np.ndarray, im_blur, im_mask)
 
   return (im_dst).astype(np.uint8)
 
@@ -536,6 +583,7 @@ def write_animated_gif(fp, frames, format='GIF', save_all=True, optimize=True, d
       LOG.info(f'{Path(fp).name}: {s:,}KB, {len(frames)} frames')
 
 
+
 # -----------------------------------------------------------------------------
 #
 # Placeholder images
@@ -543,7 +591,7 @@ def write_animated_gif(fp, frames, format='GIF', save_all=True, optimize=True, d
 # -----------------------------------------------------------------------------
 
 
-def create_blank_im(w, h, c=3, dtype=np.uint8):
+def create_blank_im(w:int, h:int, c: int=3, dtype=np.uint8) -> np.ndarray:
   """Creates blank np image
   :param w: width
   :param h: height
@@ -551,14 +599,11 @@ def create_blank_im(w, h, c=3, dtype=np.uint8):
   :param dtype: data type
   :returns (np.ndarray)
   """
-  if c == 1:
-    im = np.zeros([h, w], dtype=np.uint8)
-  else:
-    im = np.zeros([h, w, c], dtype=np.uint8)
-  return im
+  dim = [h, w] if c == 1 else [h, w, c]
+  return np.zeros(dim, dtype=np.uint8)
 
 
-def create_random_im(w, h, c=3, low=0, high=255, dtype=np.uint8):
+def create_random_im(w:int, h:int, c:int=3, low: int=0, high: int=255, dtype=np.uint8) -> np.ndarray:
   """Creates blank np image
   :param w: width
   :param h: height
@@ -581,7 +626,7 @@ def create_random_im(w, h, c=3, low=0, high=255, dtype=np.uint8):
 #
 # -----------------------------------------------------------------------------
 
-def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR):
+def resize(im: np.ndarray, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR):
   """FIXME: Resizes image, scaling issues with floating point numbers
   :param im: (nump.ndarray) image
   :param width: int
@@ -622,49 +667,49 @@ def resize(im, width=None, height=None, force_fit=False, interp=cv.INTER_LINEAR)
 #
 # -----------------------------------------------------------------------------
 
-def bgr2gray(im):
+def bgr2gray(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (BGR)
     :returns Numpy.ndarray (Gray)
   """
   return cv.cvtColor(im, cv.COLOR_BGR2GRAY)
 
-def gray2bgr(im):
+def gray2bgr(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (Gray)
     :returns Numpy.ndarray (BGR)
   """
   return cv.cvtColor(im, cv.COLOR_GRAY2BGR)
 
-def bgr2rgb(im):
+def bgr2rgb(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (BGR)
     :returns Numpy.ndarray (RGB)
   """
   return cv.cvtColor(im, cv.COLOR_BGR2RGB)
 
-def rgb2bgr(im):
+def rgb2bgr(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (RGB)
     :returns Numpy.ndarray (RGB)
   """
   return cv.cvtColor(im, cv.COLOR_RGB2BGR)
 
-def bgra2rgba(im):
+def bgra2rgba(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (BGRA)
     :returns Numpy.ndarray (RGBA)
   """
   return cv.cvtColor(im, cv.COLOR_BGRA2RGBA)
 
-def rgba2bgra(im):
+def rgba2bgra(im: np.ndarray) -> np.ndarray:
   """Wrapper for cv2.cvtColor transform
     :param im: Numpy.ndarray (RGB)
     :returns Numpy.ndarray (RGB)
   """
   return cv.cvtColor(im, cv.COLOR_RGBA2BGRA)
 
-def bgr2luma(im):
+def bgr2luma(im: np.ndarray) -> np.ndarray:
   """Converts BGR image to grayscale Luma
   :param im: np.ndarray BGR uint8
   :returns nd.array GRAY uint8
@@ -679,6 +724,7 @@ def bgr2luma(im):
 # Visualize
 #
 # -----------------------------------------------------------------------------
+
 def montage(im_arr, n_cols=3):
   # temporary function
   n_index, height, width, intensity = im_arr.shape
@@ -712,10 +758,10 @@ def load_hdr(fp):
   return (im * 255).astype(np.uint8)
 
 
-def load_heif(fp):
-  """Loads HEIF (High Efficient Image Format) image into PIL.Image
+def load_heif(fp: Union[str, Path]) -> Image.Image:
+  """Loads HEIF (High Efficient Image Format) image into
   :param fp: (str) filepath
-  :returns PIL.Image
+  :returns
   """
   try:
     import pyheif
@@ -725,6 +771,11 @@ def load_heif(fp):
     return None
 
 
+# -----------------------------------------------------------------------------
+#
+# Enumerated transform types
+#
+# -----------------------------------------------------------------------------
 
 # pixel-level transforms
 IMAGE_TRANSFORMS = {
@@ -735,89 +786,12 @@ IMAGE_TRANSFORMS = {
   'blur-h': blur_motion_h,
   'blur-bilateral': blur_bilateral,
   'blur': blur_gaussian,
-  'scale-destructive': scale_destructive,
+  'rescale': rescale,
   'brighten': brightness,
   'darken': darkness,
   'sharpness': sharpness,
   'contrast': contrast,
   'shift': shift,
   'chromatic-aberration': chromatic_aberration,
-  'grayscale': trans_bgr2gray,
-  # tint
-  # canny-edges
-  # solarize
-  # posterize
-  # desaturate
-  # pixellate
-  # noise-mono
-  # noise-color
-  # color-jitter
-  # glitch
-  # blockout
-  # gamma
-  # blur motion
-  # blur motion h
-  # blur motion v
+  'grayscale': grayscale,
 }
-
-
-# -----------------------------------------------------------------------------
-#
-# Deprecated. For reference.
-#
-# -----------------------------------------------------------------------------
-
-def _deprecated_circle_blur_soft_edges(im, bboxes, im_ksize=51, mask_ksize=51,
-  sigma_x=51, sigma_y=None, iters=2):
-  """Blurs ROI using soft edges
-  """
-  if not bboxes:
-    return im
-  elif not type(bboxes) == list:
-    bboxes = list(bboxes)
-
-  # force kernels odd
-  im_ksize = im_ksize if im_ksize % 2 else im_ksize + 1
-  mask_ksize = mask_ksize if mask_ksize % 2 else mask_ksize + 1
-  sigma_x = sigma_x if sigma_x % 2 else sigma_x + 1
-  sigma_y = sigma_y if sigma_y else sigma_x
-
-  # mk empty mask
-  h,w,c = im.shape
-  im_mask = np.zeros((h,w))
-
-  # draw mask shapes
-  for bbox in bboxes:
-    #im_mask = cv.rectangle(im_mask, bbox.p1.xy_int, bbox.p2.xy_int, (255,255,255), -1)
-    #im_mask = cv.circle(im_mask, bbox.cxcy_int, bbox.w,(255,255,255), -1)
-    im_mask = cv.ellipse(im_mask, bbox.cxcy_int, bbox.wh_int, 0, 0, 360, (255,255,255), -1)
-
-  # use sigma 1/4 size of blur kernel
-  im_blur = cv.GaussianBlur(im, (im_ksize,im_ksize), im_ksize//4, 0, im_ksize//4)
-  im_dst = im.copy()
-
-  for i in range(iters):
-    im_mask = cv.blur(im_mask, ksize=(mask_ksize, mask_ksize))
-    im_mask = cv.GaussianBlur(im_mask, (mask_ksize, mask_ksize), mask_ksize, mask_ksize)
-    im_alpha = im_mask / 255.
-    im_dst = im_alpha[:, :, None] * im_blur + (1 - im_alpha)[:, :, None] * im_dst
-
-  return (im_dst).astype(np.uint8)
-
-
-def _deprecated_compound_blur_bboxes(im, bboxes, iters=2, expand_per=-0.15, opt_pixellate=True):
-  """Pixellates and blurs object
-  """
-  if not bboxes:
-    return im
-  elif not type(bboxes) == list:
-    bboxes = list(bboxes)
-
-  k = max([min(b.w_int, b.h_int) for b in bboxes])
-  im_ksize = k // 2  # image blur kernel
-  mask_ksize = k // 10  # mask blur kernel
-
-  print('mask_ksize', mask_ksize, 'im k', im_ksize)
-  bboxes_inner = [b.expand_per(expand_per, keep_edges=True) for b in bboxes]
-  im = circle_blur_soft_edges(im, bboxes_inner, im_ksize=im_ksize, mask_ksize=mask_ksize, iters=iters)
-  return im

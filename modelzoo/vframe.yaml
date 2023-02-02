@@ -36,10 +36,17 @@ anchors:
   vframe-base: &vframe-base
     <<: *yolo-base
     notes: Created by VFRAME https://vframe.io
+  vframe-base-onnx: &vframe-base-onnx
+    <<: *yolo-base
+    processor: yolov5_onnx
+    notes: Created by VFRAME https://vframe.io
 
   ultralytics-base: &ultralytics-base
-    # meta
     <<: *yolo-base
+    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
+  ultralytics-base-onnx: &ultralytics-base-onnx
+    <<: *yolo-base
+    processor: yolov5_onnx
     notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
 
 
@@ -48,8 +55,8 @@ anchors:
 
   coco-base: &coco-base
     <<: *ultralytics-base
-    local: pytorch/detection/coco/
-    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/coco/
+    local: detection/coco/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/detection/coco/
   coco-n6: &coco-n6
     <<: *coco-base
     width: 640
@@ -76,6 +83,38 @@ anchors:
     height: 1280
     model: coco_x6.pt
 
+  # ONNX
+  coco-base-onnx: &coco-base-onnx
+    <<: *ultralytics-base
+    processor: yolov5_onnx
+    local: detection/coco/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/coco/
+  coco-n6-onnx: &coco-n6-onnx
+    <<: *coco-base-onnx
+    width: 640
+    height: 640
+    model: coco_n6.onnx
+  coco-s6-onnx: &coco-s6-onnx
+    <<: *coco-base-onnx
+    width: 640
+    height: 640
+    model: coco_s6.onnx
+  coco-m6-onnx: &coco-m6-onnx
+    <<: *coco-base-onnx
+    width: 720
+    height: 720
+    model: coco_m6.onnx
+  coco-l6-onnx: &coco-l6-onnx
+    <<: *coco-base-onnx
+    width: 960
+    height: 960
+    model: coco_l6.onnx
+  coco-x6-onnx: &coco-x6-onnx
+    <<: *coco-base-onnx
+    width: 1280
+    height: 1280
+    model: coco_x6.onnx
+
 
   # --------------------------------------------------------------------
   # Objects365
@@ -86,8 +125,8 @@ anchors:
     notes: >
       Trained by Glenn Jocher Ultralytics https://github.com/ultralytics/yolov5/pull/5194#issuecomment-948073928
       python train.py --data Objects365.yaml --batch 224 --weights --cfg yolov5m.yaml --epochs 30 --img 640 --hyp hyp.scratch-low.yaml --device 0,1,2,3,4,5,6
-    local: pytorch/detection/objects365/
-    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/objects365/
+    local: detection/objects365/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/detection/objects365/
   objects365-m: &objects365-m
     <<: *objects365-base
     width: 640
@@ -98,11 +137,12 @@ anchors:
   # --------------------------------------------------------------------
   # Face redaction
 
+  # PyTorch
   face-base: &face-base
     <<: *vframe-base
     name: YOLOV5 Face
-    local: pytorch/detection/face/
-    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/face/
+    local: detection/face/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/detection/face/
   face-18-n6: &face-18-n6
     <<: *face-base
     width: 960
@@ -118,17 +158,27 @@ anchors:
     width: 1280
     height: 1280
     model: yoloface_18_l6.pt
+  
+  # ONNX
+  face-base-onnx: &face-base-onnx
+    <<: *vframe-base-onnx
+    local: detection/face/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/onnx/detection/face/
+  face-lg-onnx: &face-lg-onnx
+    <<: *face-base-onnx
+    width: 960
+    height: 960
+    model: yoloface_lg_960.onnx
 
 
   # --------------------------------------------------------------------
-  # Conflict zone
-
   # RBK250
+
   rbk250-base: &rbk250-base
     <<: *vframe-base
     name: YOLOV5 RBK250
-    local: pytorch/detection/rbk250/
-    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/rbk250/
+    local: detection/rbk250/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/detection/rbk250/
   rbk250-48: &rbk250-48
     <<: *rbk250-base
     width: 960
@@ -149,25 +199,89 @@ anchors:
     model: rbk250_03a3_l6_960.pt
 
 
+  # --------------------------------------------------------------------
   # 9N235/210
+
   9n235-base: &9n235-base
     <<: *vframe-base
     name: YOLOV5 9N235
     width: 1280
     height: 1280
     threshold: 0.65
-    local: pytorch/detection/9n235/
-    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/pytorch/detection/9n235/
-  9n235-07: &9n235-07
+    local: detection/9n235/
+    remote: https://vframe.ams3.digitaloceanspaces.com/v2/models/detection/9n235/
+  9n235-base-pt: &9n235-base-pt
     <<: *9n235-base
-    notes: Trained at 960x960, large model arch, 0.97 F1
-    model: 9n235_07_l6_960.pt
+    processor: yolov5_pytorch
+  9n235-base-onnx: &9n235-base-onnx
+    <<: *9n235-base
+    processor: yolov5_onnx
 
+  # pytorch
+  # large
+  9n235-01c-l6: &9n235-01c-l6
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_l6.pt
+  9n235-01c-l: &9n235-01c-l
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_l.pt
+  # medium
+  9n235-01c-m6: &9n235-01c-m6
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_m6.pt
+  9n235-01c-m: &9n235-01c-m
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_m.pt
+  # small
+  9n235-01c-s6: &9n235-01c-s6
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_s6.pt
+  9n235-01c-s: &9n235-01c-s
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_s.pt
+  # nano
+  9n235-01c-n6: &9n235-01c-n6
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_n6.pt
+  9n235-01c-n: &9n235-01c-n
+    <<: *9n235-base-pt
+    model: vf_9n235_01c_n.pt
+  # onnx
+  # large
+  9n235-01c-l6: &9n235-01c-l6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_l6.onnx
+  9n235-01c-l: &9n235-01c-l-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_l.onnx
+  # medium
+  9n235-01c-m6: &9n235-01c-m6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_m6.onnx
+  9n235-01c-m: &9n235-01c-m-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_m.onnx
+  # small
+  9n235-01c-s6: &9n235-01c-s6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_s6.onnx
+  9n235-01c-s: &9n235-01c-s-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_s.onnx
+  # nano
+  9n235-01c-n6: &9n235-01c-n6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_n6.onnx
+  9n235-01c-n: &9n235-01c-n-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01c_n.onnx
+
+
+
+# --------------------------------------------------------------------
+# CLI shortcuts for models with variations
 
 models:
-
-  # --------------------------------------------------------------------
-  # CLI shortcuts for models with variations
 
   # COCO
   coco:
@@ -183,6 +297,20 @@ models:
   coco-xl:
     <<: *coco-x6
 
+  # COCO ONNX
+  coco-onnx:
+    <<: *coco-l6-onnx
+  coco-nn-onnx:
+    <<: *coco-n6-onnx
+  coco-sm-onnx:
+    <<: *coco-s6-onnx
+  coco-md-onnx:
+    <<: *coco-m6-onnx
+  coco-lg-onnx:
+    <<: *coco-l6-onnx
+  coco-xl-onnx:
+    <<: *coco-x6-onnx
+
   # Objects365
   objects365:
     <<: *objects365-m
@@ -197,12 +325,57 @@ models:
   face-lg:
     <<: *face-18-l6
 
-  # 9n235
-  9n235:
-    <<: *9n235-07
+  face-onnx:
+    <<: *face-base-onnx
+    model: yoloface_lg_960.onnx
+  face-lg-onnx:
+    <<: *face-base-onnx
+    model: yoloface_lg_960.onnx
+  face-xl-onnx:
+    <<: *face-base-onnx
+    model: yoloface_lg_960.onnx
 
   # RBK250
   rbk250:
     <<: *rbk250-03b
   rbk250-03a3:
     <<: *rbk250-03a3
+  
+  # 9n235
+  9n235:
+    <<: *9n235-01c-l6
+  9n235-l6:
+    <<: *9n235-01c-l6
+  9n235-l:
+    <<: *9n235-01c-l
+  9n235-m6:
+    <<: *9n235-01c-m6
+  9n235-m:
+    <<: *9n235-01c-m
+  9n235-s6:
+    <<: *9n235-01c-s6
+  9n235-s:
+    <<: *9n235-01c-s
+  9n235-n6:
+    <<: *9n235-01c-n6
+  9n235-n:
+    <<: *9n235-01c-n
+  # onnx
+  9n235-onnx:
+    <<: *9n235-01c-l6-onnx
+  9n235-l6-onnx:
+    <<: *9n235-01c-l6-onnx
+  9n235-l-onnx:
+    <<: *9n235-01c-l-onnx
+  9n235-m6-onnx:
+    <<: *9n235-01c-m6-onnx
+  9n235-m-onnx:
+    <<: *9n235-01c-m-onnx
+  9n235-s6-onnx:
+    <<: *9n235-01c-s6-onnx
+  9n235-s-onnx:
+    <<: *9n235-01c-s-onnx
+  9n235-n6-onnx:
+    <<: *9n235-01c-n6-onnx
+  9n235-n-onnx:
+    <<: *9n235-01c-n-onnx

@@ -142,7 +142,7 @@ class Annotation:
     """Create from annotation DataFrame row
     """
     return cls(row.filename, 
-      row.filename_mask,
+      row.get('filename_mask', ''),
       row.label_index, 
       row.label_enum, 
       row.label_display, 
@@ -161,7 +161,7 @@ class Annotation:
       LABEL_DISPLAY_NEG,  # label_display: str
       BBox(0,0,0,0,wh[0],wh[1]),  # bbox
       BLACK,              # color 
-      0,                  # anno_index
+      -1,                  # anno_index
     )
 
 

@@ -29,7 +29,7 @@ from vframe.utils.file_utils import load_txt
 class YOLOV5PyTorch(Detection):
 
   def __init__(self, cfg):
-    """Instantiate an DNN network model
+    """Instantiate DNN network model
     """
     self.cfg = cfg
     dp_yolo = join(DIR_3RDPARTY, 'yolov5')

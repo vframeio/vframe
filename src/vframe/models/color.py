@@ -12,6 +12,7 @@ import colorsys
 import random
 import logging
 
+import numpy as np
 
 LOG = logging.getLogger('VFRAME')
 
@@ -214,12 +215,12 @@ class Color:
     return cls.from_hsva_norm((h, s, v, a))
 
   
-  # def jitter(self, fac=0.1):
-  #   """Jitter RGB values by percentage
-  #   """
-  #   fac = np.clip(fac, 0.0, 1.0)
-  #   r,g,b = [random.uniform(x - fac, x + fac) for x in (self.r, self.g, self.b)]
-  #   return self.__class__.from_rgb_norm((r,g,b))
+  def jitter(self, fac=0.1):
+    """Jitter RGB values by percentage
+    """
+    fac = np.clip(fac, 0.0, 1.0)
+    r,g,b = [random.uniform(x - fac, x + fac) for x in (self.r, self.g, self.b)]
+    return self.__class__.from_rgb_norm((r,g,b))
 
   
   @classmethod

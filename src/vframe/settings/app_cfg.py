@@ -136,7 +136,8 @@ FN_ANNOTATIONS = 'annotations.csv'  # filename
 FN_DETECTIONS = 'detections.json'  # filename
 FN_ANNOTATIONS_SUMMARY = 'annotations_summary.csv'  # filename
 FN_LABELMAP = 'labelmap.yaml'
-DN_IMAGE = 'image'  # real images
+DN_IMAGE = 'image'  # real photo images
+DN_IMAGE_FULL = 'image-full'  # real photo images (original/full size)
 DN_MASK = 'mask'  # mask images
 DN_CRYPTOMATTE = 'cryptomatte'  # cryptomatte images
 DN_COMP = 'comp'  # composite images
@@ -147,9 +148,16 @@ LABEL_ENUM_NEG = 'negative'
 LABEL_DISPLAY_NEG = 'negative'
 LABEL_INDEX_NEG = -1
 
+# Plots
+FN_CORRELOGRAM_LABELS = 'plot_correlogram_labels.png'
+FN_CORRELOGRAM_IMAGES = 'plot_correlogram_images.png'
+FN_LABELS = 'plot_instances.png'
+FN_HISTOGRAM_RATIOS = 'plot_histogram_image_ratios.png'
+
 # YOLO training project files
 DN_IMAGES = 'images'  # directory name for images in concat output
 DN_YOLO_IMAGES = 'images'
+DN_YOLO_LABELS = 'labels'
 
 # CVAT
 FN_ANNOTATIONS_CVAT = 'annotations.xml'  # deprecated
@@ -202,7 +210,7 @@ modelzoo = {k: from_dict(data=v, data_class=DNN) for k,v in modelzoo_yaml.items(
 
 # Default models
 DEFAULT_DETECT_MODEL = {'COCO': 'coco'}
-DEFAULT_CLASSIFICATION_MODEL = 'places365_imagenet_vgg16'
+DEFAULT_CLASSIFICATION_MODEL = 'places365-imagenet-vgg16'
 
 
 # -----------------------------------------------------------------------------
@@ -229,7 +237,7 @@ VALID_PIPE_EXTS = VALID_PIPE_MEDIA_EXTS + VALID_PIPE_DATA_EXTS
 # Drawing defaults
 # -----------------------------------------------------------------------------
 
-DEFAULT_TEXT_SIZE = 14
+DEFAULT_FONT_SIZE = 14
 DEFAULT_STROKE_WEIGHT = 2
 DEFAULT_SIZE_LABEL = 14
 DEFAULT_PADDING_PER = 0.2

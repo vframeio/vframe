@@ -7,7 +7,7 @@
 #
 #############################################################################
 
-import onnxruntime
+import onnxruntime as ort
 import torchvision  # explicit import to avoid nms error
 import torch
 import numpy as np
@@ -15,9 +15,9 @@ import cv2 as cv
 
 from vframe.image.processors.utils.yolov5_utils import letterbox, non_max_suppression
 from vframe.settings.app_cfg import LOG
-from vframe.models.geometry import BBox
+from vframe.models.geometry import BBox, Dimension
 from vframe.image.processors.base import Detection
-from vframe.models.cvmodels import DetectResult, DetectResults
+from vframe.models.cvmodels import DetectResult, DetectResults, PreProcImDim
 from vframe.utils.file_utils import load_txt
 from vframe.utils.im_utils import resize
 
@@ -31,10 +31,20 @@ class YOLOV5ONNX(Detection):
     cfg = self.dnn_cfg
 
     # model
-    providers = ['CUDAExecutionProvider'] if cfg.device > -1 else ['CPUExecutionProvider']
-    self.model = onnxruntime.InferenceSession(cfg.fp_model, providers=providers)
+    providers_list = ort.get_available_providers()
+    # TOOD: add tensorrt provider
+    if dnn_cfg.device < 0:
+      providers = [('CPUExecutionProvider', {})]
+    else:
+      providers = [  
+        ('CUDAExecutionProvider', {
+            'device_id': cfg.device,
+        }),
+      ]
+    
+    self.model = ort.InferenceSession(cfg.fp_model, providers=providers)
     self.input_name = self.model.get_inputs()[0].name
-    self.dim_model = self.model.get_inputs()[0].shape[2:4][::-1]
+    self.dim_model = Dimension(*self.model.get_inputs()[0].shape[2:4][::-1])
     self.batch_size = self.model.get_inputs()[0].shape[0]
 
     # load class labels
@@ -49,36 +59,27 @@ class YOLOV5ONNX(Detection):
     """Pre-process image
     :param im: (numpy.ndarray) in BGR
     """
-    # resize image using letterbox
-    im = cv.cvtColor(im, cv.COLOR_BGR2RGB)  # ONNX is using RGB
-    if im.shape[2] < self.dnn_cfg.width:
-      im = resize(im, width=self.dnn_cfg.width, interp=cv.INTER_AREA)
-    self.im_preproc, ratio, self.pad = letterbox(im, new_shape=self.dim_model, auto=False, scaleup=False)
-    self.im_preproc = np.transpose(self.im_preproc, (2, 0, 1)).astype(np.float32)  # HWC -> CHW
-    self.im_preproc = np.expand_dims(self.im_preproc, axis=0)
-    self.im_preproc /= 255.0
+
+    im = cv.cvtColor(im, cv.COLOR_BGR2RGB)
+    im = resize(im, width=self.dnn_cfg.width, height=self.dnn_cfg.height, interp=cv.INTER_AREA)
+
+    # TODO: fallback to user input height if model size is dynamic
+    im_dst, ratio, self.pad = letterbox(im, new_shape=self.dim_model.wh, auto=False, scaleup=False)
+    im_dst = np.transpose(im_dst, (2, 0, 1)).astype(np.float32)  # HWC -> CHW
+    im_dst = np.expand_dims(im_dst, axis=0)
+    im_dst /= 255.0
     # image dims
-    self.dim_orig = im.shape[:2][::-1]
-    self.dim_resized = self.dim_model
-    self.dim_letterbox = (self.dim_resized[0], self.dim_resized[1] - self.pad[1]*2)
+    dim_orig = Dimension(*im.shape[:2][::-1])
+    dim_letterbox = Dimension(self.dim_model.w, self.dim_model.w - self.pad[1]*2)
+    return PreProcImDim(im_dst, dim_orig, self.dim_model, dim_letterbox)
 
 
-  def infer(self, im):
-    """Runs pre-processor, inference, and post-processor
-    :param im: (numpy.ndarry) image in BGR
-    :returns (ProcessorResult)
-    """
-    self._pre_process(im)
-    outputs = self.model.run(None, {self.input_name: self.im_preproc})
-    results = self._post_process(outputs)
-    return results
-
-
-  def _post_process(self, outputs):
+  def _post_process(self, outputs, ppimd):
     """Post process net output for YOLOV5 object detection.
     Post-process outputs of ONNX model inference into DetectResults
     Code based on YOLOV5 Ultralytics by Glenn Jocher
     :param outputs: ONNX model inference output
+    :param ppimd: PreProcImDim
     :returns (DetectResult): of object detection resultss
     """
 
@@ -87,7 +88,8 @@ class YOLOV5ONNX(Detection):
     detections = torch.from_numpy(np.array(outputs[0]))
     detections = non_max_suppression(detections,
         conf_thres=self.dnn_cfg.nms_threshold,
-        iou_thres=self.dnn_cfg.iou)
+        iou_thres=self.dnn_cfg.iou,
+        max_det=self.dnn_cfg.max_det)
 
     # benchmark
     if detections[0] is not None:
@@ -98,9 +100,19 @@ class YOLOV5ONNX(Detection):
         conf = output[4]
         if conf >= self.dnn_cfg.threshold:
             xyxy = list(map(int, output[:4]))
-            bbox = BBox(*xyxy, *self.dim_resized).translate(0, -self.pad[1]).to_dim(self.dim_letterbox).redim(self.dim_orig)
+            bbox = BBox(*xyxy, *ppimd.dim_model.wh).translate(0, -self.pad[1]).to_dim(ppimd.dim_letterbox.wh).redim(ppimd.dim_orig.wh)
             class_idx = int(output[5])
             label = self.labels[class_idx]
             detect_results.append(DetectResult(class_idx, conf, bbox, label))
 
     return DetectResults(detect_results)
+
+  
+  def infer(self, im):
+    """Runs pre-processor, inference, and post-processor
+    :param im: (numpy.ndarry) image in BGR
+    :returns (ProcessorResult)
+    """
+    ppimd = self._pre_process(im)
+    outputs = self.model.run(None, {self.input_name: ppimd.im})
+    return self._post_process(outputs, ppimd)

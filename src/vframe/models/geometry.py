@@ -18,6 +18,45 @@ import numpy as np
 from vframe.models.color import Color
 from vframe.settings.app_cfg import LOG
 
+
+# ---------------------------------------------------------------------------
+#
+# Dimension 
+#
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Dimension:
+  """Dimensions of a 2D frame
+  """
+  w: int
+  h: int
+
+  @property
+  def wh(self):
+    """Return tuple of (width, height)
+    """
+    return (self.w, self.h)
+
+  @property
+  def ratio(self):
+    """Given in w:h
+    """
+    return self.w / self.h
+
+  @property
+  def area(self):
+    return self.w * self.h
+
+  @property
+  def width(self):
+    return self.w
+
+  @property
+  def height(self):
+    return self.h
+
+
 # ---------------------------------------------------------------------------
 #
 # Point classes
@@ -63,7 +102,7 @@ class Point:
     """
     return self.__class__((self.x * scale, self.y * scale))
 
-  
+
   def distance(self, p2):
     """Calculate distance between this point and another
     :param p2: Point
@@ -481,6 +520,46 @@ class BBox:
     dx, dy = ((self.dw - self.w) / 2), ((self.dh - self.h) / 2)
     x1,y1,x2,y2 = (cx - self.w / 2, cy - self.h / 2, cx + self.w / 2, cy + self.h / 2)
     return self.__class__(x1, y1, x2, y2, *self.dim)
+
+
+  def constrained_scale(self, dim):
+    """Scale bbox to new image/canvas dimensions constrained to current image canvas dimensions
+    :param dim: (int, int) width and height dimensions 
+    """
+    # scale current bbox
+    dw, dh = dim
+    if self.dh > self.dw:
+      scale = dh / self.dh
+      dim_new = (scale * self.dw, dh)
+    elif self.dw > self.dh:
+      scale = dw / self.dw
+      dim_new = (dw, scale * self.dh)
+    else:
+      scale = dw / self.dw  # square
+      dim_new = dim
+    return self.redim(dim_new)
+
+
+  def recanvas(self, dim):
+    """Transfer bbox to new image/canvas dimensions
+    :param dim: (int, int) width and height dimensions 
+    """
+    # scale current bbox
+    dw, dh = dim
+    if self.dh > self.dw:
+      scale = dh / self.dh
+      dim_new = (scale * self.dw, dh)
+    elif self.dw > self.dh:
+      scale = dw / self.dw
+      dim_new = (dw, scale * self.dh)
+    else:
+      scale = dw / self.dw  # square
+      dim_new = dim
+    bbox = self.redim(dim_new)
+    # translate and re-init
+    wd2, hd2 = ((dw - dim_new[0])//2, (dh - dim_new[1])//2)
+    xyxy = (bbox.x1 + wd2, bbox.y1 + hd2, bbox.x2 + wd2, bbox.y2 + hd2)
+    return self.__class__(*xyxy, *dim)
 
   
 

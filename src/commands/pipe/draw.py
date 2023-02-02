@@ -73,12 +73,13 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
   
   from os.path import join
 
-  from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
-  from vframe.settings.app_cfg import USE_DRAW_FRAME, OBJECT_COLORS
+  from vframe.settings.app_cfg import (LOG, SKIP_FRAME, USE_DRAW_FRAME,
+      USE_DRAW_FRAME, OBJECT_COLORS)
   from vframe.settings.app_cfg import modelzoo
   from vframe.models.types import FrameImage
   from vframe.models.color import Color
-  from vframe.utils import draw_utils
+  from vframe.utils.draw_utils import draw_bbox
+  from vframe.utils.im_utils import gray2bgr
 
 
   ctx.obj[USE_DRAW_FRAME] = True
@@ -152,13 +153,14 @@ def cli(ctx, sink, opt_data_keys, opt_bbox, opt_no_labels, opt_label, opt_key, o
 
             # draw bbox and optional labeling
             try:
-              im = draw_utils.draw_bbox(im, bbox, color=color,
+              # ensure image is BGR 
+              if len(im.shape) == 2:
+                im = gray2bgr(im)
+              im = draw_bbox(im, bbox, color=color,
                 stroke=opt_stroke, expand=opt_expand,
                 label=label, font_size=opt_size_font, padding=opt_padding_label)
             except Exception as e:
-              LOG.error(e)
-              LOG.debug(bbox)
-              LOG.debug(M.filename)
+              LOG.error(f'Error: "{e}". File: {M.filepath}. BBox: {bbox}')
 
     # update pipe with modified image
     M.images[FrameImage.DRAW] = im

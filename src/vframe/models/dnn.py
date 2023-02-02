@@ -51,6 +51,7 @@ class DNN:
   iou: float=0.45  # intersection over union
   nms: bool = False  # use non-maximum suppression
   nms_threshold: float=0.4  # nms threshold
+  max_det: int=300
   # metadata
   credit: str=''  # how credit should be displayed
   repo: str=''  # author/repo URL

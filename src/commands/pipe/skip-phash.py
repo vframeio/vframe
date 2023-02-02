@@ -41,6 +41,7 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_PREHASH, SKIP_FILE
   from vframe.settings.app_cfg import USE_DRAW_FRAME
   from vframe.utils.im_utils import resize, np2pil, phash, create_blank_im, crop_roi
+  from vframe.utils.im_utils import num_channels, gray2bgr
   from vframe.utils.file_utils import ensure_dir
   from vframe.models.types import FrameImage, MediaType
   from vframe.models.geometry import BBox
@@ -121,6 +122,8 @@ def cli(ctx, sink, opt_thresh, opt_all_frames, opt_prehash, opt_override,
       hash_cur = M.phash
     else:
       im = M.images.get(FrameImage.ORIGINAL)
+      if num_channels(im) == 1:
+        im = gray2bgr(im)
       dim = im.shape[:2][::-1]
       if opt_use_roi:
         im_roi = isolate_roi(im, M.metadata[M.index],dim)
