@@ -19,8 +19,8 @@ from PIL import ImageFile
 import cv2 as cv
 import dacite
 
-from vframe.settings import app_cfg
-from vframe.settings.app_cfg import LOG
+from vframe.settings.app_cfg import LOG, \
+  VALID_PIPE_IMAGE_EXTS, VALID_PIPE_VIDEO_EXTS
 from vframe.models.mediameta import MediaMeta
 from vframe.utils import file_utils
 from vframe.utils.im_utils import pil2np, np2pil, resize, phash
@@ -84,7 +84,7 @@ class FileVideoStream:
       try:
         self.height = int(self.vcap.get(cv.CAP_PROP_FRAME_HEIGHT))
         self.width = int(self.vcap.get(cv.CAP_PROP_FRAME_WIDTH))
-        if file_utils.get_ext(fp).lower() in app_cfg.VALID_PIPE_IMAGE_EXTS:
+        if file_utils.get_ext(fp).lower() in VALID_PIPE_IMAGE_EXTS:
           self.frame_count = 1  # force set image to 1 frame
         else:  
           self.frame_count = int(self.vcap.get(cv.CAP_PROP_FRAME_COUNT))
@@ -216,15 +216,15 @@ class FileVideoStream:
 
 
 
-def mediainfo(fp_in):
+def mediainfo(fp_in, verbose=False):
   """Returns abbreviated video/audio metadata for video files
   :param fp_in: filepath"""
   
   # extension and media type
   ext = file_utils.get_ext(fp_in)
-  if ext in app_cfg.VALID_PIPE_IMAGE_EXTS:
+  if ext in VALID_PIPE_IMAGE_EXTS:
     media_type = 'image'
-  elif ext in app_cfg.VALID_PIPE_VIDEO_EXTS:
+  elif ext in VALID_PIPE_VIDEO_EXTS:
     media_type = 'video'
   else:
     media_type = 'invalid'
@@ -244,7 +244,7 @@ def mediainfo(fp_in):
       width, height = im.size
       data.update({'width': width, 'height': height})
     except Exception as e:
-      log.error(f'{fp_in} not valid. Skipping.')
+      LOG.error(f'{fp_in} not valid. Skipping.')
       data.update({'valid': False})
 
   elif media_type == 'video':
@@ -266,7 +266,7 @@ def mediainfo(fp_in):
         created_at = str(datetime.strptime(encoded_date, '%Z %Y-%m-%d %H:%M:%S'))
       else:
         created_at = str(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-        app_cfg.LOG.warn(f'No date available for {fp_in}. Using now()')
+        LOG.warn(f'No date available for {fp_in}. Using now()')
 
       data.update({
         'codec': video_attrs.get('codec_id', ''),
@@ -279,7 +279,8 @@ def mediainfo(fp_in):
         'created_at': created_at
         })
     else:
-      log.error(f'{fp_in} not valid. Skipping')
+      if verbose:
+        LOG.error(f'{fp_in} not valid. Skipping')
       data.update({'valid': False})
 
   mediameta = dacite.from_dict(data=data, data_class=MediaMeta)

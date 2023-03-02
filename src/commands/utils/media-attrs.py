@@ -21,12 +21,11 @@ import click
 @click.option('-f', '--force', 'opt_force', is_flag=True, 
   help='Overwrite current file')
 @click.option('-t', '--threads', 'opt_threads', default=None, type=int)
+@click.option('--verbose', 'opt_verbose', is_flag=True)
 @click.pass_context
-def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice, opt_force, opt_threads):
+def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice, 
+  opt_verbose, opt_force, opt_threads):
   """Create mediainfo metadata header CSV"""
-
-  # ------------------------------------------------
-  # imports
 
   import os
   from os.path import join
@@ -39,20 +38,18 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice, opt_for
   from pathos.multiprocessing import ProcessingPool as Pool
   from pathos.multiprocessing import cpu_count
   
-  from vframe.settings import app_cfg
+  from vframe.settings.app_cfg import LOG
   from vframe.utils.file_utils import glob_multi, load_txt
   from vframe.utils.video_utils import mediainfo
 
-  log = app_cfg.LOG
 
   if Path(opt_output).is_file() and not opt_force:
-    log.error('File exists. Use "-f/--force" to overwrite')
+    LOG.error('File exists. Use "-f/--force" to overwrite')
     return
 
   if not opt_threads:
     opt_threads = cpu_count()
 
-  log.debug(f'Using {opt_threads} threads')
 
   if Path(opt_input).is_file() and Path(opt_input).suffix.lower() == '.txt':
     fp_items = load_txt(opt_input)
@@ -61,8 +58,6 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice, opt_for
   
   if any(opt_slice):
     fp_items = fp_items[opt_slice[0]:opt_slice[1]]
-
-  log.info(f'Processing: {len(fp_items):,} videos')
 
   # -----------------------------------------------------------
   # start pool worker
@@ -96,6 +91,7 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice, opt_for
     pd.DataFrame.from_dict(errors).to_csv(fp_out_bad, index=False)
 
   # status
-  log.info(f'Processed {len(fp_items):,}')
-  log.info(f'Valid: {len(records):,}, Errors: {len(errors):,}')
+  if opt_verbose:
+    LOG.info(f'Processed {len(fp_items):,}')
+    LOG.info(f'Valid: {len(records):,}, Errors: {len(errors):,}')
     
