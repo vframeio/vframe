@@ -229,22 +229,27 @@ def mediainfo(fp_in, verbose=False):
   else:
     media_type = 'invalid'
 
+  if not Path(fp_in).is_file():
+    media_type = 'invalid'
+
   # init data
   data = {
     'filename': Path(fp_in).name,
     'ext': ext,
-    'media_type': media_type
+    'media_type': media_type,
+    'valid': True,
   }
 
-  if media_type == 'image':
-    
+  if media_type == 'invalid':
+    data.update({'valid': False})
+
+  elif media_type == 'image':
     # extend image metadata
     try:
       im = Image.open(fp_in)
       width, height = im.size
       data.update({'width': width, 'height': height})
     except Exception as e:
-      LOG.error(f'{fp_in} not valid. Skipping.')
       data.update({'valid': False})
 
   elif media_type == 'video':
@@ -279,9 +284,10 @@ def mediainfo(fp_in, verbose=False):
         'created_at': created_at
         })
     else:
-      if verbose:
-        LOG.error(f'{fp_in} not valid. Skipping')
       data.update({'valid': False})
+
+  if not data['valid'] and verbose:
+    LOG.error(f'{fp_in} not valid. Skipping')
 
   mediameta = dacite.from_dict(data=data, data_class=MediaMeta)
   

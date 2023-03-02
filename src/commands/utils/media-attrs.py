@@ -63,14 +63,14 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice,
   # start pool worker
 
   def pool_worker(fp_item):
-    return mediainfo(fp_item)
+    return mediainfo(fp_item, verbose=opt_verbose)
 
   # end pool worker
   # -----------------------------------------------------------
 
   # Multiprocess/threading use imap instead of map via @hkyi Stack Overflow 41920124
   with Pool(opt_threads) as p:
-    pool_results = list(tqdm(p.imap(pool_worker, fp_items), total=len(fp_items)))
+    pool_results = list(tqdm(p.imap(pool_worker, fp_items), total=len(fp_items), desc=f'x{opt_threads} threads'))
 
   # Separate and recast to dict
   records = []
