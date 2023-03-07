@@ -24,7 +24,7 @@ plot_types = ['bar', 'line']
 @click.option('--dpi', 'opt_dpi', 
   default=72, show_default=True,
   help="Pixels per inch resolution for output")
-@click.option('--figsize', 'opt_figsize',
+@click.option('--figsize', 'opt_figsize', type=(int, int),
   default=(1280, 720), show_default=True,
   help="matplotlib figure size (pixels")
 @click.option('--prefix', 'opt_prefix', 
@@ -59,6 +59,8 @@ def cli(sink, opt_input, opt_output, opt_plot_type, opt_dpi, opt_figsize,
   from operator import itemgetter
   from pathlib import Path
 
+  import matplotlib
+  matplotlib.use('Agg')
   import matplotlib.pyplot as plt
   import matplotlib
   import numpy as np
