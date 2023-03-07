@@ -37,9 +37,6 @@ def cli(sink, opt_input, opt_output, opt_min_seconds, opt_max_seconds,
   import os
   from pathlib import Path
   from os.path import join
-  from glob import glob
-  from dataclasses import asdict
-  from operator import itemgetter
 
   import numpy as np
   import pandas as pd

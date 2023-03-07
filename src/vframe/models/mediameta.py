@@ -27,7 +27,10 @@ class MediaMeta:
 
   def __post_init__(self):
     if not self.aspect_ratio and self.valid:
-      self.aspect_ratio = self.width / self.height
+      try:
+        self.aspect_ratio = self.width / self.height
+      except Exception as e:
+        self.valid = False
 
 
 @dataclass
