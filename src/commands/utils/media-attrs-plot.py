@@ -25,9 +25,11 @@ import click
   help='Number of K-Means clusters')
 @click.option('--num-videos', 'opt_n_videos', type=int,
   help='Override actual video number to show and approximated number.')
+@click.option('--bins', 'opt_n_bins', default=10)
+@click.option('--verbose', 'opt_verbose', is_flag=True)
 @click.pass_context
 def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix, 
-  opt_title, opt_n_clusters, opt_n_videos):
+  opt_title, opt_n_clusters, opt_n_videos, opt_n_bins, opt_verbose):
   """Plot media attributes"""
 
   # ------------------------------------------------
@@ -39,6 +41,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   from dataclasses import asdict
   from operator import itemgetter
 
+  from tqdm import tqdm
   import matplotlib.pyplot as plt
   import matplotlib
   matplotlib.use('Agg')
@@ -47,7 +50,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   import pandas as pd
   from sklearn.cluster import KMeans
   
-  from vframe.settings.app_cfg import LOG
+  from vframe.settings.app_cfg import LOG, MEDIA_ATTRS_DTYPES
   from vframe.utils import log_utils, file_utils, video_utils
   from vframe.utils.draw_utils import pixels_to_figsize, set_matplotlib_style
 
@@ -59,68 +62,68 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   set_matplotlib_style(plt)
 
   # read csv
-  dtypes = {
-    'filename': str,
-    'ext': str,
-    'valid': np.bool,
-    'width': int,
-    'height': int,
-    'aspect_ratio': float,
-    'frame_count': int,
-    'codec': str,
-    'duration': float,  # int, but pandas doesn't have int na
-    'frame_rate': float
-    }
-  df = pd.read_csv(opt_input, dtype=dtypes)
+  df = pd.read_csv(opt_input, dtype=MEDIA_ATTRS_DTYPES)
 
-  # patch
+  # aux funcs
+  def make_bins(x, n_bins, verbose=False, prefix='', dtype=np.uint16):
+    interval = int((max(x) - min(x)) // n_bins)
+    if verbose:
+      LOG.debug(f'{prefix} min: {min(x)}, max: {max(x)}, interval: {interval}')
+    return list(range(int(min(x)), int(max(x)) + interval, interval))
+  
+
+  # patch csv data
   df.width.fillna(0, inplace=True)
   df.codec.fillna('', inplace=True)
   df.duration.fillna(0, inplace=True)
   df.frame_rate.fillna(0, inplace=True)
+  df.duration = df.duration.astype(np.uint16) // 1000  # ms to seconds
+  df['seconds'] = df.frame_count / df.frame_rate  # add seconds col
 
   # drop images
-  df = df[df.frame_count > 1]
   n_videos = len(df)
   n_videos_display = n_videos if not opt_n_videos else opt_n_videos
-  LOG.debug(f'Items: {n_videos}')
 
+  # setup tqdm
+  n_plots = 6
+  p_bar = tqdm(range(n_plots), desc='Generating plots')
+
+  def inc_pbar():
+    p_bar.update(1)
+    p_bar.refresh()
 
   # ---------------------------------------------------------------------------
   # Plot width
   # ---------------------------------------------------------------------------
 
-  LOG.debug('Plot width...')
-
   # setup plot
   fig, ax = plt.subplots()
   figsize = pixels_to_figsize(opt_figsize, opt_dpi)
   fig.set_size_inches(figsize)
 
-
   if opt_title:
-    plt.title(f'Video Width Distribution for {n_videos_display:,} Videos')
+    plt.title(f'Width Distribution for {n_videos_display:,} Videos')
   plt.ylabel("Videos")
   plt.xlabel("Width (pixels)")
 
   # set bins
-  bins = (100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100)
+  x = df.width.values.tolist()
+  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='width')
 
   # plot data
-  x = df['width'].values
   plt.hist([x], bins, label=['Width'])
   plt.legend(loc='upper right')
+  plt.xticks(bins)
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_width.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  inc_pbar()
 
   # ---------------------------------------------------------------------------
   # Plot height
   # ---------------------------------------------------------------------------
-
-  LOG.debug('Plot height...')
 
   # setup plot
   fig, ax = plt.subplots()
@@ -128,29 +131,30 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Video Height Distribution for {n_videos_display:,} Videos')
+    plt.title(f'Height Distribution for {n_videos_display:,} Videos')
   plt.ylabel("Videos")
   plt.xlabel("Height (pixels)")
 
   # set bins
-  bins = (100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100)
+  x = df.height.values.tolist()
+  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='height')
 
   # plot data
   x = df['height'].values
   plt.hist([x], bins, label=['height'])
+  plt.xticks(bins)
   plt.legend(loc='upper right')
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_height.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  inc_pbar()
 
 
   # ---------------------------------------------------------------------------
   # Plot FPS
   # ---------------------------------------------------------------------------
-
-  LOG.debug('Plot FPS...')
 
   # setup plot
   fig, ax = plt.subplots()
@@ -163,26 +167,25 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.xlabel("Frames Per Second")
 
   # set bins
-  n_bins = 30
-  bin_size = 1
-  bins = list(range(15, n_bins * bin_size, bin_size))
+  x = df['frame_rate'].values
+  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='frame rate', dtype=np.float64)
 
   # plot data
   x = df['frame_rate'].values
   plt.hist([x], bins, label=['FPS'])
   plt.legend(loc='upper right')
+  plt.xticks(bins)
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_fps.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  inc_pbar()
 
 
   # ---------------------------------------------------------------------------
   # Plot duration distribution
   # ---------------------------------------------------------------------------
-  
-  LOG.debug('Plot duration...')
 
   # setup plot
   fig, ax = plt.subplots()
@@ -194,11 +197,10 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.ylabel("Videos")
   plt.xlabel("Duration (seconds)")
 
-  # set bins
-  bins = list(range(0,15*30, 15))
+  x = df.seconds.values.tolist()
+  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='duration')
 
   # plot data
-  x = [x//1000 for x in df['duration'].values]
   plt.hist([x], bins, label=['Seconds'])
   plt.legend(loc='upper right')
 
@@ -206,13 +208,11 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_duration.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
-
+  inc_pbar()
 
   # ---------------------------------------------------------------------------
   # Plot video dimension distribution
   # ---------------------------------------------------------------------------
-  
-  LOG.debug('Plot dimension...')
 
   # setup plot
   fig, ax = plt.subplots()
@@ -222,7 +222,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   heights = list(df.height.values)
   widths = list(df.width.values)
 
-  #rom sklearn.datasets.samples_generator import make_blobs
+
   X = np.array([np.array([w,h]) for w,h in zip(widths, heights)])
 
   if opt_title:
@@ -249,13 +249,12 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_kmeans.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  inc_pbar()
 
   
   # ---------------------------------------------------------------------------
   # Plot aspect ratios
   # ---------------------------------------------------------------------------
-
-  LOG.debug('Plot aspect ratios...')
 
   cluster_ids = list(y_kmeans)
   centers = kmeans.cluster_centers_
@@ -264,7 +263,6 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
     n_found = cluster_ids.count(cluster_id)
     center = centers[cluster_id]
     dim = int(round(round(center[0])/10)*10), int(round(round(center[1])/10)*10)
-    LOG.info(f'Cluster: {cluster_id}, count: {n_found:,} Dimensions: {dim}')
     o = {
       'width': dim[0],
       'height': dim[1],
@@ -283,7 +281,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Size Distribution for {n_videos_display:,} Videos')
+    plt.title(f'Size Distribution for {n_videos_display:,} Videos (k={opt_n_clusters})')
   plt.ylabel("Videos")
   plt.xlabel("Aspect Ratio")
 
@@ -300,13 +298,13 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_ratio.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  inc_pbar()
 
 
   # ---------------------------------------------------------------------------
   # Save records to CSV
   # ---------------------------------------------------------------------------
 
-  LOG.debug('Generate summary CSV...')
   records = []
   for size_result in size_results:
     dim = int(round(round(center[0])/10)*10), int(round(round(center[1])/10)*10)
@@ -326,17 +324,17 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   # Quick Stats
   # ---------------------------------------------------------------------------
 
-  LOG.info(f'Videos under 1 minute: {(len(df[df.duration < 60*1000]) / len(df)):.2%}')
-  LOG.info(f'Videos under 1.5 minutes: {(len(df[df.duration < 90*1000]) / len(df)):.2%}')
-  LOG.info(f'Videos under 2 minutes: {(len(df[df.duration < 120*1000]) / len(df)):.2%}')
+  if opt_verbose:
+    LOG.info(f'Videos under 1 minute: {(len(df[df.seconds <= 60]) / len(df)):.2%}')
+    LOG.info(f'Videos under 2 minutes: {(len(df[df.duration < 120]) / len(df)):.2%}')
+    LOG.info(f'Videos under 4 minutes: {(len(df[df.duration < 240]) / len(df)):.2%}')
 
-  LOG.info(f'Human Work days @8h: {(df.duration.sum() / 1000 / 60 / 60 / 8):.2f}')
-  LOG.info(f'Human Days @24h: {(df.duration.sum() / 1000 / 60 / 60 / 24):.2f}')
-  LOG.info(f'Computer Work days @30FPS: {(df.frame_count.sum() / 30 / 60 / 60 / 24):.2f}')
-  LOG.info(f'Computer Work days @60FPS: {(df.frame_count.sum() / 60 / 60 / 60 / 24):.2f}')
-  LOG.info(f'Computer Work days @120FPS: {(df.frame_count.sum() / 120 / 60 / 60 / 24):.2f}')
+    LOG.info(f'Human Work days @8h: {(df.duration.sum() / 1000 / 60 / 60 / 8):.2f}')
+    LOG.info(f'Human Days @24h: {(df.duration.sum() / 1000 / 60 / 60 / 24):.2f}')
 
-  LOG.info(f'Frames: {df.frame_count.sum():,}')
-  LOG.info(f'Hours: {(df.duration.sum() / 1000 / 60 / 60):,.2f}')
+    LOG.info(f'Computer Work days @30FPS: {(df.frame_count.sum() / 30 / 60 / 60 / 24):.2f}')
+    LOG.info(f'Computer Work days @60FPS: {(df.frame_count.sum() / 60 / 60 / 60 / 24):.2f}')
+    LOG.info(f'Computer Work days @120FPS: {(df.frame_count.sum() / 120 / 60 / 60 / 24):.2f}')
 
-
+    LOG.info(f'Frames: {df.frame_count.sum():,}')
+    LOG.info(f'Hours: {(df.duration.sum() / 1000 / 60 / 60):,.2f}')

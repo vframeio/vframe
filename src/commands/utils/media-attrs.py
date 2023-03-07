@@ -54,7 +54,7 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice,
   if Path(opt_input).is_file() and Path(opt_input).suffix.lower() == '.txt':
     fp_items = load_txt(opt_input)
   else:
-    fp_items = file_utils.glob_multi(opt_input, opt_exts, recursive=opt_recursive)
+    fp_items = glob_multi(opt_input, opt_exts, recursive=opt_recursive)
   
   if any(opt_slice):
     fp_items = fp_items[opt_slice[0]:opt_slice[1]]
@@ -87,8 +87,8 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice,
 
   # save errors
   if len(errors):
-    fp_out_bad = opt_output.replace('.csv', '_errors.csv')
-    pd.DataFrame.from_dict(errors).to_csv(fp_out_bad, index=False)
+    fp_out_err = opt_output.replace('.csv', '_errors.csv')
+    pd.DataFrame.from_dict(errors).to_csv(fp_out_err, index=False)
 
   # status
   if opt_verbose:

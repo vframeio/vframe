@@ -17,6 +17,7 @@ import operator
 
 import yaml
 import cv2 as cv
+import numpy as np
 from dacite import from_dict
 
 from vframe.models.color import Color
@@ -315,6 +316,24 @@ GPU_ARCHS = {
   '6.0': ['GP100', 'tesla p100'],
   '5.3': ['jetson tx1', 'tegra x1', 'drive cx', 'drive px'],
   '5.2': ['jetson tx2', 'drive-px2', 'drive px'],
+}
+
+# -----------------------------------------------------------------------------
+# Pandas data types
+# -----------------------------------------------------------------------------
+
+# media attributes
+MEDIA_ATTRS_DTYPES = {
+  'filename': str,
+  'ext': str,
+  'valid': np.bool,
+  'width': int,
+  'height': int,
+  'aspect_ratio': float,
+  'frame_count': int,
+  'codec': str,
+  'duration': float,  # int, but pandas doesn't have int na
+  'frame_rate': float
 }
 
 
