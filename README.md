@@ -1,29 +1,22 @@
 # VFRAME: Visual Forensics, Redaction, and Metadata Extraction
 
-VFRAME is a computer vision framework designed for analyzing large media archives of images and videos. It includes a ModelZoo and a customizable plugin architecture to develop custom CLI tools. VFRAME is still under development and code is subject to major changes.
+VFRAME is a computer vision framework designed for analyzing large media archives of images and videos. It includes a model library and a customizable plugin architecture to develop custom CLI tools. VFRAME is still under development and code is subject to major changes.
 
 
-## Setup Conda or pip Environment
+## Setup
 
 ```
 # Clone this repo
 git clone https://github.com/vframeio/vframe
 
-# Create Conda environment
-conda env create -f environment-linux.yml  # Linux CPU (Another step required for GPU)
+# Create Python virtual environment, activate, upgrade
+python -m venv
+source venv/bin/activate
+pip install pip -U
 
-# Activate
-conda activate vframe
-
-# Make an alias to vframe cli (recommended)
-alias vf="python /path/to/vframe/src/cli.py
-
-# or
-cd /path/to/vframe/
-python src/cli.py
+# Install VFRAME CLI with "vf" alias
+pip install -e .
 ```
-
-To run the GPU-accelerated scripts on more recent GPUs (including RTX 3080 Ti or 3090) install PyTorch nightly from <https://pytorch.org/>.
 
 
 ## Test Installation
@@ -34,27 +27,32 @@ vf
 # Show list of image processing commands
 vf pipe
 
-# Show list of modelzoo commands
-vf modelzoo
+# Test model inference
+vf models test
 ```
 
 
-
-## ModelZoo
+## Models
 ```
-# List of modelzoo commands
-vf modelzoo list
+# List of models available
+vf models list
 
 # Download a test model
-vf modelzoo download -m coco
+vf models download -m coco
 
 # Speed test model for 20 iterations
-vf modelzoo benchmark -m coco --iters 20 --device -1  # use CPU
-vf modelzoo benchmark -m coco --iters 20 --device 0 # use GPU 0, 1, etc...
+vf models test -m coco --iters 20 --device -1  # use CPU
+vf models test -m coco --iters 20 --device 0 #  use GPU 0
+
+# Test model for 100 iterations and output CSV
+vf models test -m coco -o /path/to/output.csv -d 0 --iterations 100
+
+# Plot FPS results
+vf models plot -i /path/to/output.csv
+
 ```
 
-Read more about the [ModelZoo](docs/modelzoo.md)
-
+Read more about the [models](docs/models.md)
 
 
 ## Detect Objects
@@ -63,8 +61,7 @@ Read more about the [ModelZoo](docs/modelzoo.md)
 vf pipe open -i image.jpg detect -m coco draw display
 ```
 
-Read more about [object detection](docs/object-detection.md) and the [ModelZoo](docs/modelzoo.md)
-
+Read more about [object detection](docs/object-detection.md) and the [models](docs/models.md)
 
 
 ## Redacting (Blurring) Faces
@@ -76,40 +73,52 @@ vf pipe open -i input/ detect -m yoloface redact save-images -o output/
 Read more about [redaction](docs/redaction.md)
 
 
-
 ## Batch Object Detection
 
 Convert a directory of images or video to JSON summary of detections
 ```
-vf pipe open -i $d detect save-json -o output/
+vf pipe open -i $d detect save-detections -o output/
 ```
 
 
-## Road Map
+## Primary TODOs
 
-- Add OCR
-- Expand ModelZoo
-- Improve detection inference performance
+- [ ] Convert pip to poetry and publish to PyPi
+- [ ] Add torchscript/tensorrt/coreml inference, remove 3rd party deps
+- [ ] Add shell autocompletion
+- [ ] add confidence-gradient bbox drawing
+- [ ] add checksum and improved error handling for model downloads
+- [ ] upgrade processors to include yolov8
 
+## Additional TODOs
 
+- [ ] Add OCR processor
+- [ ] upgrade processors to include segmentation
+- [ ] upgrade processors to include classification
+- [ ] add/debug ONNX tensorrt provider
+- [ ] upgrade annotation format
+- [ ] create custom metrics with csv annotation format
+- [ ] upgrade codebase to Python 3.10
+- [ ] fix/improve skip-cnn features
+- [ ] overhaul skip-* logic
+- [ ] overhaul mediafile logic
+- [ ] open issues/prs
+
+---
 
 ## Acknowledgments
 
-VFRAME gratefully acknowledges support  from the following organizations and grants:
+VFRAME gratefully acknowledges support from the following organizations and grants:
 
-![](docs/assets/spacer_white_10.png)
+![](docs/assets/spacer_white_10.png
 
 ![](docs/assets/nlnet.jpg)
 
 VFRAME received support from the NLNet Foundation and Next Generation Internet (NGI0) supported research and development of face blurring and biometric redaction tools during 2019 - 2021. Funding was provided through the NGI0 Privacy Enhancing Technologies Fund, a fund established by NLnet with financial support from the European Commission’s Next Generation Internet program. 
 
-![](docs/assets/spacer_white_10.png)
-
 ![](docs/assets/meedan.jpg)
 
 VFRAME development during 2019-2021 is being supported with a three-year grant by [Meedan](https://meedan.com) / Check Global. With this grant, we have developed tools to integrate computer vision in to Check's infrastructure, allowing computer vision to be deployed in the effort to verify breaking news, and carried out research and development of the synthetic data generation and training environment.
-
-![](docs/assets/spacer_white_10.png)
 
 ![](docs/assets/bmbf.jpg)
 

@@ -21,6 +21,10 @@ from glob import iglob
 import argparse
 import click
 
+from pathlib import Path
+
+# append path (TODO: fix path in setup.py tools)
+sys.path.append(str(Path(__file__).resolve().parent))
 from vframe.settings import app_cfg
 from vframe.utils import log_utils
 
@@ -126,7 +130,6 @@ def process_commands(processors):
 # -----------------------------------------------------------------------------
 
 # append files to click groups
-import vframe.utils.im_utils
 
 for plugin_script in plugin_group.scripts:
 
@@ -167,4 +170,5 @@ for plugin_script in plugin_group.scripts:
 #
 # -----------------------------------------------------------------------------
 
-cli()
+if __name__ == '__main__':
+  cli()
