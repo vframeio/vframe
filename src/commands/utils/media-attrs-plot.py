@@ -325,7 +325,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
 
 
   # ---------------------------------------------------------------------------
-  # Plot duration distribution
+  # Plot duration distribution with manual bins
   # ---------------------------------------------------------------------------
 
   # setup plot
@@ -333,18 +333,24 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   figsize = pixels_to_figsize(opt_figsize, opt_dpi)
   fig.set_size_inches(figsize)
 
+  # format
+  n_bins = 60
+  bins = [15 * i for i in range(0, n_bins + 1)]
+
+  # plot data
+  x = df.seconds.values.tolist()
+  plt.hist([x], bins, label=['Videos'], align='left')
+
+  # format
   if opt_title:
-    plt.title(f'Duration Distribution {n_videos_str} (bins={opt_n_bins})')
+    plt.title(f'Duration Distribution {n_videos_str} (bins={n_bins})')
   plt.ylabel("Videos")
   ax.yaxis.set_major_locator(MaxNLocator(integer=True))
   plt.xlabel("Duration (seconds)")
-
-  x = df.seconds.values.tolist()
-  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='duration')
-
-  # plot data
-  plt.hist([x], bins, label=['Videos'], align='left')
   plt.legend(loc='upper right')
+  plt.xticks(bins)
+  plt.xticks(rotation=45, ha='right')
+  ax.set_xlim(0, max(bins))
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_duration.png')
@@ -352,6 +358,37 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.savefig(fp_out, dpi=opt_dpi)
   plt.close()
   inc_pbar()
+
+  # ---------------------------------------------------------------------------
+  # Plot duration distribution with auto bins
+  # ---------------------------------------------------------------------------
+
+  # setup plot
+  fig, ax = plt.subplots()
+  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
+  fig.set_size_inches(figsize)  
+
+  # plot data
+  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='duration')
+  x = df.seconds.values.tolist()
+  plt.hist([x], bins, label=['Videos'], align='left')
+
+  # format
+  if opt_title:
+    plt.title(f'Duration Distribution {n_videos_str} (bins={opt_n_bins})')
+  plt.legend(loc='upper right')
+  plt.xticks(bins)
+  plt.ylabel("Videos")
+  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+  plt.xlabel("Seconds")
+
+  # save
+  fp_out = join(opt_output, f'{opt_prefix}_duration_auto_interval.png')
+  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+  plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
+  inc_pbar()
+
 
   # ---------------------------------------------------------------------------
   # Plot video dimension distribution
@@ -469,6 +506,8 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   # ---------------------------------------------------------------------------
 
   if opt_verbose:
+    LOG.info(f'Total videos: {len(df):,}')
+
     LOG.info(f'Videos under 1 minute: {(len(df[df.seconds <= 60]) / len(df)):.2%}')
     LOG.info(f'Videos under 2 minutes: {(len(df[df.seconds <= 120]) / len(df)):.2%}')
     LOG.info(f'Videos under 4 minutes: {(len(df[df.seconds <= 240]) / len(df)):.2%}')
