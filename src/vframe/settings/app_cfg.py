@@ -333,7 +333,8 @@ MEDIA_ATTRS_DTYPES = {
   'frame_count': int,
   'codec': str,
   'duration': float,  # int, but pandas doesn't have int na
-  'frame_rate': float
+  'frame_rate': float,
+  'created_at': str,
 }
 
 

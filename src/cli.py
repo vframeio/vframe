@@ -15,6 +15,7 @@ from os.path import join
 import sys
 from pathlib import Path
 import time
+import traceback
 import importlib
 from glob import iglob
 
@@ -162,6 +163,7 @@ for plugin_script in plugin_group.scripts:
     except Exception as e:
       msg = f'Could not import "{fn}": {e}'
       print(f"{app_cfg.TERM_COLORS.FAIL}{msg}{app_cfg.TERM_COLORS.ENDC}")
+      print(traceback.format_exc())
 
 
 # -----------------------------------------------------------------------------
