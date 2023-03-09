@@ -110,8 +110,6 @@ vf pipe open -i $d detect save-detections -o output/
 
 VFRAME gratefully acknowledges support from the following organizations and grants:
 
-![](docs/assets/spacer_white_10.png
-
 ![](docs/assets/nlnet.jpg)
 
 VFRAME received support from the NLNet Foundation and Next Generation Internet (NGI0) supported research and development of face blurring and biometric redaction tools during 2019 - 2021. Funding was provided through the NGI0 Privacy Enhancing Technologies Fund, a fund established by NLnet with financial support from the European Commission’s Next Generation Internet program. 
