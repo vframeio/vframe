@@ -40,10 +40,10 @@ plugins:
   # Included: ModelZoo
   # ---------------------------------------------------------------------------
 
-  - name: modelzoo
-    description: ModelZoo scripts
+  - name: models
+    description: Model scripts
     scripts:
-      - filepath: commands/modelzoo
+      - filepath: commands/models
 
 
   # ---------------------------------------------------------------------------
