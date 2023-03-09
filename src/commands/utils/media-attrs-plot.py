@@ -23,26 +23,34 @@ import click
   help='Show title')
 @click.option('--clusters', 'opt_n_clusters', default=6,
   help='Number of K-Means clusters')
-@click.option('--num-videos', 'opt_n_videos', type=int,
-  help='Override actual video number to show and approximated number.')
 @click.option('--bins', 'opt_n_bins', default=10)
+@click.option('--split-years', 'opt_split_years', is_flag=True,
+  help='Split years into separate plots')
 @click.option('--verbose', 'opt_verbose', is_flag=True)
+@click.option('--daily/--no-daily', 'opt_daily', is_flag=True, default=False,
+  help='Generate daily media counts')
+@click.option('--monthly/--no-monthly', 'opt_monthly', is_flag=True, default=True,
+  help='Generate monthly media counts')
+@click.option('--yearly/--no-yearly', 'opt_yearly', is_flag=True, default=True,
+  help='Generate yearly media counts')
 @click.pass_context
-def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix, 
-  opt_title, opt_n_clusters, opt_n_videos, opt_n_bins, opt_verbose):
+def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
+ opt_title, opt_n_clusters, opt_n_bins, opt_split_years, opt_verbose,
+ opt_daily, opt_monthly, opt_yearly):
   """Plot media attributes"""
-
-  # ------------------------------------------------
-  # imports
 
   import os
   from os.path import join
   from operator import itemgetter
+  import calendar
+  from datetime import datetime
 
   from tqdm import tqdm
   import matplotlib.pyplot as plt
   import matplotlib
   matplotlib.use('Agg')
+  import matplotlib.dates as mdates
+  from matplotlib.ticker import MaxNLocator
   import numpy as np
   import pandas as pd
   from sklearn.cluster import KMeans
@@ -64,8 +72,6 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   # aux funcs
   def make_bins(x, n_bins, verbose=False, prefix='', dtype=np.uint16):
     interval = int((max(x) - min(x)) // n_bins)
-    if verbose:
-      LOG.debug(f'{prefix} min: {min(x)}, max: {max(x)}, interval: {interval}')
     return list(range(int(min(x)), int(max(x)) + interval, interval))
   
 
@@ -77,19 +83,151 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   df.duration = df.duration.astype(np.uint16) // 1000  # ms to seconds
   df['seconds'] = df.frame_count / df.frame_rate  # add seconds col
 
-  # override exact video number for ambiguity reasons
+  # inits
   n_videos = len(df)
-  n_videos_display = n_videos if not opt_n_videos else opt_n_videos
+  n_videos_str = f'(total={n_videos:,})'
 
   # setup tqdm
   n_plots = 6
-  p_bar = tqdm(range(n_plots), desc='Generating plots')
+  p_bar = tqdm(range(n_plots), desc='Generating plots', leave=False)
 
   def inc_pbar():
     p_bar.update(1)
     p_bar.refresh()
 
   
+  # ---------------------------------------------------------------------------
+  # Plot videos per month, year
+  # ---------------------------------------------------------------------------
+  
+  df['created_at_dt'] = pd.to_datetime(df['created_at']).dt.date
+  df = df.sort_values(by=['created_at_dt'], ascending=True)
+
+  if opt_yearly:
+    df['created_at_yr'] = df['created_at_dt'].map(lambda dt: int(dt.strftime('%Y')))
+    yr_min, yr_max = (df['created_at_yr'].min(), df['created_at_yr'].max())
+
+    # sum videos per year
+    years = range(yr_min, yr_max + 1)
+    counts = {i:len(df[df['created_at_yr'] == i]) for i in years}
+
+    # setup plot
+    fig, ax = plt.subplots()
+    figsize = pixels_to_figsize(opt_figsize, opt_dpi)
+    fig.set_size_inches(figsize)
+
+    # plot data
+    x = counts.keys()
+    y = counts.values()
+    plt.bar(x, y, align='center', label='Videos')
+
+    # format
+    if opt_title:
+      plt.title(f'Videos/Year {yr_min}-{yr_max} (total={len(df):,})')
+    plt.legend(loc='upper right')
+    plt.ylabel("Videos")
+    plt.xlabel("Year")
+    plt.xticks(years)
+    plt.xticks(rotation=45, ha='right')
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    # save
+    fn = f"{opt_prefix}_years.png"
+    fp_out = join(opt_output, fn)
+    plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+    plt.savefig(fp_out, dpi=opt_dpi)
+    plt.close()
+  
+  if opt_monthly:
+
+    # group by year
+    df['created_at_yr'] = df['created_at_dt'].map(lambda dt: int(dt.strftime('%Y')))
+    df_gr_years = df.groupby('created_at_yr')
+    
+    # iterate years
+    for g, df_gr_year in tqdm(df_gr_years, desc='Years'):
+      # add column for YYYY-MM
+      df_gr_year['created_at_mm_str'] = df_gr_year['created_at_dt'].map(lambda dt: dt.strftime('%m'))
+
+      # sum videos per month
+      counts = {}
+      for i in range(1,13):
+        counts[calendar.month_name[i]] = len(df_gr_year[df_gr_year['created_at_mm_str'] == str(i).zfill(2)])
+      
+      # setup plot
+      fig, ax = plt.subplots()
+      figsize = pixels_to_figsize(opt_figsize, opt_dpi)
+      fig.set_size_inches(figsize)
+
+      # plot data
+      x = counts.keys()
+      y = counts.values()
+      plt.bar(x, y, align='center', label='Videos')
+
+      # format
+      if opt_title:
+        plt.title(f'Videos/Month {g} (total={len(df_gr_year):,})')
+      plt.legend(loc='upper right')
+      plt.ylabel("Videos")
+      ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+      plt.xlabel(f"Month ({g})")
+      plt.xticks(rotation=45, ha='right')
+
+      # save
+      fn = f"{opt_prefix}_date_{str(g).replace('-','_')}.png"
+      fp_out = join(opt_output, fn)
+      plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+      plt.savefig(fp_out, dpi=opt_dpi)
+      plt.close()
+
+
+  if opt_daily:
+
+    # group by month
+    df['created_at_ym_str'] = df['created_at_dt'].map(lambda dt: dt.strftime('%Y-%m'))  
+    df_gr_yms = df.groupby('created_at_ym_str')
+
+    # iterate months
+    for g, df_gr_ym in tqdm(df_gr_yms, desc='Month'):
+      # group by day
+      df_gr_ym['created_at_day'] = df_gr_ym['created_at_dt'].map(lambda dt: dt.strftime('%d'))
+      date = datetime.strptime(g, '%Y-%m')
+      date_str = date.strftime('%b %Y')
+      n_days = calendar.monthrange(date.year, date.month)[1]
+      n_vid_gr = len(df_gr_ym)
+      month_name = calendar.month_name[date.month]
+      counts = {}
+      for i in range(1, n_days + 1):
+        x = str(i).zfill(2)
+        counts[x] = len(df_gr_ym[df_gr_ym['created_at_day'] == x])
+
+      # setup plot
+      fig, ax = plt.subplots()
+      figsize = pixels_to_figsize(opt_figsize, opt_dpi)
+      fig.set_size_inches(figsize)
+
+      # plot data
+      x = counts.keys()
+      y = counts.values()
+      plt.bar(x, y, align='center', label='Videos')
+
+      # format
+      if opt_title:
+        plt.title(f'Videos/Day {date_str} (total={n_vid_gr:,})')
+      plt.legend(loc='upper right')
+      plt.ylabel("Videos")
+      plt.xticks(rotation=45, ha='right')
+      ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+      plt.xlabel(f"Date ({date_str})")
+      # save
+      fn = f"{opt_prefix}_date_{g.replace('-','_')}.png"
+      fp_out = join(opt_output, fn)
+      plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+      plt.savefig(fp_out, dpi=opt_dpi)
+      plt.close()
+
+
   # ---------------------------------------------------------------------------
   # Plot width
   # ---------------------------------------------------------------------------
@@ -100,8 +238,9 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Width Distribution for {n_videos_display:,} Videos (bins={opt_n_bins})')
+    plt.title(f'Width Distribution {n_videos_str} (bins={opt_n_bins})')
   plt.ylabel("Videos")
+  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
   plt.xlabel("Width (pixels)")
 
   # set bins
@@ -109,7 +248,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='width')
 
   # plot data
-  plt.hist([x], bins, label=['Width'])
+  plt.hist([x], bins, label=['Videos'], align='left')
   plt.legend(loc='upper right')
   plt.xticks(bins)
 
@@ -117,6 +256,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_width.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
   # ---------------------------------------------------------------------------
@@ -129,8 +269,9 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Height Distribution for {n_videos_display:,} Videos (bins={opt_n_bins})')
+    plt.title(f'Height Distribution {n_videos_str} (bins={opt_n_bins})')
   plt.ylabel("Videos")
+  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
   plt.xlabel("Height (pixels)")
 
   # set bins
@@ -139,7 +280,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
 
   # plot data
   x = df['height'].values
-  plt.hist([x], bins, label=['height'])
+  plt.hist([x], bins, label=['Videos'], align='left')
   plt.xticks(bins)
   plt.legend(loc='upper right')
 
@@ -147,6 +288,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_height.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
 
@@ -160,7 +302,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Frames Per Second Distribution for {n_videos_display:,} Videos (bins={opt_n_bins})')
+    plt.title(f'Frames Per Second Distribution {n_videos_str} (bins={opt_n_bins})')
   plt.ylabel("Video")
   plt.xlabel("Frames Per Second")
 
@@ -170,7 +312,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
 
   # plot data
   x = df['frame_rate'].values
-  plt.hist([x], bins, label=['FPS'])
+  plt.hist([x], bins, label=['Videos'], align='left')
   plt.legend(loc='upper right')
   plt.xticks(bins)
 
@@ -178,6 +320,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_fps.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
 
@@ -191,21 +334,23 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Duration Distribution for {n_videos_display:,} Videos (bins={opt_n_bins})')
+    plt.title(f'Duration Distribution {n_videos_str} (bins={opt_n_bins})')
   plt.ylabel("Videos")
+  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
   plt.xlabel("Duration (seconds)")
 
   x = df.seconds.values.tolist()
   bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='duration')
 
   # plot data
-  plt.hist([x], bins, label=['Seconds'])
+  plt.hist([x], bins, label=['Videos'], align='left')
   plt.legend(loc='upper right')
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_duration.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
   # ---------------------------------------------------------------------------
@@ -239,12 +384,13 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.ylabel("Height")
   plt.xlabel("Width")
   if opt_title:
-    plt.title(f'K-Means Clusters for {n_videos_display:,} Videos (k={opt_n_clusters})')
+    plt.title(f'K-Means Clusters {n_videos_str} (k={opt_n_clusters})')
 
   # save
   fp_out = join(opt_output, f'{opt_prefix}_kmeans.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
   
@@ -277,8 +423,9 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fig.set_size_inches(figsize)
 
   if opt_title:
-    plt.title(f'Size Distribution for {n_videos_display:,} Videos (k={opt_n_clusters})')
+    plt.title(f'Size Distribution {n_videos_str} (k={opt_n_clusters})')
   plt.ylabel("Videos")
+  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
   plt.xlabel("Aspect Ratio")
 
   x = list(range(len(size_results)))
@@ -294,6 +441,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, f'{opt_prefix}_ratio.png')
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
+  plt.close()
   inc_pbar()
 
 

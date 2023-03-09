@@ -39,7 +39,7 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice,
   from pathos.multiprocessing import cpu_count
   
   from vframe.settings.app_cfg import LOG
-  from vframe.utils.file_utils import glob_multi, load_txt
+  from vframe.utils.file_utils import glob_multi, load_txt, ensure_dir
   from vframe.utils.video_utils import mediainfo
 
 
@@ -83,6 +83,7 @@ def cli(sink, opt_input, opt_output, opt_recursive, opt_exts, opt_slice,
       records.append(asdict(pool_result))
 
   # save records
+  ensure_dir(opt_output)
   pd.DataFrame.from_dict(records).to_csv(opt_output, index=False)
 
   # save errors

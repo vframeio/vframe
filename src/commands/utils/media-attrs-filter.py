@@ -9,6 +9,7 @@
 
 
 import click
+from datetime import date
 
 @click.command('')
 @click.option('-i', '--input', 'opt_input', required=True)
@@ -21,18 +22,21 @@ import click
 @click.option('--max-height', 'opt_max_height', type=int)
 @click.option('--min-fps', 'opt_min_fps', type=int)
 @click.option('--max-fps', 'opt_max_fps', type=int)
-@click.option('--output-txt', 'opt_output_txt')
-@click.option('--prefix', 'opt_prefix', type=str)
-@click.option('--input-lookup', 'opt_fp_lkup', 
+@click.option('--min-date', 'opt_min_date', 
+  type=click.DateTime(formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]),
+  help='Date formatted in YYYY-MM-DD format')
+@click.option('--max-date', 'opt_max_date', 
+  type=click.DateTime(formats=["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]),
+  help='Date formatted in YYYY-MM-DD format')
+@click.option('--output-filelist', 'opt_output_txt')
+@click.option('--output-prefix', 'opt_prefix', type=str)
+@click.option('--output-reference-list', 'opt_fp_lkup', 
   help='Filepath lookup reference to extract filepath with filename')
 @click.pass_context
 def cli(sink, opt_input, opt_output, opt_min_seconds, opt_max_seconds,
   opt_min_width, opt_max_width, opt_min_height, opt_max_height,
-  opt_min_fps, opt_max_fps, opt_output_txt, opt_prefix, opt_fp_lkup):
+  opt_min_fps, opt_max_fps, opt_min_date, opt_max_date, opt_output_txt, opt_prefix, opt_fp_lkup):
   """Filter and clean media attributes to new filelist"""
-
-  # ------------------------------------------------
-  # imports
 
   import os
   from pathlib import Path
@@ -43,6 +47,7 @@ def cli(sink, opt_input, opt_output, opt_min_seconds, opt_max_seconds,
   
   from vframe.settings.app_cfg import LOG, MEDIA_ATTRS_DTYPES
   from vframe.utils.file_utils import ensure_dir, write_txt, load_txt
+  
 
   # error check
   if opt_prefix and opt_fp_lkup:
@@ -83,17 +88,26 @@ def cli(sink, opt_input, opt_output, opt_min_seconds, opt_max_seconds,
   if any([opt_min_seconds, opt_max_seconds]):
     df['seconds'] = df.frame_count / df.frame_rate
 
-  # filter duration seconds  
+  # filter duration seconds
   if opt_min_seconds:
-    df = df[df.seconds >+ opt_min_seconds]
+    df = df[df.seconds >= opt_min_seconds]
   if opt_max_seconds:
     df = df[df.seconds <= opt_max_seconds]
 
+  if any([opt_min_date, opt_max_date]):
+    df['created_at_dt'] = pd.to_datetime(df['created_at']).dt.date
+  if opt_min_date:
+    date_min = opt_min_date.date()
+    df = df[df.created_at_dt >= date_min]
+  if opt_max_date:
+    date_max = opt_max_date.date()
+    df = df[df.created_at_dt <= date_max]
+  if any([opt_min_date, opt_max_date]):
+    df = df.drop(columns=['created_at_dt'])
 
   # write new data
   df.to_csv(opt_output, index=False)
 
-  #
   # write new filelist
   if opt_output_txt:
     filenames = df.filename.values.tolist()
