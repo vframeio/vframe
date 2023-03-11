@@ -12,7 +12,7 @@ import logging
 import random
 import math
 from dataclasses import dataclass, field
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Union
 
 from dacite import from_dict
 import numpy as np
@@ -173,14 +173,15 @@ class Annotation:
 
 @dataclass
 class Cryptomatte:
-  object_name: str
+  object_names: Union[str, List]
   label_enum: str
   label_display: str
   label_index: int
   filename: str=''  # defaults to object name
 
   def __post_init__(self):
-    self.filename = self.object_name if not self.filename else self.filename
+    self.object_names = [object_names] if isinstance(self.object_names, str) else self.object_names
+    self.filename = self.object_names[0] if not self.filename else self.filename
 
   
 @dataclass
