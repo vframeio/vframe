@@ -19,7 +19,7 @@ from vframe.utils.click_utils import generator
   multiple=True, help='Extensions to glob for')
 @click.option('-r', '--recursive', 'opt_recursive', is_flag=True,
   help='Recursive glob')
-@click.option('--slice', 'opt_slice', type=(int, int), default=(-1, -1),
+@click.option('--slice', 'opt_slice', type=(int, int),
   help="Slice list of inputs")
 @click.option('--skip-frames', 'opt_skip_frames', is_flag=True,
   help='Skip all frames, only iterate files')
@@ -31,10 +31,15 @@ from vframe.utils.click_utils import generator
 @click.option('--media-path', 'opt_new_filepath', type=str,
   default='',
   help='Override JSON filepath')
+@click.option('--job-name-prefix', 'opt_job_name_prefix', default='',
+  help='Job name prefix for tqdm display')
+@click.option('--job-name-suffix', 'opt_job_name_suffix', default='',
+  help='Job name suffix for tqdm display')
 @generator
 @click.pass_context
 def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice, 
-  opt_skip_frames, opt_check_exist, opt_randomize, opt_new_filepath):
+  opt_skip_frames, opt_check_exist, opt_randomize, opt_new_filepath,
+  opt_job_name_prefix, opt_job_name_suffix):
   """Open media for processing"""
 
   from tqdm import tqdm
@@ -69,17 +74,23 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
     }
 
   # init media file reader
-  r = dacite.from_dict(data_class=MediaFileReader, data=init_obj)
-  ctx.obj[READER] = r
+  R = dacite.from_dict(data_class=MediaFileReader, data=init_obj)
+  ctx.obj[READER] = R
   ctx.obj[SKIP_MEDIA_FILTERS] = get_ext(opt_input) == 'json'
 
   # error checks
-  if not r.n_files:
+  if not R.n_files:
     LOG.info('No files to process.')
     return
 
   # process media
-  for m in tqdm(r.iter_files(), total=r.n_files, desc='Files', leave=False):
+  desc = 'Files'
+  if all([x != None for x in opt_slice]):
+    desc = f'{desc} {"-".join(list(map(str,opt_slice)))}'
+  desc = f'{opt_job_name_prefix} {desc} {opt_job_name_suffix} '
+
+
+  for m in tqdm(R.iter_files(), total=R.n_files, desc=desc, leave=False):
     
     ctx.obj[SKIP_FILE] = False  # reset
     m.skip_all_frames = opt_skip_frames
@@ -106,4 +117,4 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
 
 
   # print stats
-  LOG.info(r.stats)
+  LOG.info(R.stats)
