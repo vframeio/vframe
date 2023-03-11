@@ -29,14 +29,32 @@ import click
 @click.option('--verbose', 'opt_verbose', is_flag=True)
 @click.option('--daily/--no-daily', 'opt_daily', is_flag=True, default=False,
   help='Generate daily media counts')
-@click.option('--monthly/--no-monthly', 'opt_monthly', is_flag=True, default=True,
+@click.option('--monthly/--no-monthly', 'opt_monthly', is_flag=True, default=False,
   help='Generate monthly media counts')
 @click.option('--yearly/--no-yearly', 'opt_yearly', is_flag=True, default=True,
   help='Generate yearly media counts')
+@click.option('--seconds-bins', 'opt_seconds_bins', default=60,
+  help='Number of duration bins duration plot')
+@click.option('--seconds-bin-size', 'opt_seconds_bin_size', default=15,
+  help='Duration bin size in seconds for duration plot')
+@click.option('--width-bins', 'opt_width_bins', default=48,
+  help='Number of width bins width plot')
+@click.option('--width-bin-size', 'opt_width_bin_size', default=40,
+  help='width bin size in seconds for width plot')
+@click.option('--height-bins', 'opt_height_bins', default=48,
+  help='Number of height bins height plot')
+@click.option('--height-bin-size', 'opt_height_bin_size', default=40,
+  help='height bin size in seconds for height plot')
+@click.option('--fps-bins', 'opt_fps_bins', default=60,
+  help='Number of fps bins fps plot')
+@click.option('--fps-bin-size', 'opt_fps_bin_size', default=1,
+  help='fps bin size in seconds for fps plot')
 @click.pass_context
 def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
  opt_title, opt_n_clusters, opt_n_bins, opt_split_years, opt_verbose,
- opt_daily, opt_monthly, opt_yearly):
+ opt_daily, opt_monthly, opt_yearly, opt_seconds_bins, opt_seconds_bin_size,
+ opt_height_bins, opt_height_bin_size, opt_width_bins, opt_width_bin_size,
+ opt_fps_bins, opt_fps_bin_size):
   """Plot media attributes"""
 
   import os
@@ -71,7 +89,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
 
   # aux funcs
   def make_bins(x, n_bins, verbose=False, prefix='', dtype=np.uint16):
-    interval = int((max(x) - min(x)) // n_bins)
+    interval = max(1, int((max(x) - min(x)) // n_bins))
     return list(range(int(min(x)), int(max(x)) + interval, interval))
   
 
@@ -89,11 +107,55 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
 
   # setup tqdm
   n_plots = 6
-  p_bar = tqdm(range(n_plots), desc='Generating plots', leave=False)
+  pbar = tqdm(range(n_plots), desc='Generating plots', leave=False)
 
-  def inc_pbar():
-    p_bar.update(1)
-    p_bar.refresh()
+  # plot generator aux function
+  def make_plot(x, y, plot_type='hist', fn='plot_', title='', xlabel='x', ylabel='y', label='Video', 
+    loc='upper right', align='left', force_int_x=True, force_int_y=False,
+    rotate=0, xlim=False, ylim=False, pbar=None):
+
+    # update status
+    pbar.set_description(fn)
+
+    # setup plot
+    fig, ax = plt.subplots()
+    figsize = pixels_to_figsize(opt_figsize, opt_dpi)
+    fig.set_size_inches(figsize)
+
+    # plot data
+    if plot_type == 'hist':
+      plt.hist([x], y, label=[label], align=align)
+    elif plot_type == 'bar':
+      plt.bar(x, y, label='Aspect Ratio')
+
+    # format
+    if title:
+      plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend(loc=loc)
+    if force_int_x:
+      ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    if force_int_y:
+      ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+    if rotate:
+      plt.xticks(rotation=rotate, ha='right')
+    if xlim:
+      ax.set_xlim(min(y), max(y))
+    if ylim:
+      ax.set_ylim(min(y), max(y))
+    if plot_type == 'hist':
+      plt.xticks(y)
+
+    # save
+    plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
+    plt.savefig(join(opt_output, fn), dpi=opt_dpi)
+    plt.close()
+
+    if pbar:
+      pbar.update(1)
+      pbar.refresh()
+
 
   
   # ---------------------------------------------------------------------------
@@ -232,162 +294,142 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   # Plot width
   # ---------------------------------------------------------------------------
 
-  # setup plot
-  fig, ax = plt.subplots()
-  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
-  fig.set_size_inches(figsize)
+  x = df.width.values
 
-  if opt_title:
-    plt.title(f'Width Distribution {n_videos_str} (bins={opt_n_bins})')
-  plt.ylabel("Videos")
-  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-  plt.xlabel("Width (pixels)")
+  make_plot(
+    x=x, 
+    y=[opt_height_bin_size * i for i in range(0, opt_height_bins + 1)],
+    plot_type='hist',
+    title=f'Width Distribution {n_videos_str} (bins={opt_height_bins})', 
+    xlabel='Width (pixels)',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_width.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=True,
+    pbar=pbar
+    )
+  
+  make_plot(
+    x=x, 
+    y=make_bins(x, opt_n_bins),
+    plot_type='hist',
+    title=f'Width Distribution {n_videos_str} (autobins={opt_n_bins})', 
+    xlabel='Width (pixels)',
+    ylabel='Videos',
+    fn=f'{opt_prefix}_width_auto.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=False,
+    pbar=pbar
+    )
 
-  # set bins
-  x = df.width.values.tolist()
-  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='width')
-
-  # plot data
-  plt.hist([x], bins, label=['Videos'], align='left')
-  plt.legend(loc='upper right')
-  plt.xticks(bins)
-
-  # save
-  fp_out = join(opt_output, f'{opt_prefix}_width.png')
-  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
-  plt.savefig(fp_out, dpi=opt_dpi)
-  plt.close()
-  inc_pbar()
-
+  
   # ---------------------------------------------------------------------------
-  # Plot height
+  # Plot height with manual bins
   # ---------------------------------------------------------------------------
+  
+  x = df.height.values
 
-  # setup plot
-  fig, ax = plt.subplots()
-  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
-  fig.set_size_inches(figsize)
+  make_plot(
+    x=x, 
+    y=[opt_height_bin_size * i for i in range(0, opt_height_bins + 1)],
+    plot_type='hist',
+    title=f'Height Distribution {n_videos_str} (bins={opt_height_bins})', 
+    xlabel='Height (pixels)',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_height.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=True,
+    pbar=pbar
+    )
 
-  if opt_title:
-    plt.title(f'Height Distribution {n_videos_str} (bins={opt_n_bins})')
-  plt.ylabel("Videos")
-  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-  plt.xlabel("Height (pixels)")
-
-  # set bins
-  x = df.height.values.tolist()
-  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='height')
-
-  # plot data
-  x = df['height'].values
-  plt.hist([x], bins, label=['Videos'], align='left')
-  plt.xticks(bins)
-  plt.legend(loc='upper right')
-
-  # save
-  fp_out = join(opt_output, f'{opt_prefix}_height.png')
-  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
-  plt.savefig(fp_out, dpi=opt_dpi)
-  plt.close()
-  inc_pbar()
+  
+  make_plot(
+    x=x, 
+    y = make_bins(x, opt_n_bins),
+    plot_type='hist',
+    title=f'Height Distribution {n_videos_str} (autobins={opt_n_bins})', 
+    xlabel='Height (pixels)',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_height_auto.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=False,
+    pbar=pbar
+    )
 
 
   # ---------------------------------------------------------------------------
   # Plot FPS
   # ---------------------------------------------------------------------------
 
-  # setup plot
-  fig, ax = plt.subplots()
-  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
-  fig.set_size_inches(figsize)
+  x = df.frame_rate.values
 
-  if opt_title:
-    plt.title(f'Frames Per Second Distribution {n_videos_str} (bins={opt_n_bins})')
-  plt.ylabel("Video")
-  plt.xlabel("Frames Per Second")
+  make_plot(
+    x=x, 
+    y=[opt_fps_bin_size * i for i in range(0, opt_fps_bins + 1)],
+    plot_type='hist',
+    title=f'FPS Distribution {n_videos_str} (bins={opt_fps_bins})', 
+    xlabel='Frames Per Second',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_fps.png',
+    force_int_x=True,
+    rotate=0,
+    xlim=True,
+    pbar=pbar
+    )
 
-  # set bins
-  x = df['frame_rate'].values
-  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='frame rate', dtype=np.float64)
+  make_plot(
+    x=x, 
+    y=make_bins(x, opt_n_bins, dtype=np.float64),
+    plot_type='hist',
+    title=f'FPS Distribution {n_videos_str} (autobins={opt_n_bins})', 
+    xlabel='Frames Per Second',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_fps_auto_interval.png',
+    force_int_x=True,
+    rotate=0,
+    xlim=True,
+    pbar=pbar
+    )
 
-  # plot data
-  x = df['frame_rate'].values
-  plt.hist([x], bins, label=['Videos'], align='left')
-  plt.legend(loc='upper right')
-  plt.xticks(bins)
-
-  # save
-  fp_out = join(opt_output, f'{opt_prefix}_fps.png')
-  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
-  plt.savefig(fp_out, dpi=opt_dpi)
-  plt.close()
-  inc_pbar()
-
-
-  # ---------------------------------------------------------------------------
-  # Plot duration distribution with manual bins
-  # ---------------------------------------------------------------------------
-
-  # setup plot
-  fig, ax = plt.subplots()
-  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
-  fig.set_size_inches(figsize)
-
-  # format
-  n_bins = 60
-  bins = [15 * i for i in range(0, n_bins + 1)]
-
-  # plot data
-  x = df.seconds.values.tolist()
-  plt.hist([x], bins, label=['Videos'], align='left')
-
-  # format
-  if opt_title:
-    plt.title(f'Duration Distribution {n_videos_str} (bins={n_bins})')
-  plt.ylabel("Videos")
-  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-  plt.xlabel("Duration (seconds)")
-  plt.legend(loc='upper right')
-  plt.xticks(bins)
-  plt.xticks(rotation=45, ha='right')
-  ax.set_xlim(0, max(bins))
-
-  # save
-  fp_out = join(opt_output, f'{opt_prefix}_duration.png')
-  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
-  plt.savefig(fp_out, dpi=opt_dpi)
-  plt.close()
-  inc_pbar()
 
   # ---------------------------------------------------------------------------
-  # Plot duration distribution with auto bins
+  # Plot Length distribution with manual bins
   # ---------------------------------------------------------------------------
 
-  # setup plot
-  fig, ax = plt.subplots()
-  figsize = pixels_to_figsize(opt_figsize, opt_dpi)
-  fig.set_size_inches(figsize)  
+  x = df.seconds.values
 
-  # plot data
-  bins = make_bins(x, opt_n_bins, verbose=opt_verbose, prefix='duration')
-  x = df.seconds.values.tolist()
-  plt.hist([x], bins, label=['Videos'], align='left')
+  make_plot(
+    x=x,
+    y=[opt_seconds_bin_size * i for i in range(0, opt_seconds_bins + 1)],
+    plot_type='hist',
+    title=f'Length (Seconds) {n_videos_str} (bins={opt_seconds_bins})',
+    xlabel='Seconds',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_duration.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=True,
+    pbar=pbar
+    )
+  
+  make_plot(
+    x=x,
+    y=make_bins(x, opt_n_bins, dtype=np.float64),
+    plot_type='hist',
+    title=f'Length (Seconds) {n_videos_str} (autobins={opt_n_bins})', 
+    xlabel='Seconds',
+    ylabel='Videos',
+    fn = f'{opt_prefix}_duration_auto_interval.png',
+    force_int_x=True,
+    rotate=45,
+    xlim=False,
+    pbar=pbar
+    )
 
-  # format
-  if opt_title:
-    plt.title(f'Duration Distribution {n_videos_str} (bins={opt_n_bins})')
-  plt.legend(loc='upper right')
-  plt.xticks(bins)
-  plt.ylabel("Videos")
-  ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-  plt.xlabel("Seconds")
-
-  # save
-  fp_out = join(opt_output, f'{opt_prefix}_duration_auto_interval.png')
-  plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
-  plt.savefig(fp_out, dpi=opt_dpi)
-  plt.close()
-  inc_pbar()
 
 
   # ---------------------------------------------------------------------------
@@ -428,7 +470,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
   plt.close()
-  inc_pbar()
+  # inc_pbar()
 
   
   # ---------------------------------------------------------------------------
@@ -479,7 +521,7 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   plt.tight_layout(pad=1.0, w_pad=0.5, h_pad=1.0)
   plt.savefig(fp_out, dpi=opt_dpi)
   plt.close()
-  inc_pbar()
+  # inc_pbar()
 
 
   # ---------------------------------------------------------------------------
