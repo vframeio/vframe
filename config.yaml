@@ -21,7 +21,7 @@ logger:
 # ---------------------------------------------------------------------------
 
 modelzoo:
-  - filepath: 'modelzoo/vframe.yaml'
+  - filepath: 'models/config.yaml'
 
 plugins:
 

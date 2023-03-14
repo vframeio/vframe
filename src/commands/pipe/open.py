@@ -19,7 +19,7 @@ from vframe.utils.click_utils import generator
   multiple=True, help='Extensions to glob for')
 @click.option('-r', '--recursive', 'opt_recursive', is_flag=True,
   help='Recursive glob')
-@click.option('--slice', 'opt_slice', type=(int, int),
+@click.option('--slice', 'opt_slice', type=(int, int), default=(-1,-1),
   help="Slice list of inputs")
 @click.option('--skip-frames', 'opt_skip_frames', is_flag=True,
   help='Skip all frames, only iterate files')
@@ -85,9 +85,9 @@ def cli(ctx, sink, opt_input, opt_recursive, opt_exts, opt_slice,
 
   # process media
   desc = 'Files'
-  if all([x != None for x in opt_slice]):
+  if all([x >= 0 for x in opt_slice]):
     desc = f'{desc} {"-".join(list(map(str,opt_slice)))}'
-  desc = f'{opt_job_name_prefix} {desc} {opt_job_name_suffix} '
+  desc = f'{opt_job_name_prefix}{desc}{opt_job_name_suffix}'
 
 
   for m in tqdm(R.iter_files(), total=R.n_files, desc=desc, leave=False):

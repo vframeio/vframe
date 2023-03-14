@@ -35,7 +35,7 @@ def cli(ctx, sink, opt_width, opt_height, opt_frame_type, opt_all_frames, opt_in
   from vframe.settings.app_cfg import LOG, SKIP_FRAME, USE_DRAW_FRAME
   from vframe.utils.im_utils import resize
 
-  if not opt_width or opt_height:
+  if not (opt_width or opt_height):
     raise click.UsageError('-w/--width or -h/--height required')
 
   frame_types = [FrameImage.DRAW, FrameImage.ORIGINAL] if opt_all_frames else [opt_frame_type]
