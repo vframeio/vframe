@@ -26,7 +26,6 @@ import click
 @click.option('--bins', 'opt_n_bins', default=10)
 @click.option('--split-years', 'opt_split_years', is_flag=True,
   help='Split years into separate plots')
-@click.option('--verbose', 'opt_verbose', is_flag=True)
 @click.option('--daily/--no-daily', 'opt_daily', is_flag=True, default=False,
   help='Generate daily media counts')
 @click.option('--monthly/--no-monthly', 'opt_monthly', is_flag=True, default=False,
@@ -51,7 +50,7 @@ import click
   help='fps bin size in seconds for fps plot')
 @click.pass_context
 def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
- opt_title, opt_n_clusters, opt_n_bins, opt_split_years, opt_verbose,
+ opt_title, opt_n_clusters, opt_n_bins, opt_split_years,
  opt_daily, opt_monthly, opt_yearly, opt_seconds_bins, opt_seconds_bin_size,
  opt_height_bins, opt_height_bin_size, opt_width_bins, opt_width_bin_size,
  opt_fps_bins, opt_fps_bin_size):
@@ -541,25 +540,3 @@ def cli(sink, opt_input, opt_output, opt_dpi, opt_figsize, opt_prefix,
   fp_out = join(opt_output, 'clustered_size_summary.csv')
   df_summary = pd.DataFrame.from_dict(records)
   df_summary.to_csv(fp_out, index=False)
-
-
-  # ---------------------------------------------------------------------------
-  # Quick Stats
-  # ---------------------------------------------------------------------------
-
-  if opt_verbose:
-    LOG.info(f'Total videos: {len(df):,}')
-
-    LOG.info(f'Videos under 1 minute: {(len(df[df.seconds <= 60]) / len(df)):.2%}')
-    LOG.info(f'Videos under 2 minutes: {(len(df[df.seconds <= 120]) / len(df)):.2%}')
-    LOG.info(f'Videos under 4 minutes: {(len(df[df.seconds <= 240]) / len(df)):.2%}')
-
-    LOG.info(f'Human Work days @8h: {(df.seconds.sum() / 60 / 60 / 8):.2f}')
-    LOG.info(f'Human Days @24h: {(df.seconds.sum() / 60 / 60 / 24):.2f}')
-
-    LOG.info(f'Computer Work days @30FPS: {(df.frame_count.sum() / 30 / 60 / 60 / 24):.2f}')
-    LOG.info(f'Computer Work days @60FPS: {(df.frame_count.sum() / 60 / 60 / 60 / 24):.2f}')
-    LOG.info(f'Computer Work days @120FPS: {(df.frame_count.sum() / 120 / 60 / 60 / 24):.2f}')
-
-    LOG.info(f'Frames: {df.frame_count.sum():,}')
-    LOG.info(f'Hours: {(df.duration.sum() / 60 / 60):,.2f}')
