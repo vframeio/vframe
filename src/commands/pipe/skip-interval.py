@@ -13,7 +13,7 @@ import click
 from vframe.utils.click_utils import processor
 
 @click.command('')
-@click.option('-i', '--interval', 'opt_frame_interval', default=2,
+@click.option('-n', '--num-frames', 'opt_frame_interval', default=2,
   help='Number of frames to decimate/skip for every frame read')
 @click.option('--override', 'opt_override', is_flag=True)
 @processor
