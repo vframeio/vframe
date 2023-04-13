@@ -136,6 +136,8 @@ FN_ANNOTATIONS = 'annotations.csv'  # filename
 FN_DETECTIONS = 'detections.json'  # filename
 FN_ANNOTATIONS_SUMMARY = 'annotations_summary.csv'  # filename
 FN_LABELMAP = 'labelmap.yaml'
+FN_CACHE_SHA256 = 'vframe_cache_sha256.csv'
+FN_DEDUP_SHA256 = 'vframe_dedup_sha256.txt'
 DN_IMAGE = 'image'  # real photo images
 DN_IMAGE_FULL = 'image-full'  # real photo images (original/full size)
 DN_MASK = 'mask'  # mask images
@@ -324,7 +326,7 @@ GPU_ARCHS = {
 MEDIA_ATTRS_DTYPES = {
   'filename': str,
   'ext': str,
-  'valid': np.bool,
+  'valid': bool,
   'width': int,
   'height': int,
   'aspect_ratio': float,
