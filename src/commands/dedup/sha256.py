@@ -18,7 +18,7 @@ OPTS_KEEP = ['first', 'last']
 @click.option('-i', '--input', 'opt_input', required=True,
     help="Path to input(s)")
 @click.option('-o', '--output', 'opt_output',
-  help='Path to output cache CSV file')
+  help='Path to output directory for CSV and TXT files')
 @click.option('--rebuild', 'opt_rebuild', is_flag=True,
   help='Rebuild hash cache if already exists')
 @click.option('-e', '--ext', 'opt_exts', multiple=True,
@@ -50,16 +50,15 @@ def cli(ctx, opt_input, opt_output, opt_recursive, opt_keep, opt_rebuild, opt_ex
 
 
   if not opt_output:
-    dn = opt_input if Path(opt_input).is_dir() else Path(opt_input).parent
-    opt_output = join(dn, FN_CACHE_SHA256)
-  elif Path(opt_output) and not Path(opt_output).suffix.lower() == '.csv':
-    LOG.error('CSV filepath required for cache')
-    return
+    dn_out = opt_input if Path(opt_input).is_dir() else Path(opt_input).parent
+  else:
+    dn_out = opt_output
+  fp_out = join(dn_out, FN_CACHE_SHA256)
 
   # inits
   n_cpus = cpu_count()
   opt_threads = opt_threads if opt_threads else n_cpus
-  ensure_dir(opt_output)
+  ensure_dir(fp_out)
 
   # mk list of all file inputs and update cache
   filepaths = []
@@ -72,12 +71,12 @@ def cli(ctx, opt_input, opt_output, opt_recursive, opt_keep, opt_rebuild, opt_ex
   # init list of dict of filepaths
 
   # load cache of existing filepaths and hashes
-  if Path(opt_output).is_file() and not opt_rebuild:
-    df_cache = pd.read_csv(opt_output, dtype={'date_modified': str})
+  if Path(fp_out).is_file() and not opt_rebuild:
+    df_cache = pd.read_csv(fp_out, dtype={'date_modified': str})
     LOG.info(f'{len(df_cache):,} items cached')
   else:
     df_cache = pd.DataFrame({"filepath": [], 'sha256': [], 'date_modified': []})
-    LOG.info(f'Building new cache file at: {opt_output}')
+    LOG.info(f'Building new cache file at: {fp_out}')
 
     
   # remove files from cache that no longer exist in file list
@@ -126,10 +125,10 @@ def cli(ctx, opt_input, opt_output, opt_recursive, opt_keep, opt_rebuild, opt_ex
   df_new = pd.DataFrame.from_dict(results)
   df_cache = pd.concat([df_cache, df_new])
   df_cache.sort_values(by=('date_modified'), ascending=False, inplace=True)
-  df_cache.to_csv(opt_output, index=False)
+  df_cache.to_csv(fp_out, index=False)
 
   # dedupe
   df_cache.drop_duplicates(['sha256'], keep=opt_keep, inplace=True)
-  fp_out = join(Path(opt_output).parent, FN_DEDUP_SHA256)
+  fp_out = join(dn_out, FN_DEDUP_SHA256)
   write_txt(fp_out, df_cache.filepath.values.tolist())
   LOG.info(f'{len(df_cache):,} deduplicated files written to text file: {fp_out}')
