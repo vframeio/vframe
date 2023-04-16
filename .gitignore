@@ -9,18 +9,27 @@ notebooks/
 # Ignore
 3rdparty/
 vframe_cli/plugins/*
-modelzoo/models*
 data/local/*
 data/media/input/*
 data/media/output/*
 data/incoming/*
 data/test/*
 data/reports/*
+models/detection/**/
+models/classification/**/
+models/ocr/**/
+!models/config.yaml
+!models/detection/*.yaml
+config-*.yaml
+*.zip
+
+# Keep
+!models/detection/.gitkeep
+
 
 # Don't ignore
 !vframe_cli/plugins/.gitkeep
 !vframe_cli/plugins/config.yaml*
-!modelzoo/models/.gitkeep
 !data/.gitkeep
 !data/local/.gitkeep
 !data/media/.gitkeep
