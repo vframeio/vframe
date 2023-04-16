@@ -21,7 +21,13 @@ logger:
 # ---------------------------------------------------------------------------
 
 modelzoo:
-  - filepath: 'models/config.yaml'
+  # VFRAME models
+  - filepath: 'models/detection/9n235.yaml'
+  - filepath: 'models/detection/rbk250.yaml'
+  - filepath: 'models/detection/face.yaml'
+  # 3rd party models
+  - filepath: 'models/detection/objects365.yaml'
+  - filepath: 'models/detection/coco.yaml'
 
 plugins:
 

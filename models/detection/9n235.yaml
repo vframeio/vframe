@@ -1,0 +1,121 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+################################################################################
+#
+# 9N235/9N210
+#
+################################################################################
+
+anchors:
+  
+  yolo-base: &yolo-base
+    # meta
+    name: YOLOV5
+    width: 1280
+    height: 960
+    output: bbox
+    iou: 0.45
+    nms_threshold: 0.4
+    threshold: 0.7
+    resize_enabled: True
+    batch_enabled: True
+    processor: yolov5_pytorch
+    notes: Created by VFRAME https://vframe.io
+    # processor: yolov5_onnx | yolov5_pytorch
+    # local: path/to/local/model.ext
+    # remote: https://example.com
+    # model: best.pt | best.onnx
+
+  vframe-base: &vframe-base
+    <<: *yolo-base
+    
+  vframe-base-onnx: &vframe-base-onnx
+    <<: *yolo-base
+    processor: yolov5_onnx
+
+
+
+  # --------------------------------------------------------------------
+  # 9N235/210
+
+  9n235-base: &9n235-base
+    <<: *vframe-base
+    name: YOLOV5 9N235
+    width: 1280
+    height: 1280
+    threshold: 0.65
+    local: detection/9n235/
+    remote: https://dl.vframe.io/v2/models/detection/9n235/
+  9n235-base-pt: &9n235-base-pt
+    <<: *9n235-base
+    processor: yolov5_pytorch
+  9n235-base-onnx: &9n235-base-onnx
+    <<: *9n235-base
+    processor: yolov5_onnx
+
+  # PyTorch
+  9n235-01d-l6: &9n235-01d-l6
+    <<: *9n235-base-pt
+    model: vf_9n235_01d_l6.pt
+  9n235-01d-m6: &9n235-01d-m6
+    <<: *9n235-base-pt
+    model: vf_9n235_01d_m6.pt
+  9n235-01d-s6: &9n235-01d-s6
+    <<: *9n235-base-pt
+    model: vf_9n235_01d_s6.pt
+  9n235-01d-n6: &9n235-01d-n6
+    <<: *9n235-base-pt
+    model: vf_9n235_01d_n6.pt
+
+  # ONNX
+  9n235-01d-l6: &9n235-01d-l6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01d_l6.onnx
+  9n235-01d-m6: &9n235-01d-m6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01d_m6.onnx
+  9n235-01d-s6: &9n235-01d-s6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01d_s6.onnx
+  9n235-01d-n6: &9n235-01d-n6-onnx
+    <<: *9n235-base-onnx
+    model: vf_9n235_01d_n6.onnx
+
+
+
+# --------------------------------------------------------------------
+# CLI shortcuts for models with variations
+
+models:
+
+  # PyTorch
+  9n235:
+    <<: *9n235-01d-l6
+  9n235-l6:
+    <<: *9n235-01d-l6
+  9n235-m6:
+    <<: *9n235-01d-m6
+  9n235-s6:
+    <<: *9n235-01d-s6
+  9n235-n6:
+    <<: *9n235-01d-n6
+
+  # ONNX
+  9n235-onnx:
+    <<: *9n235-01d-l6-onnx
+  9n235-l6-onnx:
+    <<: *9n235-01d-l6-onnx
+  9n235-m6-onnx:
+    <<: *9n235-01d-m6-onnx
+  9n235-s6-onnx:
+    <<: *9n235-01d-s6-onnx
+  9n235-n6-onnx:
+    <<: *9n235-01d-n6-onnx

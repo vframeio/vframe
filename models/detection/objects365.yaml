@@ -1,0 +1,81 @@
+############################################################################# 
+#
+# VFRAME
+# MIT License
+# Copyright (c) 2020 Adam Harvey and VFRAME
+# https://vframe.io 
+#
+#############################################################################
+
+
+################################################################################
+#
+# Objects365
+#
+################################################################################
+
+anchors:
+  
+  yolo-base: &yolo-base
+    # meta
+    name: YOLOV5
+    width: 960
+    height: 960
+    output: bbox
+    iou: 0.45
+    nms_threshold: 0.4
+    threshold: 0.7
+    resize_enabled: True
+    batch_enabled: True
+    processor: yolov5_pytorch
+    # processor: yolov5_onnx | yolov5_pytorch
+    # local: path/to/local/model.ext
+    # remote: https://example.com
+    # model: best.pt | best.onnx
+
+  vframe-base: &vframe-base
+    <<: *yolo-base
+    notes: Created by VFRAME https://vframe.io
+  vframe-base-onnx: &vframe-base-onnx
+    <<: *yolo-base
+    processor: yolov5_onnx
+    notes: Created by VFRAME https://vframe.io
+
+  ultralytics-base: &ultralytics-base
+    <<: *yolo-base
+    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
+  ultralytics-base-onnx: &ultralytics-base-onnx
+    <<: *yolo-base
+    processor: yolov5_onnx
+    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
+
+
+  
+  # --------------------------------------------------------------------
+  # Objects365
+
+  objects365-base: &objects365-base
+    <<: *ultralytics-base
+    name: Objects365
+    notes: >
+      Trained by Glenn Jocher Ultralytics https://github.com/ultralytics/yolov5/pull/5194#issuecomment-948073928
+      python train.py --data Objects365.yaml --batch 224 --weights --cfg yolov5m.yaml --epochs 30 --img 640 --hyp hyp.scratch-low.yaml --device 0,1,2,3,4,5,6
+    local: detection/objects365/
+    remote: https://dl.vframe.io/v2/models/detection/objects365/
+  objects365-m: &objects365-m
+    <<: *objects365-base
+    width: 640
+    height: 640
+    model: yolov5m_objects365.pt
+    
+
+  
+
+# --------------------------------------------------------------------
+# CLI shortcuts for models with variations
+
+models:
+
+  # Objects365
+  objects365:
+    <<: *objects365-m
