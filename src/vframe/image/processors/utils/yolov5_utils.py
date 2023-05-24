@@ -26,7 +26,16 @@ import cv2
 
 from vframe.settings.app_cfg import LOG
 
-def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
+
+def letterbox(
+    im,
+    new_shape=(640, 640),
+    color=(114, 114, 114),
+    auto=True,
+    scaleFill=False,
+    scaleup=True,
+    stride=32,
+):
     # Resize and pad image while meeting stride-multiple constraints
     shape = im.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
@@ -55,11 +64,20 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleF
         im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    im = cv2.copyMakeBorder(
+        im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
+    )  # add border
     return im, ratio, (dw, dh)
 
 
-def letterbox_old(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True):
+def letterbox_old(
+    img,
+    new_shape=(640, 640),
+    color=(114, 114, 114),
+    auto=True,
+    scaleFill=False,
+    scaleup=True,
+):
     # Resize image to a 32-pixel-multiple rectangle https://github.com/ultralytics/yolov3/issues/232
     shape = img.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
@@ -88,20 +106,22 @@ def letterbox_old(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, s
         img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
     top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
     left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-    img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+    img = cv2.copyMakeBorder(
+        img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
+    )  # add border
     return img, ratio, (dw, dh)
 
 
 def non_max_suppression(
-        prediction,
-        conf_thres=0.25,
-        iou_thres=0.45,
-        classes=None,
-        agnostic=False,
-        multi_label=False,
-        labels=(),
-        max_det=300,
-        nm=0,  # number of masks
+    prediction,
+    conf_thres=0.25,
+    iou_thres=0.45,
+    classes=None,
+    agnostic=False,
+    multi_label=False,
+    labels=(),
+    max_det=300,
+    nm=0,  # number of masks
 ):
     """Non-Maximum Suppression (NMS) on inference results to reject overlapping detections
     Source: https://github.com/ultralytics/yolov5/blob/master/utils/general.py#L884
@@ -109,11 +129,13 @@ def non_max_suppression(
          list of detections, on (n,6) tensor per image [xyxy, conf, cls]
     """
 
-    if isinstance(prediction, (list, tuple)):  # YOLOv5 model in validation model, output = (inference_out, loss_out)
+    if isinstance(
+        prediction, (list, tuple)
+    ):  # YOLOv5 model in validation model, output = (inference_out, loss_out)
         prediction = prediction[0]  # select only inference output
 
     device = prediction.device
-    mps = 'mps' in device.type  # Apple MPS
+    mps = "mps" in device.type  # Apple MPS
     if mps:  # MPS not fully supported yet, convert tensors to CPU before NMS
         prediction = prediction.cpu()
     bs = prediction.shape[0]  # batch size
@@ -121,8 +143,12 @@ def non_max_suppression(
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Checks
-    assert 0 <= conf_thres <= 1, f'Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0'
-    assert 0 <= iou_thres <= 1, f'Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0'
+    assert (
+        0 <= conf_thres <= 1
+    ), f"Invalid Confidence threshold {conf_thres}, valid values are between 0.0 and 1.0"
+    assert (
+        0 <= iou_thres <= 1
+    ), f"Invalid IoU {iou_thres}, valid values are between 0.0 and 1.0"
 
     # Settings
     # min_wh = 2  # (pixels) minimum box width and height
@@ -158,7 +184,9 @@ def non_max_suppression(
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf
 
         # Box/Mask
-        box = xywh2xyxy(x[:, :4])  # center_x, center_y, width, height) to (x1, y1, x2, y2)
+        box = xywh2xyxy(
+            x[:, :4]
+        )  # center_x, center_y, width, height) to (x1, y1, x2, y2)
         mask = x[:, mi:]  # zero columns if no masks
 
         # Detections matrix nx6 (xyxy, conf, cls)
@@ -192,11 +220,13 @@ def non_max_suppression(
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
-        if merge and (1 < n < 3E3):  # Merge NMS (boxes merged using weighted mean)
+        if merge and (1 < n < 3e3):  # Merge NMS (boxes merged using weighted mean)
             # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
             weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(
+                1, keepdim=True
+            )  # merged boxes
             if redundant:
                 i = i[iou.sum(1) > 1]  # require redundancy
 
@@ -204,7 +234,7 @@ def non_max_suppression(
         if mps:
             output[xi] = output[xi].to(device)
         if (time.time() - t) > time_limit:
-            LOG.warning(f'WARNING ⚠️ NMS time limit {time_limit:.3f}s exceeded')
+            LOG.warning(f"WARNING ⚠️ NMS time limit {time_limit:.3f}s exceeded")
             break  # time limit exceeded
 
     return output
@@ -225,8 +255,9 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
         b2_y1, b2_y2 = box2[1] - box2[3] / 2, box2[1] + box2[3] / 2
 
     # Intersection area
-    inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * \
-            (torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)).clamp(0)
+    inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * (
+        torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)
+    ).clamp(0)
 
     # Union Area
     w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + eps
@@ -235,16 +266,24 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
 
     iou = inter / union
     if GIoU or DIoU or CIoU:
-        cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
+        cw = torch.max(b1_x2, b2_x2) - torch.min(
+            b1_x1, b2_x1
+        )  # convex (smallest enclosing box) width
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
-            c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
-            rho2 = ((b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2 +
-                    (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2) / 4  # center distance squared
+            c2 = cw**2 + ch**2 + eps  # convex diagonal squared
+            rho2 = (
+                (b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2
+                + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2
+            ) / 4  # center distance squared
             if DIoU:
                 return iou - rho2 / c2  # DIoU
-            elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-                v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
+            elif (
+                CIoU
+            ):  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
+                v = (4 / math.pi**2) * torch.pow(
+                    torch.atan(w2 / h2) - torch.atan(w1 / h1), 2
+                )
                 with torch.no_grad():
                     alpha = v / ((1 + eps) - iou + v)
                 return iou - (rho2 / c2 + v * alpha)  # CIoU
@@ -276,8 +315,17 @@ def box_iou(box1, box2):
     area2 = box_area(box2.T)
 
     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
-    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
+    inter = (
+        (
+            torch.min(box1[:, None, 2:], box2[:, 2:])
+            - torch.max(box1[:, None, :2], box2[:, :2])
+        )
+        .clamp(0)
+        .prod(2)
+    )
+    return inter / (
+        area1[:, None] + area2 - inter
+    )  # iou = inter / (area1 + area2 - inter)
 
 
 def xyxy2xywh(x):
@@ -288,6 +336,7 @@ def xyxy2xywh(x):
     y[:, 2] = x[:, 2] - x[:, 0]  # width
     y[:, 3] = x[:, 3] - x[:, 1]  # height
     return y
+
 
 def xywh2xyxy(x):
     # Convert nx4 boxes from [x, y, w, h] to [x1, y1, x2, y2] where xy1=top-left, xy2=bottom-right
@@ -302,8 +351,12 @@ def xywh2xyxy(x):
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
     # Rescale coords (xyxy) from img1_shape to img0_shape
     if ratio_pad is None:  # calculate from img0_shape
-        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
-        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
+        gain = min(
+            img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1]
+        )  # gain  = old / new
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (
+            img1_shape[0] - img0_shape[0] * gain
+        ) / 2  # wh padding
     else:
         gain = ratio_pad[0][0]
         pad = ratio_pad[1]

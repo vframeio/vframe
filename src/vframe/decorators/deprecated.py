@@ -2,6 +2,7 @@
 # Helpers for deprecation
 ###############################################################################
 
+
 class DeprecationWarning(Warning):  # pylint: disable=redefined-builtin
     """Warning for deprecated calls.
     Since python 2.7 DeprecatedWarning is silent by default. So we define
@@ -23,6 +24,7 @@ def warn(msg, category=UserWarning, stacklevel=2):
         Usually ``2``.
     """
     import warnings
+
     warnings.warn(msg, category=category, stacklevel=stacklevel)
 
 
@@ -59,8 +61,9 @@ class deprecated(object):  # pylint: disable=invalid-name
         An optional comment that will be appended to the warning message.
     """
 
-    def __init__(self, alt_func=None, behavior="warn", removed_version=None,
-                 comment=None):
+    def __init__(
+        self, alt_func=None, behavior="warn", removed_version=None, comment=None
+    ):
         self.alt_func = alt_func
         self.behavior = behavior
         self.removed_version = removed_version
@@ -73,17 +76,15 @@ class deprecated(object):  # pylint: disable=invalid-name
 
         rmv_msg = None
         if self.removed_version is not None:
-            rmv_msg = "It will be removed in version %s." % (
-                self.removed_version,)
+            rmv_msg = "It will be removed in version %s." % (self.removed_version,)
 
         comment_msg = None
         if self.comment is not None and len(self.comment) > 0:
             comment_msg = "%s." % (self.comment.rstrip(". "),)
 
-        addendum = " ".join([submsg
-                             for submsg
-                             in [alt_msg, rmv_msg, comment_msg]
-                             if submsg is not None])
+        addendum = " ".join(
+            [submsg for submsg in [alt_msg, rmv_msg, comment_msg] if submsg is not None]
+        )
 
         @functools.wraps(func)
         def wrapped(*args, **kwargs):
@@ -92,6 +93,7 @@ class deprecated(object):  # pylint: disable=invalid-name
 
             # TODO add class name if class method
             import inspect
+
             # arg_names = func.__code__.co_varnames
 
             # getargspec() was deprecated in py3, but doesn't exist in py2
@@ -102,10 +104,11 @@ class deprecated(object):  # pylint: disable=invalid-name
 
             if "self" in arg_names or "cls" in arg_names:
                 main_msg = "Method ``%s.%s()`` is deprecated." % (
-                    args[0].__class__.__name__, func.__name__)
+                    args[0].__class__.__name__,
+                    func.__name__,
+                )
             else:
-                main_msg = "Function ``%s()`` is deprecated." % (
-                    func.__name__,)
+                main_msg = "Function ``%s()`` is deprecated." % (func.__name__,)
 
             msg = (main_msg + " " + addendum).rstrip(" ").replace("``", "`")
 

@@ -28,9 +28,9 @@ from vframe.utils import click_utils
   multiple=True,
   help='DNN blob image size. Overrides config file')
 @click.option('--image-size', 'opt_im_sizes', 
-  default=[(640,480)], type=(int, int), multiple=True,
+  default=[(640,640)], type=(int, int), multiple=True,
   help='Image inference size')
-@click.option('--iterations', 'opt_n_iters',
+@click.option('--iters', 'opt_n_iters',
   default=10, show_default=True,
   type=click.IntRange(1,1000),
   help='Number of iterations')
