@@ -16,106 +16,121 @@
 
 anchors:
   
-  yolo-base: &yolo-base
-    # meta
-    name: YOLOV5
-    width: 1280
-    height: 960
+  base: &base
+    name: 9N235 YOLOV8 Detector
+    # processor
+    processor: yolov8 # yolov8 | yolov5_onnx | yolov5_pytorch (deprecated)
     output: bbox
+    width: 960
+    height: 960
     iou: 0.45
     nms_threshold: 0.4
-    threshold: 0.7
+    threshold: 0.6
     resize_enabled: True
     batch_enabled: True
-    processor: yolov5_pytorch
-    notes: Created by VFRAME https://vframe.io
-    # processor: yolov5_onnx | yolov5_pytorch
-    # local: path/to/local/model.ext
-    # remote: https://example.com
-    # model: best.pt | best.onnx
+    # meta
+    author: VFRAME.io
+    author_url: https://vframe.io
+    license_tag: MIT
+    license_url: https://github.com/vframeio/vframe/LICENSE
+    version: "0.1"
+    # files
+    local: detection/9n235/
+    remote: https://dl.vframe.io/models/detection/9n235/
+    # overwrite
+    # model: best.engine, best.mlmodel, best.onnx
 
-  vframe-base: &vframe-base
-    <<: *yolo-base
-    
-  vframe-base-onnx: &vframe-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-
-
-
-  # --------------------------------------------------------------------
-  # 9N235/210
-
-  9n235-base: &9n235-base
-    <<: *vframe-base
-    name: YOLOV5 9N235
+  onnx-v5: &onnx-v5
+    <<: *base
     width: 1280
     height: 1280
-    threshold: 0.65
-    local: detection/9n235/
-    remote: https://dl.vframe.io/v2/models/detection/9n235/
-  9n235-base-pt: &9n235-base-pt
-    <<: *9n235-base
-    processor: yolov5_pytorch
-  9n235-base-onnx: &9n235-base-onnx
-    <<: *9n235-base
     processor: yolov5_onnx
-
-  # PyTorch
-  9n235-01d-l6: &9n235-01d-l6
-    <<: *9n235-base-pt
-    model: vf_9n235_01d_l6.pt
-  9n235-01d-m6: &9n235-01d-m6
-    <<: *9n235-base-pt
-    model: vf_9n235_01d_m6.pt
-  9n235-01d-s6: &9n235-01d-s6
-    <<: *9n235-base-pt
-    model: vf_9n235_01d_s6.pt
-  9n235-01d-n6: &9n235-01d-n6
-    <<: *9n235-base-pt
-    model: vf_9n235_01d_n6.pt
-
-  # ONNX
-  9n235-01d-l6: &9n235-01d-l6-onnx
-    <<: *9n235-base-onnx
-    model: vf_9n235_01d_l6.onnx
-  9n235-01d-m6: &9n235-01d-m6-onnx
-    <<: *9n235-base-onnx
-    model: vf_9n235_01d_m6.onnx
-  9n235-01d-s6: &9n235-01d-s6-onnx
-    <<: *9n235-base-onnx
-    model: vf_9n235_01d_s6.onnx
-  9n235-01d-n6: &9n235-01d-n6-onnx
-    <<: *9n235-base-onnx
-    model: vf_9n235_01d_n6.onnx
 
 
 
 # --------------------------------------------------------------------
-# CLI shortcuts for models with variations
+# CLI enums for models with variations
 
 models:
+  # Old V5 models
 
-  # PyTorch
+  9n235-sm-onnx: &9n235-sm-onnx
+    <<: *onnx-v5
+    model: vf_9n235_01d_s6_v5.onnx
+  9n235-md-onnx: &9n235-md-onnx
+    <<: *onnx-v5
+    model: vf_9n235_01d_s6_v5.onnx
+  9n235-lg-onnx: &9n235-lg-onnx
+    <<: *onnx-v5
+    model: vf_9n235_01d_s6_v5.onnx
+
+
+  # New V8 models  
+  # TensorRT
+  9n235-nn-rt: &9n235-nn-rt
+    <<: *base
+    model: vf_9n235_01f_n6_v8.engine
+  # 9n235-sm-rt: &9n235-sm-rt
+  #   <<: *base
+  #   model: vf_9n235_01f_s6_v8.engine
+  # 9n235-md-rt: &9n235-md-rt
+  #   <<: *base
+  #   model: vf_9n235_01f_m6_v8.engine
+  # 9n235-lg-rt: &9n235-lg-rt
+  #   <<: *base
+  #   model: vf_9n235_01f_l6_v8.engine
+
+  # # ONNX
+  9n235-nn-onnx: &9n235-nn-onnx
+    <<: *base
+    model: vf_9n235_01f_n6_v8.onnx
+  # 9n235-sm-onnx: &9n235-sm-onnx
+  #   <<: *base
+  #   model: vf_9n235_01f_s6_v8.onnx
+  # 9n235-md-onnx: &9n235-md-onnx
+  #   <<: *base
+  #   model: vf_9n235_01f_m6_v8.onnx
+  # 9n235-lg-onnx: &9n235-lg-onnx
+  #   <<: *base
+  #   model: vf_9n235_01f_l6_v8.onnx
+
+  # # Torchscript
+  # 9n235-nn-torchscript: &9n235-nn-torchscript
+  #   <<: *base
+  #   model: vf_9n235_01f_n6_v8.torchscript
+  # 9n235-sm-torchscript: &9n235-sm-torchscript
+  #   <<: *base
+  #   model: vf_9n235_01f_s6_v8.torchscript
+  # 9n235-md-torchscript: &9n235-md-torchscript
+  #   <<: *base
+  #   model: vf_9n235_01f_m6_v8.torchscript
+  # 9n235-lg-torchscript: &9n235-lg-torchscript
+  #   <<: *base
+  #   model: vf_9n235_01f_l6_v8.torchscript
+
+  # # CoreML
+  9n235-nn-coreml: &9n235-nn-coreml
+    <<: *base
+    model: vf_9n235_01f_n6_v8.mlmodel
+  # 9n235-sm-coreml: &9n235-sm-coreml
+  #   <<: *base
+  #   model: vf_9n235_01f_s6_v8.mlmodel
+  # 9n235-md-coreml: &9n235-md-coreml
+  #   <<: *base
+  #   model: vf_9n235_01f_m6_v8.mlmodel
+  # 9n235-lg-coreml: &9n235-lg-coreml
+  #   <<: *base
+  #   model: vf_9n235_01f_l6_v8.mlmodel
+
+  # Default: Use TensorRT
   9n235:
-    <<: *9n235-01d-l6
-  9n235-l6:
-    <<: *9n235-01d-l6
-  9n235-m6:
-    <<: *9n235-01d-m6
-  9n235-s6:
-    <<: *9n235-01d-s6
-  9n235-n6:
-    <<: *9n235-01d-n6
-
-  # ONNX
-  9n235-onnx:
-    <<: *9n235-01d-l6-onnx
-  9n235-l6-onnx:
-    <<: *9n235-01d-l6-onnx
-  9n235-m6-onnx:
-    <<: *9n235-01d-m6-onnx
-  9n235-s6-onnx:
-    <<: *9n235-01d-s6-onnx
-  9n235-n6-onnx:
-    <<: *9n235-01d-n6-onnx
+    <<: *9n235-nn-rt
+  9n235-nn:
+    <<: *9n235-nn-rt
+  # In progress: sm,md,lg use onnx
+  9n235-sm:
+    <<: *9n235-sm-onnx
+  9n235-md:
+    <<: *9n235-md-onnx
+  9n235-lg:
+    <<: *9n235-lg-onnx

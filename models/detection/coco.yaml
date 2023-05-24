@@ -10,134 +10,109 @@
 
 ################################################################################
 #
-# Conflict zone models
+# COCO
 #
 ################################################################################
 
 anchors:
   
-  yolo-base: &yolo-base
+  base: &base
     # meta
-    name: YOLOV5
-    width: 960
-    height: 960
+    name: COCO YOLOV8 Detector
+    width: 640
+    height: 640
     output: bbox
     iou: 0.45
     nms_threshold: 0.4
-    threshold: 0.7
+    threshold: 0.6
     resize_enabled: True
     batch_enabled: True
-    processor: yolov5_pytorch
-    # processor: yolov5_onnx | yolov5_pytorch
-    # local: path/to/local/model.ext
-    # remote: https://example.com
-    # model: best.pt | best.onnx
-
-  ultralytics-base: &ultralytics-base
-    <<: *yolo-base
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-  ultralytics-base-onnx: &ultralytics-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-
-
-  # --------------------------------------------------------------------
-  # COCO: general object detection
-
-  coco-base: &coco-base
-    <<: *ultralytics-base
+    processor: yolov8  # yolov8, yolov5_onnx (yolov5_pytorch is deprecated)
+    author: Ultralytics
+    author_url: https://ultralytics.com/
+    license_tag: AGPL-3.0
+    license_url: https://ultralytics.com/license
+    version: 8.0.106
     local: detection/coco/
-    remote: https://dl.vframe.io/v2/models/detection/coco/
-  coco-n6: &coco-n6
-    <<: *coco-base
-    width: 640
-    height: 640
-    model: coco_n6.pt
-  coco-s6: &coco-s6
-    <<: *coco-base
-    width: 640
-    height: 640
-    model: coco_s6.pt
-  coco-m6: &coco-m6
-    <<: *coco-base
-    width: 720
-    height: 720
-    model: coco_m6.pt
-  coco-l6: &coco-l6
-    <<: *coco-base
-    width: 960
-    height: 960
-    model: coco_l6.pt
-  coco-x6: &coco-x6
-    <<: *coco-base
-    width: 1280
-    height: 1280
-    model: coco_x6.pt
-
-  # ONNX
-  coco-base-onnx: &coco-base-onnx
-    <<: *ultralytics-base
-    processor: yolov5_onnx
-    local: detection/coco/
-    remote: https://dl.vframe.io/v2/models/onnx/detection/coco/
-  coco-n6-onnx: &coco-n6-onnx
-    <<: *coco-base-onnx
-    width: 640
-    height: 640
-    model: coco_n6.onnx
-  coco-s6-onnx: &coco-s6-onnx
-    <<: *coco-base-onnx
-    width: 640
-    height: 640
-    model: coco_s6.onnx
-  coco-m6-onnx: &coco-m6-onnx
-    <<: *coco-base-onnx
-    width: 720
-    height: 720
-    model: coco_m6.onnx
-  coco-l6-onnx: &coco-l6-onnx
-    <<: *coco-base-onnx
-    width: 960
-    height: 960
-    model: coco_l6.onnx
-  coco-x6-onnx: &coco-x6-onnx
-    <<: *coco-base-onnx
-    width: 1280
-    height: 1280
-    model: coco_x6.onnx
-
+    remote: https://dl.vframe.io/models/detection/coco/
+    # overwrite
+    # model: best.engine, best.mlmodel, best.onnx
 
 
 # --------------------------------------------------------------------
 # CLI shortcuts for models with variations
 
 models:
+  
+  # ----------------------------------------------------------
+  # TensorRT
 
-  # COCO
+  coco-nn-rt: &coco-nn-rt
+    <<: *base
+    model: yolov8n.engine
+  coco-sm-rt: &coco-sm-rt
+    <<: *base
+    model: yolov8s.engine
+  coco-md-rt: &coco-md-rt
+    <<: *base
+    model: yolov8m.engine
+  coco-lg-rt: &nn-coco-lg-rt
+    <<: *base
+    model: yolov8l.engine
+  coco-xl-rt: &coco-xl-rt
+    <<: *base
+    model: yolov8x.engine
+
+  # ----------------------------------------------------------
+  # ONNX
+  
+  coco-nn-onnx: &coco-nn-onnx
+    <<: *base
+    model: yolov8n.onnx
+  coco-sm-onnx: &coco-sm-onnx
+    <<: *base
+    model: yolov8s.onnx
+  coco-md-onnx: &coco-md-onnx
+    <<: *base
+    model: yolov8m.onnx
+  coco-lg-onnx: &nn-coco-lg-onnx
+    <<: *base
+    model: yolov8l.onnx
+  coco-xl-onnx: &coco-xl-onnx
+    <<: *base
+    model: yolov8x.onnx
+
+  # ----------------------------------------------------------
+  # CoreML
+
+  coco-nn-coreml: &coco-nn-coreml
+    <<: *base
+    model: yolov8n.mlmodel
+  coco-sm-coreml: &coco-sm-coreml
+    <<: *base
+    model: yolov8s.mlmodel
+  coco-md-coreml: &coco-md-coreml
+    <<: *base
+    model: yolov8m.mlmodel
+  coco-lg-coreml: &nn-coco-lg-coreml
+    <<: *base
+    model: yolov8l.mlmodel
+  coco-xl-coreml: &coco-xl-coreml
+    <<: *base
+    model: yolov8x.mlmodel
+  
+  # ----------------------------------------------------------
+  # default models use TensorRT
+  
   coco:
-    <<: *coco-l6
+    <<: *coco-md-rt
   coco-nn:
-    <<: *coco-n6
+    <<: *coco-md-rt
   coco-sm:
-    <<: *coco-s6
+    <<: *coco-md-rt
   coco-md:
-    <<: *coco-m6
+    <<: *coco-md-rt
   coco-lg:
-    <<: *coco-l6
+    <<: *coco-md-rt
   coco-xl:
-    <<: *coco-x6
-
-  # COCO ONNX
-  coco-onnx:
-    <<: *coco-l6-onnx
-  coco-nn-onnx:
-    <<: *coco-n6-onnx
-  coco-sm-onnx:
-    <<: *coco-s6-onnx
-  coco-md-onnx:
-    <<: *coco-m6-onnx
-  coco-lg-onnx:
-    <<: *coco-l6-onnx
-  coco-xl-onnx:
-    <<: *coco-x6-onnx
+    <<: *coco-md-rt

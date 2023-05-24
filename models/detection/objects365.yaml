@@ -16,66 +16,44 @@
 
 anchors:
   
-  yolo-base: &yolo-base
-    # meta
-    name: YOLOV5
-    width: 960
-    height: 960
+  base: &base
+    name: Objects 365 YOLOV5 Detector
+    # processor
+    processor: yolov5_onnx # yolov8 | yolov5_onnx | yolov5_pytorch (deprecated)
     output: bbox
+    width: 640
+    height: 640
     iou: 0.45
     nms_threshold: 0.4
-    threshold: 0.7
+    threshold: 0.6
     resize_enabled: True
     batch_enabled: True
-    processor: yolov5_pytorch
-    # processor: yolov5_onnx | yolov5_pytorch
-    # local: path/to/local/model.ext
-    # remote: https://example.com
-    # model: best.pt | best.onnx
-
-  vframe-base: &vframe-base
-    <<: *yolo-base
-    notes: Created by VFRAME https://vframe.io
-  vframe-base-onnx: &vframe-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-    notes: Created by VFRAME https://vframe.io
-
-  ultralytics-base: &ultralytics-base
-    <<: *yolo-base
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-  ultralytics-base-onnx: &ultralytics-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-
-
-  
-  # --------------------------------------------------------------------
-  # Objects365
-
-  objects365-base: &objects365-base
-    <<: *ultralytics-base
-    name: Objects365
+    # meta
+    author: Ultralytics
+    author_url: https://ultralytics.com/
+    license_tag: AGPL-3.0
+    license_url: https://ultralytics.com/license
+    version: "0.1"
     notes: >
       Trained by Glenn Jocher Ultralytics https://github.com/ultralytics/yolov5/pull/5194#issuecomment-948073928
       python train.py --data Objects365.yaml --batch 224 --weights --cfg yolov5m.yaml --epochs 30 --img 640 --hyp hyp.scratch-low.yaml --device 0,1,2,3,4,5,6
+    # files
     local: detection/objects365/
-    remote: https://dl.vframe.io/v2/models/detection/objects365/
-  objects365-m: &objects365-m
-    <<: *objects365-base
-    width: 640
-    height: 640
-    model: yolov5m_objects365.pt
-    
+    remote: https://dl.vframe.io/models/detection/objects365/
+    # overwrite
+    # model: best.engine, best.mlmodel, best.onnx
 
-  
+  # ONNX
+  objects365-md-onnx: &objects365-md-onnx
+    <<: *base
+    model: ultralytics_obj365_01_m_v5_640.onnx
+
 
 # --------------------------------------------------------------------
-# CLI shortcuts for models with variations
+# CLI enums for models with variations
 
 models:
 
-  # Objects365
+  # Default
   objects365:
-    <<: *objects365-m
+    <<: *objects365-md-onnx

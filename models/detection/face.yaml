@@ -10,255 +10,53 @@
 
 ################################################################################
 #
-# Face detection for redaction
+# Face detection models for redaction
 #
 ################################################################################
 
 anchors:
   
-  yolo-base: &yolo-base
-    # meta
-    name: YOLOV5
+  base: &base
+    name: Face YOLOV5 Detector
+    # processor
+    processor: yolov5_onnx # yolov8 | yolov5_onnx | yolov5_pytorch (deprecated)
+    output: bbox
     width: 960
     height: 960
-    output: bbox
     iou: 0.45
     nms_threshold: 0.4
-    threshold: 0.7
+    threshold: 0.6
     resize_enabled: True
     batch_enabled: True
-    processor: yolov5_pytorch
-    # processor: yolov5_onnx | yolov5_pytorch
-    # local: path/to/local/model.ext
-    # remote: https://example.com
-    # model: best.pt | best.onnx
-
-  vframe-base: &vframe-base
-    <<: *yolo-base
-    notes: Created by VFRAME https://vframe.io
-  vframe-base-onnx: &vframe-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-    notes: Created by VFRAME https://vframe.io
-
-  ultralytics-base: &ultralytics-base
-    <<: *yolo-base
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-  ultralytics-base-onnx: &ultralytics-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-    notes: Created by Ultralytics https://github.com/ultralytics/yolov5/
-
-
-  # --------------------------------------------------------------------
-  # COCO: general object detection
-
-  coco-base: &coco-base
-    <<: *ultralytics-base
-    local: detection/coco/
-    remote: https://dl.vframe.io/v2/models/detection/coco/
-  coco-n6: &coco-n6
-    <<: *coco-base
-    width: 640
-    height: 640
-    model: coco_n6.pt
-  coco-s6: &coco-s6
-    <<: *coco-base
-    width: 640
-    height: 640
-    model: coco_s6.pt
-  coco-m6: &coco-m6
-    <<: *coco-base
-    width: 720
-    height: 720
-    model: coco_m6.pt
-  coco-l6: &coco-l6
-    <<: *coco-base
-    width: 960
-    height: 960
-    model: coco_l6.pt
-  coco-x6: &coco-x6
-    <<: *coco-base
-    width: 1280
-    height: 1280
-    model: coco_x6.pt
-
-  # ONNX
-  coco-base-onnx: &coco-base-onnx
-    <<: *ultralytics-base
-    processor: yolov5_onnx
-    local: detection/coco/
-    remote: https://dl.vframe.io/v2/models/onnx/detection/coco/
-  coco-n6-onnx: &coco-n6-onnx
-    <<: *coco-base-onnx
-    width: 640
-    height: 640
-    model: coco_n6.onnx
-  coco-s6-onnx: &coco-s6-onnx
-    <<: *coco-base-onnx
-    width: 640
-    height: 640
-    model: coco_s6.onnx
-  coco-m6-onnx: &coco-m6-onnx
-    <<: *coco-base-onnx
-    width: 720
-    height: 720
-    model: coco_m6.onnx
-  coco-l6-onnx: &coco-l6-onnx
-    <<: *coco-base-onnx
-    width: 960
-    height: 960
-    model: coco_l6.onnx
-  coco-x6-onnx: &coco-x6-onnx
-    <<: *coco-base-onnx
-    width: 1280
-    height: 1280
-    model: coco_x6.onnx
-
-
-  # --------------------------------------------------------------------
-  # Objects365
-
-  objects365-base: &objects365-base
-    <<: *ultralytics-base
-    name: Objects365
-    notes: >
-      Trained by Glenn Jocher Ultralytics https://github.com/ultralytics/yolov5/pull/5194#issuecomment-948073928
-      python train.py --data Objects365.yaml --batch 224 --weights --cfg yolov5m.yaml --epochs 30 --img 640 --hyp hyp.scratch-low.yaml --device 0,1,2,3,4,5,6
-    local: detection/objects365/
-    remote: https://dl.vframe.io/v2/models/detection/objects365/
-  objects365-m: &objects365-m
-    <<: *objects365-base
-    width: 640
-    height: 640
-    model: yolov5m_objects365.pt
-    
-
-  # --------------------------------------------------------------------
-  # Face redaction
-
-  # PyTorch
-  face-base: &face-base
-    <<: *vframe-base
-    name: YOLOV5 Face
+    # meta
+    author: VFRAME.io
+    author_url: https://vframe.io
+    license_tag: MIT
+    license_url: https://github.com/vframeio/vframe/LICENSE
+    version: "0.7"
+    # files
     local: detection/face/
-    remote: https://dl.vframe.io/v2/models/detection/face/
-  face-18-n6: &face-18-n6
-    <<: *face-base
-    width: 960
-    height: 960
-    model: yoloface_18_n6.pt
-  face-18-s6: &face-18-s6
-    <<: *face-base
-    width: 960
-    height: 960
-    model: yoloface_18_s6.pt
-  face-18-l6: &face-18-l6
-    <<: *face-base
-    width: 1280
-    height: 1280
-    model: yoloface_18_l6.pt
-  
-  # ONNX
-  face-base-onnx: &face-base-onnx
-    <<: *vframe-base-onnx
-    local: detection/face/
-    remote: https://dl.vframe.io/v2/models/onnx/detection/face/
-  face-lg-onnx: &face-lg-onnx
-    <<: *face-base-onnx
-    width: 960
-    height: 960
-    model: yoloface_lg_960.onnx
-
-
-  # --------------------------------------------------------------------
-  # RBK250
-
-  rbk250-base: &rbk250-base
-    <<: *vframe-base
-    name: YOLOV5 RBK250
-    local: detection/rbk250/
-    remote: https://dl.vframe.io/v2/models/detection/rbk250/
-  rbk250-48: &rbk250-48
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960, large model arch, approx 0.97 F1
-    model: rbk250_48_l6_960.pt
-  rbk250-03b: &rbk250-03b
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960 with all images, large model arch, 0.9777 F1
-    model: rbk250_03b_l6_960.pt
-  rbk250-03a3: &rbk250-03a3
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960 with batch 11-12, large model arch, 0.912 F1
-    model: rbk250_03a3_l6_960.pt
-
+    remote: https://dl.vframe.io/models/detection/face/
+    # overwrite
+    # model: best.engine, best.mlmodel, best.onnx
 
 
 # --------------------------------------------------------------------
-# CLI shortcuts for models with variations
+# CLI enums for models with variations
 
 models:
+  
+  # ONNX
+  face-nn: &face-nn
+    <<: *base
+    model: vf_face_18_n6.onnx
+  face-sm: &face-sm
+    <<: *base
+    model: vf_face_18_s6.onnx
+  face-lg: &face-lg
+    <<: *base
+    model: vf_face_18c_l6.onnx
 
-  # COCO
-  coco:
-    <<: *coco-l6
-  coco-nn:
-    <<: *coco-n6
-  coco-sm:
-    <<: *coco-s6
-  coco-md:
-    <<: *coco-m6
-  coco-lg:
-    <<: *coco-l6
-  coco-xl:
-    <<: *coco-x6
-
-  # COCO ONNX
-  coco-onnx:
-    <<: *coco-l6-onnx
-  coco-nn-onnx:
-    <<: *coco-n6-onnx
-  coco-sm-onnx:
-    <<: *coco-s6-onnx
-  coco-md-onnx:
-    <<: *coco-m6-onnx
-  coco-lg-onnx:
-    <<: *coco-l6-onnx
-  coco-xl-onnx:
-    <<: *coco-x6-onnx
-
-  # Objects365
-  objects365:
-    <<: *objects365-m
-
-  # Face
+  # Default
   face:
-    <<: *face-18-l6
-  face-nn:
-    <<: *face-18-n6
-  face-sm:
-    <<: *face-18-s6
-  face-lg:
-    <<: *face-18-l6
-
-  face-onnx:
-    <<: *face-base-onnx
-    model: yoloface_lg_960.onnx
-  face-lg-onnx:
-    <<: *face-base-onnx
-    model: yoloface_lg_960.onnx
-  face-xl-onnx:
-    <<: *face-base-onnx
-    model: yoloface_lg_960.onnx
-
-  # RBK250
-  rbk250:
-    <<: *rbk250-03b
-  rbk250-03a3:
-    <<: *rbk250-03a3
+    <<: *face-lg

@@ -2,7 +2,7 @@
 #
 # VFRAME
 # MIT License
-# Copyright (c) Adam Harvey and VFRAME
+# Copyright (c) 2020 Adam Harvey and VFRAME
 # https://vframe.io 
 #
 #############################################################################
@@ -10,72 +10,56 @@
 
 ################################################################################
 #
-# RBK-250
+# Objects365
 #
 ################################################################################
 
 anchors:
   
-  yolo-base: &yolo-base
-    # meta
-    name: YOLOV5
+  base: &base
+    name: RBK-250 Tailfin YOLOV5 Detector
+    # processor
+    processor: yolov5_onnx # yolov8 | yolov5_onnx | yolov5_pytorch (deprecated)
+    output: bbox
     width: 960
     height: 960
-    output: bbox
     iou: 0.45
     nms_threshold: 0.4
-    threshold: 0.7
+    threshold: 0.6
     resize_enabled: True
     batch_enabled: True
-    processor: yolov5_pytorch
-    notes: Created by VFRAME https://vframe.io
-    # processor: yolov5_onnx | yolov5_pytorch
-    # local: path/to/local/model.ext
-    # remote: https://example.com
-    # model: best.pt | best.onnx
-
-  vframe-base: &vframe-base
-    <<: *yolo-base
-  vframe-base-onnx: &vframe-base-onnx
-    <<: *yolo-base
-    processor: yolov5_onnx
-
-  # --------------------------------------------------------------------
-  # RBK250
-
-  rbk250-base: &rbk250-base
-    <<: *vframe-base
-    name: YOLOV5 RBK250
+    # meta
+    author: VFRAME.io
+    author_url: https://vframe.io
+    license_tag: MIT
+    license_url: https://github.com/vframeio/vframe/LICENSE
+    version: "0.3.3"
+    # files
     local: detection/rbk250/
-    remote: https://dl.vframe.io/v2/models/detection/rbk250/
-  rbk250-48: &rbk250-48
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960, large model arch, approx 0.97 F1
-    model: rbk250_48_l6_960.pt
-  rbk250-03b: &rbk250-03b
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960 with all images, large model arch, 0.9777 F1
-    model: rbk250_03b_l6_960.pt
-  rbk250-03a3: &rbk250-03a3
-    <<: *rbk250-base
-    width: 960
-    height: 960
-    notes: Trained at 960x960 with batch 11-12, large model arch, 0.912 F1
-    model: rbk250_03a3_l6_960.pt
+    remote: https://dl.vframe.io/models/detection/rbk250/
+    # overwrite
+    # model: best.engine, best.mlmodel, best.onnx
 
+  # ONNX
+  rbk250-lg-onnx: &rbk250-lg-onnx
+    <<: *base
+    model: vf_rbk250_48_l6_960.onnx
+
+  rbk250-lg-pt: &rbk250-lg-pt
+    <<: *base
+    processor: yolov5_pytorch
+    model: vf_rbk250_48_l6_960.pt
 
 
 # --------------------------------------------------------------------
-# CLI shortcuts for models with variations
+# CLI enums for models with variations
 
 models:
 
-  # RBK250
+  # Default
   rbk250:
-    <<: *rbk250-03b
-  rbk250-03a3:
-    <<: *rbk250-03a3
+    <<: *rbk250-lg-onnx
+  rbk250-onnx:
+    <<: *rbk250-lg-onnx
+  rbk250-pt:
+    <<: *rbk250-lg-pt
