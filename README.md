@@ -16,6 +16,8 @@ pip install pip -U
 
 # Install VFRAME CLI with "vf" alias
 pip install -e .
+# or
+python setup.py develop
 ```
 
 
