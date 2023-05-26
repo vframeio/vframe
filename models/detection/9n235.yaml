@@ -52,11 +52,8 @@ anchors:
 # CLI enums for models with variations
 
 models:
-  # Old V5 models
 
-  9n235-sm-onnx: &9n235-sm-onnx
-    <<: *onnx-v5
-    model: vf_9n235_01d_s6_v5.onnx
+  # Old V5 models
   9n235-md-onnx: &9n235-md-onnx
     <<: *onnx-v5
     model: vf_9n235_01d_s6_v5.onnx
@@ -70,9 +67,15 @@ models:
   9n235-nn-rt: &9n235-nn-rt
     <<: *base
     model: vf_9n235_01f_n6_v8.engine
-  # 9n235-sm-rt: &9n235-sm-rt
-  #   <<: *base
-  #   model: vf_9n235_01f_s6_v8.engine
+  9n235-nn-half-rt: &9n235-nn-half-rt
+    <<: *base
+    model: vf_9n235_01f_n6_half_v8.engine
+  9n235-sm-rt: &9n235-sm-rt
+    <<: *base
+    model: vf_9n235_01f_s6_v8.engine
+  9n235-sm-half-rt: &9n235-sm-half-rt
+    <<: *base
+    model: vf_9n235_01f_s6_half_v8.engine
   # 9n235-md-rt: &9n235-md-rt
   #   <<: *base
   #   model: vf_9n235_01f_m6_v8.engine
@@ -80,13 +83,13 @@ models:
   #   <<: *base
   #   model: vf_9n235_01f_l6_v8.engine
 
-  # # ONNX
+  # ONNX
   9n235-nn-onnx: &9n235-nn-onnx
     <<: *base
     model: vf_9n235_01f_n6_v8.onnx
-  # 9n235-sm-onnx: &9n235-sm-onnx
-  #   <<: *base
-  #   model: vf_9n235_01f_s6_v8.onnx
+  9n235-sm-onnx: &9n235-sm-onnx
+    <<: *base
+    model: vf_9n235_01f_s6_v8.onnx
   # 9n235-md-onnx: &9n235-md-onnx
   #   <<: *base
   #   model: vf_9n235_01f_m6_v8.onnx
@@ -94,27 +97,13 @@ models:
   #   <<: *base
   #   model: vf_9n235_01f_l6_v8.onnx
 
-  # # Torchscript
-  # 9n235-nn-torchscript: &9n235-nn-torchscript
-  #   <<: *base
-  #   model: vf_9n235_01f_n6_v8.torchscript
-  # 9n235-sm-torchscript: &9n235-sm-torchscript
-  #   <<: *base
-  #   model: vf_9n235_01f_s6_v8.torchscript
-  # 9n235-md-torchscript: &9n235-md-torchscript
-  #   <<: *base
-  #   model: vf_9n235_01f_m6_v8.torchscript
-  # 9n235-lg-torchscript: &9n235-lg-torchscript
-  #   <<: *base
-  #   model: vf_9n235_01f_l6_v8.torchscript
-
-  # # CoreML
+  # CoreML
   9n235-nn-coreml: &9n235-nn-coreml
     <<: *base
     model: vf_9n235_01f_n6_v8.mlmodel
-  # 9n235-sm-coreml: &9n235-sm-coreml
-  #   <<: *base
-  #   model: vf_9n235_01f_s6_v8.mlmodel
+  9n235-sm-coreml: &9n235-sm-coreml
+    <<: *base
+    model: vf_9n235_01f_s6_v8.mlmodel
   # 9n235-md-coreml: &9n235-md-coreml
   #   <<: *base
   #   model: vf_9n235_01f_m6_v8.mlmodel
