@@ -52,7 +52,7 @@ def cli(sink, opt_model_enums, opt_device, opt_dnn_sizes,
 
   from vframe.models.cvmodels import BenchmarkResult
   from vframe.image.dnn_factory import DNNFactory
-  from vframe.utils import file_utils, im_utils
+  from vframe.utils.file_utils import ensure_dir
   from vframe.settings.app_cfg import LOG, modelzoo
 
   # add models
@@ -143,6 +143,7 @@ def cli(sink, opt_model_enums, opt_device, opt_dnn_sizes,
 
   # write
   if opt_fp_out:
+    ensure_dir(opt_fp_out)
     if opt_verbose:
       LOG.info(f'Wrote data to {opt_fp_out}')
     pd.DataFrame.from_dict(benchmarks).to_csv(opt_fp_out, index=False)
