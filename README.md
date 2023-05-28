@@ -18,20 +18,49 @@ pip install pip -U
 pip install -e .
 # or
 python setup.py develop
-```
 
+# Or manually
+pip install -r requirements.txt
 
-## Test Installation
-```
-# Show list of commands
+# Test installation
 vf
-
-# Show list of image processing commands
-vf pipe
-
-# Test model inference
-vf models test
 ```
+
+```
+usage: vf [command]
+
+VFRAME CLI (0.2.0)
+
+positional arguments:
+  [command]
+
+optional arguments:
+  -h, --help  show this help message and exit
+
+Commands and plugins:
+	pipe                Image processing pipeline
+	models              Model scripts
+	utils               Utility scripts
+	dedup               Deduplication scripts
+```
+
+
+## Detect Objects
+```
+# detect objects using COCO model (replace "image.jpg" with your image)
+vf pipe open -i image.jpg detect -m coco draw display
+```
+
+Read more about [object detection](docs/object-detection.md) and the [models](docs/models.md)
+
+
+## Redacting (Blurring) Faces
+```
+# Detect and blur faces in directory of images
+vf pipe open -i input/ detect -m yoloface redact save-images -o output/
+```
+
+Read more about [redaction](docs/redaction.md)
 
 
 ## Models
@@ -57,54 +86,35 @@ vf models plot -i /path/to/output.csv
 Read more about the [models](docs/models.md)
 
 
-## Detect Objects
-```
-# detect objects using COCO model (replace "image.jpg" with your image)
-vf pipe open -i image.jpg detect -m coco draw display
-```
+## TODOs
 
-Read more about [object detection](docs/object-detection.md) and the [models](docs/models.md)
-
-
-## Redacting (Blurring) Faces
-```
-# Detect and blur faces in directory of images
-vf pipe open -i input/ detect -m yoloface redact save-images -o output/
-```
-
-Read more about [redaction](docs/redaction.md)
-
-
-## Batch Object Detection
-
-Convert a directory of images or video to JSON summary of detections
-```
-vf pipe open -i $d detect save-detections -o output/
-```
-
-
-## Primary TODOs
-
-- [ ] Convert pip to poetry and publish to PyPi
-- [ ] Add torchscript/tensorrt/coreml inference, remove 3rd party deps
-- [ ] Add shell autocompletion
-- [ ] add confidence-gradient bbox drawing
+Models
 - [ ] add checksum and improved error handling for model downloads
-- [ ] upgrade processors to include yolov8
 
-## Additional TODOs
+Usability
+- [ ] Ensure MacOS and M1/M2 compatibility
+- [ ] Improve model format selection
+- [ ] Add CSV output for simple spreadsheet sync/import
+- [ ] overhaul skip-* logic
+- [ ] overhaul mediafile logic
+- [ ] Add shell autocompletion
 
-- [ ] Add OCR processor
-- [ ] upgrade processors to include segmentation
-- [ ] upgrade processors to include classification
-- [ ] add/debug ONNX tensorrt provider
+Inference
+- [x] add/debug ONNX tensorrt provider
+- [ ] Add multi-GPU processing
 - [ ] upgrade annotation format
 - [ ] create custom metrics with csv annotation format
 - [ ] upgrade codebase to Python 3.10
-- [ ] fix/improve skip-cnn features
-- [ ] overhaul skip-* logic
-- [ ] overhaul mediafile logic
-- [ ] open issues/prs
+
+Visuals
+- [ ] Add confidence-coloring
+- [ ] Clean/update drawing code
+
+New
+- [ ] Add image segmentation
+- [ ] Add image classification
+- [ ] Add OCR
+- [ ] Add skip-cnn features
 
 ---
 
