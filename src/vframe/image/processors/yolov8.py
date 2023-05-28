@@ -43,7 +43,6 @@ class YOLOV8(Detection):
                     agnostic_nms=cfg.agnostic_nms,
                     imgsz=cfg.width,
                     verbose=False)
-        results = self.model.predict([im_rand], **self.args)
 
         # load labels
         self.labels = load_txt(cfg.fp_labels) if cfg.labels_exist else []
