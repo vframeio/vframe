@@ -36,7 +36,7 @@ anchors:
     version: "0.3.3"
     # files
     local: detection/rbk250/
-    remote: https://dl.vframe.io/models/detection/rbk250/
+    remote: https://files.vframe.io/models/detection/rbk250/
     # overwrite
     # model: best.engine, best.mlmodel, best.onnx
 

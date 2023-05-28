@@ -36,7 +36,7 @@ anchors:
     version: "0.1"
     # files
     local: detection/9n235/
-    remote: https://dl.vframe.io/models/detection/9n235/
+    remote: https://files.vframe.io/models/detection/9n235/
     # overwrite
     # model: best.engine, best.mlmodel, best.onnx
 
@@ -76,6 +76,18 @@ models:
   9n235-sm-half-rt: &9n235-sm-half-rt
     <<: *base
     model: vf_9n235_01f_s6_half_v8.engine
+  9n235-sm-1920-rt: &9n235-sm-1920-rt
+    <<: *base
+    width: 1920
+    height: 1920
+    resize_enabled: False
+    model: vf_9n235_01f_s6_1920_v8.engine
+  9n235-sm-1920-half-rt: &9n235-sm-1920-half-rt
+    <<: *base
+    width: 1920
+    height: 1920
+    resize_enabled: False
+    model: vf_9n235_01f_s6_1920_half_v8.engine
   # 9n235-md-rt: &9n235-md-rt
   #   <<: *base
   #   model: vf_9n235_01f_m6_v8.engine

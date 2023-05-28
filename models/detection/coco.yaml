@@ -34,7 +34,7 @@ anchors:
     license_url: https://ultralytics.com/license
     version: 8.0.106
     local: detection/coco/
-    remote: https://dl.vframe.io/models/detection/coco/
+    remote: https://files.vframe.io/models/detection/coco/
     # overwrite
     # model: best.engine, best.mlmodel, best.onnx
 
