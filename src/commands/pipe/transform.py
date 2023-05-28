@@ -49,9 +49,9 @@ def cli(ctx, sink, opt_filter, opt_frame_type, opt_all_frames, opt_shuffle):
       continue
 
     # apply
-    im = M.images[opt_frame_type]
-    im = IMAGE_TRANSFORMS.get(opt_filter[0])(im, opt_filter[1])
-    M.images[opt_frame_type] = im
+    for t in frame_types:
+      im = M.images[t]
+      M.images[t] = IMAGE_TRANSFORMS.get(opt_filter[0])(im, opt_filter[1])
 
     # update
     sink.send(M)

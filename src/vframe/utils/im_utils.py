@@ -20,15 +20,8 @@ import cv2 as cv
 from PIL import Image, ImageDraw, ImageEnhance
 
 import numpy as np
-import imageio
 from imagehash import ImageHash
 import scipy.fftpack  # imagehash
-
-try:
-    # TODO: move into standalone script
-    imageio.plugins.freeimage.download()
-except Exception as e:
-    LOG.warning("Could not download freeimage")
 
 from vframe.utils.misc_utils import oddify, evenify
 from vframe.models.geometry import BBox
@@ -277,53 +270,6 @@ def contrast(im: np.ndarray, fac: float) -> np.ndarray:
     amt = np.interp(fac, [0.0, 1.0], (0, 3))
     return _enhance(im, ImageEnhance.Contrast, amt)
 
-
-def shift(im: np.ndarray, fac: float) -> np.ndarray:
-    """Degrades image by superimposing image with offset xy and applies random blend"""
-    w, h = im.shape[:2][::-1]
-    max_px = int(max(im.shape[:2]) * 0.02)
-    D = max(1, int(np.interp(fac, [0.0, 1.0], (0, max_px))))
-    rad = random.uniform(0, 2 * math.pi)
-    dx = int(math.cos(rad) / D)
-    dy = int(math.sin(rad) / D)
-    # pad
-    im_dst = cv.copyMakeBorder(im, D, D, D, D, cv.BORDER_CONSTANT, value=[0, 0, 0])
-    # paste
-    x1, y1, x2, y2 = list(np.array([0, 0, w, h]) + np.array([dx, dy, -dx, -dy]))
-    # crop
-    xyxy = list(np.array([0, 0, w, h]) + np.array([D, D, -D, -D]))
-    bbox = BBox(*xyxy, w + D, h + D)
-    im_dst = crop_roi(im_dst, bbox)
-    # scale
-    im_dst = resize(im_dst, width=w, height=h, force_fit=True)
-    # blend
-    alpha = random.uniform(0.1, 0.35)
-    return blend(im, im_dst, alpha)
-
-
-def chromatic_aberration(
-    im: np.ndarray, fac: float, channel: int = 0, max_distance: int = 5
-) -> np.ndarray:
-    """Scale-shift color channel and then superimposes it back into image
-    :param channel: int for BGR channel 0 = B
-    """
-    # TODO: use shift method to overlay channels
-    channel = channel if channel else random.randint(0, 2)
-    w, h = im.shape[:2][::-1]
-    im_c = im.copy()
-    # dx,dy = value_range
-    dx = np.interp(fac, [0.0, 1.0], (0, max_distance))
-    dy = np.interp(fac, [0.0, 1.0], (0, max_distance))
-    # inner crop
-    xyxy = list(np.array([0, 0, w, h]) + np.array([dx, dy, -dx, -dy]))
-    bbox = BBox(*xyxy, w, h)
-    im_c = crop_roi(im_c, bbox)
-    # resize back to original dims
-    im_c = resize(im_c, width=w, height=h, force_fit=True)
-    # add color channel
-    im_dst = im.copy()
-    im_dst[:, :, channel] = im_c[:, :, channel]
-    return im_dst
 
 
 def grayscale(im: np.ndarray, fac: float) -> np.ndarray:
@@ -791,21 +737,6 @@ def montage(im_arr, n_cols=3):
 # -----------------------------------------------------------------------------
 
 
-def load_hdr(fp):
-    """Loads HDR image in .hdr or .exr format
-    :param fp: (str) filepath
-    :returns numpy.ndarray in BGR format
-    """
-    if Path(fp).suffix.lower() == ".exr":
-        im = cv.imread(fp, cv.IMREAD_ANYCOLOR | cv.IMREAD_ANYDEPTH)
-    else:
-        im = imageio.imread(fp, format="HDR-FI")  # RGB
-        im = cv.cvtColor(im, cv.COLOR_RGB2BGR)
-    im = np.power(im, 1 / 2.2)  # gamma correction
-    im = np.clip(im, 0, 1)
-    return (im * 255).astype(np.uint8)
-
-
 def load_heif(fp: Union[str, Path]) -> Image.Image:
     """Loads HEIF (High Efficient Image Format) image into
     :param fp: (str) filepath
@@ -840,7 +771,5 @@ IMAGE_TRANSFORMS = {
     "darken": darkness,
     "sharpness": sharpness,
     "contrast": contrast,
-    "shift": shift,
-    "chromatic-aberration": chromatic_aberration,
     "grayscale": grayscale,
 }

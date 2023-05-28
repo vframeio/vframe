@@ -35,8 +35,6 @@ plot_types = ['bar', 'line']
 @click.option('--sort/--no-sort', 'opt_sort', is_flag=True,
   default=True,
   help="Sort")
-@click.option('-f', '--force', 'opt_force', is_flag=True,
-  help="Overwrite file")
 @click.option('--xlabel-size', 'opt_xlabel_size', default=12)
 @click.option('--ylabel-size', 'opt_ylabel_size', default=12)
 @click.option('--title-size', 'opt_title_size', default=18)
@@ -45,8 +43,8 @@ plot_types = ['bar', 'line']
   Helpful when using YOLO models which require size intervals')
 @click.pass_context
 def cli(sink, opt_input, opt_output, opt_plot_type, opt_dpi, opt_figsize, 
-  opt_prefix, opt_title, opt_sort, opt_force, 
-  opt_xlabel_size, opt_ylabel_size, opt_title_size, opt_user_size):
+  opt_prefix, opt_title, opt_sort, opt_xlabel_size, opt_ylabel_size,
+   opt_title_size, opt_user_size):
   """Plot benchmark FPS results"""
 
   # ------------------------------------------------
@@ -76,9 +74,6 @@ def cli(sink, opt_input, opt_output, opt_plot_type, opt_dpi, opt_figsize,
     ext = file_utils.get_ext(opt_input)
     opt_output = opt_input.replace(ext, 'png')
   file_utils.ensure_dir(opt_output)
-  if Path(opt_output).is_file() and not opt_force:
-    log.error(f'File exists {opt_output}. Use "-f/--force" to overwrite')
-    return
 
   df = pd.read_csv(opt_input)
 

@@ -33,7 +33,6 @@ from collections import OrderedDict
 
 from typing import Dict, List, Tuple, Union
 from dacite import from_dict
-import xmltodict
 import click
 import ruamel.yaml as yaml
 import numpy as np
@@ -164,21 +163,6 @@ def load_txt(fp: str, data_class: object = None, as_list: bool = True):
     return lines
 
 
-def load_xml(fp: str, data_class: object = None):
-    """Loads XML and returns dict of items
-    :param fp: String filepath to XML
-    :param data_class: DataClass data model
-    returns: OrderedDict of XML values
-    """
-    check_file_exists(fp)
-    with open(fp, "rt") as f:
-        lines = f.read()
-    data = xmltodict.parse(lines)
-    if data_class:
-        data = from_dict(data_class=data_class, data=data)
-    return data
-
-
 class NumpyEncoder(json.JSONEncoder):
     """Special json encoder for numpy types"""
 
@@ -253,8 +237,6 @@ def load_file(fp: str, data_class: object = None):
         return load_csv(fp, data_class=data_class)
     elif ext == "txt":
         return load_txt(fp, data_class=data_class)
-    elif ext == "xml":
-        return load_xml(fp, data_class=data_class)
     elif ext == "yaml" or ext == "yml":
         return load_yaml(fp, data_class=data_class)
     else:
