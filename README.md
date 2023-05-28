@@ -45,6 +45,15 @@ Commands and plugins:
 ```
 
 
+**Disable 3rd Party Library Analytics**
+
+Ultralytics uses Sentry for app usage analytics. Disable it by using:
+`yolo settings config=False`
+or if that doesn't work edit the `settings.yaml` file in
+`/home/#$SER/.config/Ultralytics/settings.yaml` (Linux) and set `sync: False`
+
+
+
 ## Detect Objects
 ```
 # detect objects using COCO model (replace "image.jpg" with your image)
@@ -61,7 +70,6 @@ vf pipe open -i input/ detect -m yoloface redact save-images -o output/
 ```
 
 Read more about [redaction](docs/redaction.md)
-
 
 ## Models
 ```
